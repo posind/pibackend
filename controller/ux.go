@@ -124,10 +124,11 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		helper.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
+	//check validasi user
 	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
 	if err != nil {
 		var respn model.Response
-		respn.Status = "Error : Data user tidak di temukan"
+		respn.Status = "Error : Data user tidak di temukan: " + payload.Id
 		respn.Response = err.Error()
 		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
