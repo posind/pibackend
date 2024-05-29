@@ -135,6 +135,15 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 	}
 	//ambil data project
 	prjobjectId, err := primitive.ObjectIDFromHex(lap.Kode)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : ObjectID Tidak Valid"
+		respn.Info = lap.Kode
+		respn.Location = "Encode Object ID Error"
+		respn.Response = err.Error()
+		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		return
+	}
 	prjuser, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": prjobjectId})
 	if err != nil {
 		var respn model.Response
