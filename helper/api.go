@@ -33,3 +33,19 @@ func PostStructWithToken[T any](tokenkey string, tokenvalue string, structname i
 	}
 	return
 }
+
+func Get[T any](urltarget string) (result T, err error) {
+	resp, err := http.Get(urltarget)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	if er := json.Unmarshal(body, &result); er != nil {
+		return
+	}
+	return
+}

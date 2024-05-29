@@ -61,6 +61,15 @@ func SRVLookup(srvuri string) (mongouri string) {
 	return
 }
 
+func GetAllDistinctDoc(db *mongo.Database, filter bson.M, fieldname, collection string) (doc []any, err error) {
+	ctx := context.TODO()
+	doc, err = db.Collection(collection).Distinct(ctx, fieldname, filter)
+	if err != nil {
+		return nil, err
+	}
+	return doc, nil
+}
+
 func GetRandomDoc[T any](db *mongo.Database, collection string, size uint) (result []T, err error) {
 	filter := mongo.Pipeline{
 		{{Key: "$sample", Value: bson.D{{Key: "size", Value: size}}}},
