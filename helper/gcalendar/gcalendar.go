@@ -7,12 +7,14 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gocroot/helper"
+	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
+	"google.golang.org/api/option"
 )
 
 // MongoDB URI
@@ -23,12 +25,19 @@ const dbName = "google_api"
 const credCol = "credentials"
 const tokenCol = "tokens"
 
+var mongoinfo = model.DBInfo{
+	DBString: "mongodb+srv://domyid:d2FqCsbjSS7hW2Xt@cluster0.fvazjna.mongodb.net/",
+	DBName:   "domyid",
+}
+
+var Mongoconn, ErrorMongoconn = helper.MongoConnect(mongoinfo)
+
 // Retrieve a token, saves the token, then returns the generated client.
-func getClient(config *oauth2.Config, client *mongo.Client) *http.Client {
-	tok, err := tokenFromMongo(client)
+func getClient(config *oauth2.Config, db *mongo.Database) *http.Client {
+	tok, err := tokenFromMongo(db)
 	if err != nil {
 		tok = getTokenFromWeb(config)
-		saveTokenToMongo(client, tok)
+		saveTokenToMongo(db, tok)
 	}
 	return config.Client(context.Background(), tok)
 }
@@ -51,8 +60,8 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 }
 
 // Retrieves a token from MongoDB.
-func tokenFromMongo(client *mongo.Client) (*oauth2.Token, error) {
-	collection := client.Database(dbName).Collection(tokenCol)
+func tokenFromMongo(db *mongo.Database) (*oauth2.Token, error) {
+	collection := db.Collection(tokenCol)
 	var token oauth2.Token
 	err := collection.FindOne(context.TODO(), bson.M{}).Decode(&token)
 	if err != nil {
@@ -62,35 +71,48 @@ func tokenFromMongo(client *mongo.Client) (*oauth2.Token, error) {
 }
 
 // Saves a token to MongoDB.
-func saveTokenToMongo(client *mongo.Client, token *oauth2.Token) {
-	collection := client.Database(dbName).Collection(tokenCol)
-	_, err := collection.InsertOne(context.TODO(), token)
+func saveTokenToMongo(db *mongo.Database, token *oauth2.Token) {
+	collection := db.Collection(tokenCol)
+	// Remove any existing tokens
+	_, err := collection.DeleteMany(context.TODO(), bson.M{})
+	if err != nil {
+		log.Fatalf("Unable to delete old tokens from MongoDB: %v", err)
+	}
+	_, err = collection.InsertOne(context.TODO(), token)
 	if err != nil {
 		log.Fatalf("Unable to save token to MongoDB: %v", err)
 	}
 }
 
 func main() {
-	// MongoDB client setup
-	clientOpts := options.Client().ApplyURI(uri)
-	client, err := mongo.Connect(context.TODO(), clientOpts)
-	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	if ErrorMongoconn != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", ErrorMongoconn)
 	}
-	defer client.Disconnect(context.TODO())
 
 	// Read credentials.json from MongoDB
-	credCollection := client.Database(dbName).Collection(credCol)
+	credCollection := Mongoconn.Collection(credCol)
 	var credData bson.M
-	err = credCollection.FindOne(context.TODO(), bson.M{}).Decode(&credData)
+	err := credCollection.FindOne(context.TODO(), bson.M{}).Decode(&credData)
 	if err != nil {
 		log.Fatalf("Unable to retrieve credentials from MongoDB: %v", err)
 	}
+
+	// Debug: Print the credentials retrieved from MongoDB
+	fmt.Printf("Credentials retrieved from MongoDB: %v\n", credData)
+
+	// Remove the MongoDB specific _id field
+	delete(credData, "_id")
+
+	// Debug: Print the credentials after removing _id
+	fmt.Printf("Credentials after removing _id: %v\n", credData)
 
 	credBytes, err := json.Marshal(credData)
 	if err != nil {
 		log.Fatalf("Unable to marshal credentials: %v", err)
 	}
+
+	// Debug: Print the marshaled JSON credentials
+	fmt.Printf("Marshaled JSON credentials: %s\n", string(credBytes))
 
 	// If modifying these scopes, delete your previously saved token.json.
 	config, err := google.ConfigFromJSON(credBytes, calendar.CalendarScope)
@@ -98,9 +120,9 @@ func main() {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
 
-	httpClient := getClient(config, client)
+	httpClient := getClient(config, Mongoconn)
 
-	srv, err := calendar.New(httpClient)
+	srv, err := calendar.NewService(context.TODO(), option.WithHTTPClient(httpClient))
 	if err != nil {
 		log.Fatalf("Unable to retrieve Calendar client: %v", err)
 	}
@@ -118,8 +140,8 @@ func main() {
 			TimeZone: "America/Los_Angeles",
 		},
 		Attendees: []*calendar.EventAttendee{
-			{Email: "lpage@example.com"},
-			{Email: "sbrin@example.com"},
+			{Email: "awangga@gmail.com"},
+			{Email: "awangga@ulbi.ac.id"},
 		},
 	}
 
