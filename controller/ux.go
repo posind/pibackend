@@ -134,10 +134,11 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	//ambil data project
-	prjuser, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": lap.Kode})
+	prjobjectId, err := primitive.ObjectIDFromHex(lap.Kode)
+	prjuser, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": prjobjectId})
 	if err != nil {
 		var respn model.Response
-		respn.Status = "Error : Data user tidak di temukan"
+		respn.Status = "Error : Data project tidak di temukan: " + lap.Kode
 		respn.Response = err.Error()
 		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
