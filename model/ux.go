@@ -4,6 +4,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Laporan struct {
 	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty" query:"id" url:"_id,omitempty" reqHeader:"_id"`
+	Project   Project            `json:"project,omitempty" bson:"project,omitempty"`
 	User      Userdomyikado      `json:"user,omitempty" bson:"user,omitempty"`
 	Petugas   string             `json:"petugas,omitempty" bson:"petugas,omitempty"`
 	NoPetugas string             `json:"nopetugas,omitempty" bson:"nopetugas,omitempty"`

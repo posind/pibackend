@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/gocroot/helper"
 	"github.com/gocroot/model"
@@ -17,20 +19,27 @@ import (
 	"google.golang.org/api/option"
 )
 
-// MongoDB URI
-const uri = "mongodb://localhost:27017"
-
 // Database and collection names
-const dbName = "google_api"
 const credCol = "credentials"
 const tokenCol = "tokens"
 
 var mongoinfo = model.DBInfo{
-	DBString: "mongodb+srv://domyid:d2FqCsbjSS7hW2Xt@cluster0.fvazjna.mongodb.net/",
+	DBString: os.Getenv("MONGOSTRINGTEST"),
 	DBName:   "domyid",
 }
 
 var Mongoconn, ErrorMongoconn = helper.MongoConnect(mongoinfo)
+
+// Struct to hold the credentials data from MongoDB
+type Credentials struct {
+	ClientID     string   `json:"client_id"`
+	ClientSecret string   `json:"client_secret"`
+	RefreshToken string   `json:"refresh_token"`
+	TokenURI     string   `json:"token_uri"`
+	Scopes       []string `json:"scopes"`
+	Expiry       string   `json:"expiry"`
+	Token        string   `json:"token"`
+}
 
 // Retrieve a token, saves the token, then returns the generated client.
 func getClient(config *oauth2.Config, db *mongo.Database) *http.Client {
@@ -57,6 +66,15 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 		log.Fatalf("Unable to retrieve token from web: %v", err)
 	}
 	return tok
+}
+
+// Retrieves a token source from MongoDB.
+func tokenSourceFromMongo(db *mongo.Database, config *oauth2.Config) (oauth2.TokenSource, error) {
+	token, err := tokenFromMongo(db)
+	if err != nil {
+		return nil, err
+	}
+	return config.TokenSource(context.Background(), token), nil
 }
 
 // Retrieves a token from MongoDB.
@@ -91,41 +109,63 @@ func main() {
 
 	// Read credentials.json from MongoDB
 	credCollection := Mongoconn.Collection(credCol)
-	var credData bson.M
+	var credData Credentials
 	err := credCollection.FindOne(context.TODO(), bson.M{}).Decode(&credData)
 	if err != nil {
 		log.Fatalf("Unable to retrieve credentials from MongoDB: %v", err)
 	}
 
 	// Debug: Print the credentials retrieved from MongoDB
-	fmt.Printf("Credentials retrieved from MongoDB: %v\n", credData)
+	fmt.Printf("Credentials retrieved from MongoDB: %+v\n", credData)
 
-	// Remove the MongoDB specific _id field
-	delete(credData, "_id")
-
-	// Debug: Print the credentials after removing _id
-	fmt.Printf("Credentials after removing _id: %v\n", credData)
-
-	credBytes, err := json.Marshal(credData)
-	if err != nil {
-		log.Fatalf("Unable to marshal credentials: %v", err)
+	// Create the OAuth2 config from the credentials data
+	config := &oauth2.Config{
+		ClientID:     credData.ClientID,
+		ClientSecret: credData.ClientSecret,
+		Endpoint:     google.Endpoint,
+		Scopes:       credData.Scopes,
+		RedirectURL:  "http://localhost",
 	}
 
-	// Debug: Print the marshaled JSON credentials
-	fmt.Printf("Marshaled JSON credentials: %s\n", string(credBytes))
-
-	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(credBytes, calendar.CalendarScope)
+	// Initialize token with retrieved values
+	expiryTime, err := time.Parse(time.RFC3339, credData.Expiry)
 	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
+		log.Fatalf("Unable to parse token expiry time: %v", err)
+	}
+	token := &oauth2.Token{
+		AccessToken:  credData.Token,
+		TokenType:    "Bearer",
+		RefreshToken: credData.RefreshToken,
+		Expiry:       expiryTime,
 	}
 
-	httpClient := getClient(config, Mongoconn)
+	// Save the token to MongoDB
+	saveTokenToMongo(Mongoconn, token)
+
+	// Create token source from credentials and config
+	tokenSource, err := tokenSourceFromMongo(Mongoconn, config)
+	if err != nil {
+		log.Fatalf("Unable to create token source: %v", err)
+	}
+	// Create OAuth2 client using token source
+	httpClient := oauth2.NewClient(context.Background(), tokenSource)
 
 	srv, err := calendar.NewService(context.TODO(), option.WithHTTPClient(httpClient))
 	if err != nil {
-		log.Fatalf("Unable to retrieve Calendar client: %v", err)
+		// If token expired, try refreshing token and creating service again
+		if strings.Contains(err.Error(), "token expired") {
+			tokenSource := oauth2.ReuseTokenSource(nil, tokenSource)
+			httpClient := oauth2.NewClient(context.Background(), tokenSource)
+			srv, err = calendar.NewService(context.Background(), option.WithHTTPClient(httpClient))
+			if err != nil {
+				log.Fatalf("Unable to retrieve Calendar client: %v", err)
+			}
+		} else {
+			log.Fatalf("Unable to retrieve Calendar client: %v", err)
+		}
 	}
+
+	// Create event...
 
 	event := &calendar.Event{
 		Summary:     "Google I/O 2024",

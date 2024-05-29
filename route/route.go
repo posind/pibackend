@@ -37,6 +37,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostWebHookGithub(w, r)
 	case method == "POST" && path == "/notif/ux/postlaporan":
 		controller.PostLaporan(w, r)
+	case method == "POST" && path == "/notif/ux/postfeedback":
+		controller.PostFeedback(w, r)
 	case method == "POST" && path == "/notif/ux/postrating":
 		controller.PostRatingLaporan(w, r)
 	case method == "GET" && helper.URLParam(path, "/notif/ux/getlaporan/:id"):
