@@ -213,6 +213,7 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		helper.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
+	//validasi eksistensi user di db
 	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
 	if err != nil {
 		var respn model.Response
@@ -221,7 +222,27 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
+	//ambil data project
+	prjobjectId, err := primitive.ObjectIDFromHex(lap.Kode)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : ObjectID Tidak Valid"
+		respn.Info = lap.Kode
+		respn.Location = "Encode Object ID Error"
+		respn.Response = err.Error()
+		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		return
+	}
+	prjuser, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": prjobjectId})
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : Data project tidak di temukan: " + lap.Kode
+		respn.Response = err.Error()
+		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
 	//lojik inputan post
+	lap.Project = prjuser
 	lap.User = docuser
 	lap.Phone = ValidasiNoHP(lap.Phone)
 	lap.Petugas = docuser.Name
