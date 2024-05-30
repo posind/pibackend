@@ -30,7 +30,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 		helper.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
-	payload, err := hook.Parse(req, github.PushEvent)
+	payload, err := hook.Parse(req, github.PushEvent, github.PingEvent)
 	if err != nil {
 		resp.Info = "Tidak ada Push"
 		resp.Response = err.Error()
@@ -38,6 +38,12 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	switch pyl := payload.(type) {
+	case github.PingPayload:
+		resp.Response = prj.Description
+		resp.Info = prj.Name
+		resp.Status = prj.Owner.Name
+		helper.WriteJSON(respw, http.StatusOK, resp)
+		return
 	case github.PushPayload:
 		var komsg, msg string
 		for i, komit := range pyl.Commits {
