@@ -21,6 +21,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.GetHome(w, r)
 	case method == "GET" && path == "/refresh/token":
 		controller.GetNewToken(w, r)
+	case method == "GET" && path == "/data/pushrepo/kemarin":
+		controller.GetYesterdayDistincWAGroup(w, r)
 	case method == "GET" && path == "/data/user":
 		controller.GetDataUser(w, r)
 	case method == "POST" && path == "/data/user":
