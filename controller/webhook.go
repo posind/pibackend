@@ -51,7 +51,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			appd := strconv.Itoa(i+1) + ". " + kommsg + "\n_" + komit.Author.Name + "_\n"
 			dokcommit := model.PushReport{
 				ProjectName: prj.Name,
-				ProjectID:   prj.ID,
+				Project:     prj,
 				Username:    komit.Author.Username,
 				Email:       komit.Author.Email,
 				Repo:        pyl.Repository.URL,
@@ -59,7 +59,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				Message:     kommsg,
 			}
 			if (prj.Owner.Email == komit.Author.Email) || (prj.Owner.GithubUsername == komit.Author.Username) {
-				dokcommit.UserID = prj.Owner.ID
+				dokcommit.User = prj.Owner
 			} else {
 				var member *model.Userdomyikado
 				member, err := getMemberByAttributeInProject(prj, "githubusername", komit.Author.Username)
@@ -73,7 +73,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 						return
 					}
 				}
-				dokcommit.UserID = member.ID
+				dokcommit.User = *member
 			}
 			_, err = atdb.InsertOneDoc(config.Mongoconn, "pushrepo", dokcommit)
 			if err != nil {
