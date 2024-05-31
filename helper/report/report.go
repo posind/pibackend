@@ -23,7 +23,7 @@ type PushRank struct {
 }
 
 func GetDataLaporanMasukKemarin(db *mongo.Database, waGroupId string) (msg string) {
-	msg += "*Jumlah Laporan Hari Ini :*\n"
+	msg += "*Jumlah Laporan Kemarin:*\n"
 	ranklist := GetRankDataLaporan(db, YesterdayFilter(), waGroupId)
 	for i, data := range ranklist {
 		msg += strconv.Itoa(i+1) + ". " + data.Username + " : " + strconv.Itoa(data.TotalCommit) + "\n"
@@ -127,13 +127,13 @@ func GetDataRepoMasukKemarinBukanLibur(db *mongo.Database) (msg string) {
 }
 
 func GetDataRepoMasukKemarin(db *mongo.Database, groupId string) (msg string) {
-	msg += "*Laporan Jumlah Push Repo Hari Ini :*\n"
+	msg += "*Laporan Jumlah Push Repo Kemarin :*\n"
 	pushrepo := db.Collection("pushrepo")
 	// Create filter to query data for today
 	filter := bson.M{"_id": YesterdayFilter(), "project.wagroupid": groupId}
 	usernamelist, _ := atdb.GetAllDistinctDoc(db, filter, "username", "pushrepo")
 	for _, username := range usernamelist {
-		filter := bson.M{"username": username, "_id": TodayFilter()}
+		filter := bson.M{"username": username, "_id": YesterdayFilter()}
 		// Query the database
 		var pushdata []model.PushReport
 		cur, err := pushrepo.Find(context.Background(), filter)
