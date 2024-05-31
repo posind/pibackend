@@ -65,10 +65,11 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 		}
 	}
 	//kirim report ke group
+	gid := "6281313112053-1492882006"
 	dt := &model.TextMessage{
-		To:       "6281313112053-1492882006",
+		To:       gid,
 		IsGroup:  true,
-		Messages: report.GetDataRepoMasukHarian(config.Mongoconn) + "\n" + report.GetDataLaporanMasukHarian(config.Mongoconn),
+		Messages: report.GetDataRepoMasukHariIni(config.Mongoconn, gid) + "\n" + report.GetDataLaporanMasukHariini(config.Mongoconn, gid),
 	}
 	resp, err = helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
