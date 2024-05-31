@@ -53,6 +53,9 @@ func GetRankDataLaporanUpdateTambahPoin(db *mongo.Database, filterhari bson.M, w
 		}
 		defer cur.Close(context.Background())
 		poin, err := TambahPoinLaporanbyPhoneNumber(nopetugas.(string), pushdata)
+		if err != nil {
+			return
+		}
 		if len(pushdata) > 0 {
 			//ranklist = append(ranklist, PushRank{Username: pushdata[0].Petugas, Poin: float64(len(pushdata))})
 			ranklist = append(ranklist, PushRank{Username: pushdata[0].Petugas, Poin: poin})
@@ -166,19 +169,19 @@ func GetDataRepoMasukKemarinUpdateTambahPoin(db *mongo.Database, groupId string)
 		defer cur.Close(context.Background())
 		if len(pushdata) > 0 {
 			msg += "*" + username.(string) + " : +" + strconv.Itoa(len(pushdata)) + "*\n"
-			TambahPoinbyGithubUsername(username.(string), float64(len(pushdata)))
+			TambahPoinPushRepobyGithubUsername(username.(string), float64(len(pushdata)))
 		}
 	}
 	return
 }
 
-func TambahPoinbyGithubUsername(ghuser string, poin float64) (err error) {
+func TambahPoinPushRepobyGithubUsername(ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
 	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"githubusername": ghuser})
 	if err != nil {
 		return
 	}
-	poinbaru := usr.Poin + poin
-	_, err = atdb.UpdateDoc(config.Mongoconn, "user", bson.M{"githubusername": ghuser}, bson.M{"poin": poinbaru})
+	usr.Poin = usr.Poin + poin
+	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"githubusername": ghuser}, usr)
 	if err != nil {
 		return
 	}
