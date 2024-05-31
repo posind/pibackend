@@ -12,7 +12,7 @@ import (
 )
 
 func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
-	filter := bson.M{"_id": report.YesterdayNotLiburFilter()}
+	filter := bson.M{"_id": report.Yesterday()}
 	res, err := atdb.GetAllDistinctDoc(config.Mongoconn, filter, "project.wagroupid", "pushrepo")
 	if err != nil {
 		var resp model.Response

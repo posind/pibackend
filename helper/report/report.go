@@ -181,6 +181,13 @@ func YesterdayNotLiburFilter() bson.M {
 	}
 }
 
+func Yesterday() bson.M {
+	return bson.M{
+		"$gte": primitive.NewObjectIDFromTimestamp(GetDateKemarin()),
+		"$lt":  primitive.NewObjectIDFromTimestamp(GetDateKemarin().Add(24 * time.Hour)),
+	}
+}
+
 func GetDateKemarinBukanHariLibur() (datekemarinbukanlibur time.Time) {
 	// Definisi lokasi waktu sekarang
 	location, _ := time.LoadLocation("Asia/Jakarta")
@@ -192,6 +199,16 @@ func GetDateKemarinBukanHariLibur() (datekemarinbukanlibur time.Time) {
 	}
 
 	datekemarinbukanlibur = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+
+	return
+}
+
+func GetDateKemarin() (datekemarin time.Time) {
+	// Definisi lokasi waktu sekarang
+	location, _ := time.LoadLocation("Asia/Jakarta")
+	n := -1
+	t := time.Now().AddDate(0, 0, n).In(location) //.Truncate(24 * time.Hour)
+	datekemarin = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 
 	return
 }
