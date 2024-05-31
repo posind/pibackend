@@ -83,7 +83,13 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
 				return
 			}
-			report.TambahPoinPushRepobyGithubUsername(dokcommit.Username, 1)
+			_, err := report.TambahPoinPushRepobyGithubUsername(dokcommit.Username, 1)
+			if err != nil {
+				resp.Info = "TambahPoinPushRepobyGithubUsername gagal"
+				resp.Response = err.Error()
+				helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
+				return
+			}
 			komsg += appd
 		}
 		msg = pyl.Pusher.Name + "\n" + pyl.Sender.Login + "\n" + pyl.Repository.Name + "\n" + pyl.Ref + "\n" + pyl.Repository.URL + "\n" + komsg
