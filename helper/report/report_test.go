@@ -16,7 +16,7 @@ var mongoinfo = model.DBInfo{
 var Mongoconn, ErrorMongoconn = helper.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
-	results := GetDataRepoMasukKemarin(Mongoconn, "6281313112053-1492882006") // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
+	results := GetDataLaporanMasukKemarinUpdateTambahPoin(Mongoconn, "6281313112053-1492882006") // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
 	print(results)
 
 }

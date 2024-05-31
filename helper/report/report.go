@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gocroot/config"
 	"github.com/gocroot/helper"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/model"
@@ -19,30 +20,31 @@ import (
 type PushRank struct {
 	Username    string
 	TotalCommit int
+	Poin        float64
 	Repos       map[string]int
 }
 
-func GetDataLaporanMasukKemarin(db *mongo.Database, waGroupId string) (msg string) {
+func GetDataLaporanMasukKemarinUpdateTambahPoin(db *mongo.Database, waGroupId string) (msg string) {
 	msg += "*Jumlah Laporan Kemarin:*\n"
-	ranklist := GetRankDataLaporan(db, YesterdayFilter(), waGroupId)
+	ranklist := GetRankDataLaporanUpdateTambahPoin(db, YesterdayFilter(), waGroupId)
 	for i, data := range ranklist {
-		msg += strconv.Itoa(i+1) + ". " + data.Username + " : " + strconv.Itoa(data.TotalCommit) + "\n"
+		msg += strconv.Itoa(i+1) + ". " + data.Username + " : +" + strconv.Itoa(int(data.Poin)) + "\n"
 	}
 
 	return
 }
 
-func GetRankDataLaporan(db *mongo.Database, filterhari bson.M, waGroupId string) (ranklist []PushRank) {
-	pushrepo := db.Collection("uxlaporan")
+func GetRankDataLaporanUpdateTambahPoin(db *mongo.Database, filterhari bson.M, waGroupId string) (ranklist []PushRank) {
+	uxlaporan := db.Collection("uxlaporan")
 	// Create filter to query data for today
 	filter := bson.M{"_id": filterhari, "project.wagroupid": waGroupId}
-	usernamelist, _ := atdb.GetAllDistinctDoc(db, filter, "petugas", "uxlaporan")
+	nopetugass, _ := atdb.GetAllDistinctDoc(db, filter, "nopetugas", "uxlaporan")
 	//ranklist := []PushRank{}
-	for _, username := range usernamelist {
-		filter := bson.M{"petugas": username, "_id": filterhari}
+	for _, nopetugas := range nopetugass {
+		filter := bson.M{"nopetugas": nopetugas, "_id": filterhari}
 		// Query the database
 		var pushdata []model.Laporan
-		cur, err := pushrepo.Find(context.Background(), filter)
+		cur, err := uxlaporan.Find(context.Background(), filter)
 		if err != nil {
 			return
 		}
@@ -50,14 +52,32 @@ func GetRankDataLaporan(db *mongo.Database, filterhari bson.M, waGroupId string)
 			return
 		}
 		defer cur.Close(context.Background())
+		poin, err := TambahPoinLaporanbyPhoneNumber(nopetugas.(string), pushdata)
 		if len(pushdata) > 0 {
-			ranklist = append(ranklist, PushRank{Username: username.(string), TotalCommit: len(pushdata)})
+			//ranklist = append(ranklist, PushRank{Username: pushdata[0].Petugas, Poin: float64(len(pushdata))})
+			ranklist = append(ranklist, PushRank{Username: pushdata[0].Petugas, Poin: poin})
 		}
 	}
-	sort.SliceStable(ranklist, func(i, j int) bool {
-		return ranklist[i].TotalCommit > ranklist[j].TotalCommit
-	})
 	return
+}
+
+func TambahPoinLaporanbyPhoneNumber(phonenumber string, laporans []model.Laporan) (poin float64, err error) {
+	for _, laporan := range laporans {
+		poinbaru := laporan.Rating / 5.0
+		poin += poinbaru
+	}
+	poin += float64(len(laporans))
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"phonenumber": phonenumber})
+	if err != nil {
+		return
+	}
+	poinbaru := usr.Poin + poin
+	_, err = atdb.UpdateDoc(config.Mongoconn, "user", bson.M{"phonenumber": phonenumber}, bson.M{"poin": poinbaru})
+	if err != nil {
+		return
+	}
+	return
+
 }
 
 func GetDataLaporanMasukHarian(db *mongo.Database) (msg string) {
@@ -126,8 +146,8 @@ func GetDataRepoMasukKemarinBukanLibur(db *mongo.Database) (msg string) {
 	return
 }
 
-func GetDataRepoMasukKemarin(db *mongo.Database, groupId string) (msg string) {
-	msg += "*Laporan Jumlah Push Repo Kemarin :*\n"
+func GetDataRepoMasukKemarinUpdateTambahPoin(db *mongo.Database, groupId string) (msg string) {
+	msg += "*Laporan Penambahan Poin dari Jumlah Push Repo Kemarin :*\n"
 	pushrepo := db.Collection("pushrepo")
 	// Create filter to query data for today
 	filter := bson.M{"_id": YesterdayFilter(), "project.wagroupid": groupId}
@@ -145,14 +165,25 @@ func GetDataRepoMasukKemarin(db *mongo.Database, groupId string) (msg string) {
 		}
 		defer cur.Close(context.Background())
 		if len(pushdata) > 0 {
-			msg += "*" + username.(string) + " : " + strconv.Itoa(len(pushdata)) + "*\n"
-			for j, push := range pushdata {
-				msg += strconv.Itoa(j+1) + ". " + strings.TrimSpace(push.Message) + "\n"
-
-			}
+			msg += "*" + username.(string) + " : +" + strconv.Itoa(len(pushdata)) + "*\n"
+			TambahPoinbyGithubUsername(username.(string), float64(len(pushdata)))
 		}
 	}
 	return
+}
+
+func TambahPoinbyGithubUsername(ghuser string, poin float64) (err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"githubusername": ghuser})
+	if err != nil {
+		return
+	}
+	poinbaru := usr.Poin + poin
+	_, err = atdb.UpdateDoc(config.Mongoconn, "user", bson.M{"githubusername": ghuser}, bson.M{"poin": poinbaru})
+	if err != nil {
+		return
+	}
+	return
+
 }
 
 func GetDataRepoMasukHarian(db *mongo.Database) (msg string) {

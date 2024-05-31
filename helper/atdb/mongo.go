@@ -2,6 +2,7 @@ package atdb
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -68,6 +69,26 @@ func GetAllDistinctDoc(db *mongo.Database, filter bson.M, fieldname, collection 
 		return nil, err
 	}
 	return doc, nil
+}
+
+// GetAllDistinctDoc mengambil semua nilai yang berbeda dari field tertentu dalam koleksi yang diberikan
+func GetAllDistinct[T any](db *mongo.Database, filter bson.M, fieldname, collection string) ([]T, error) {
+	ctx := context.TODO()
+	rawDoc, err := db.Collection(collection).Distinct(ctx, fieldname, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	// Mengkonversi []interface{} ke []T
+	result := make([]T, len(rawDoc))
+	for i, v := range rawDoc {
+		value, ok := v.(T)
+		if !ok {
+			return nil, fmt.Errorf("type assertion to %T failed", v)
+		}
+		result[i] = value
+	}
+	return result, nil
 }
 
 func GetRandomDoc[T any](db *mongo.Database, collection string, size uint) (result []T, err error) {

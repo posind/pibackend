@@ -13,7 +13,7 @@ type Laporan struct {
 	Phone     string             `json:"phone,omitempty" bson:"phone,omitempty"`
 	Solusi    string             `json:"solusi,omitempty" bson:"solusi,omitempty"`
 	Komentar  string             `json:"komentar,omitempty" bson:"komentar,omitempty"`
-	Rating    int                `json:"rating,omitempty" bson:"rating,omitempty"`
+	Rating    float64            `json:"rating,omitempty" bson:"rating,omitempty"`
 }
 
 type Rating struct {
