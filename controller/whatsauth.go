@@ -6,8 +6,10 @@ import (
 
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper"
+	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/model"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func GetHome(respw http.ResponseWriter, req *http.Request) {
@@ -65,18 +67,35 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 		}
 	}
 	//kirim report ke group
-	gid := "6281313112053-1492882006"
-	dt := &model.TextMessage{
-		To:       gid,
-		IsGroup:  true,
-		Messages: report.GetDataRepoMasukHariIni(config.Mongoconn, gid) + "\n" + report.GetDataLaporanMasukHariini(config.Mongoconn, gid),
-	}
-	resp, err = helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	filter := bson.M{"_id": report.TodayFilter()}
+	wagroupidlist, err := atdb.GetAllDistinctDoc(config.Mongoconn, filter, "project.wagroupid", "pushrepo")
 	if err != nil {
-		resp.Info = "Tidak berhak"
+		resp.Info = "Gagal Query Distincs project.wagroupid"
 		resp.Response = err.Error()
 		helper.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
+	}
+	for _, gid := range wagroupidlist {
+		// Type assertion to convert any to string
+		groupID, ok := gid.(string)
+		if !ok {
+			resp.Info = "wagroupid is not a string"
+			resp.Response = "wagroupid is not a string"
+			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+			return
+		}
+		dt := &model.TextMessage{
+			To:       groupID,
+			IsGroup:  true,
+			Messages: report.GetDataRepoMasukHariIni(config.Mongoconn, groupID) + "\n" + report.GetDataLaporanMasukHariini(config.Mongoconn, groupID),
+		}
+		resp, err = helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		if err != nil {
+			resp.Info = "Tidak berhak"
+			resp.Response = err.Error()
+			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+			return
+		}
 	}
 	helper.WriteJSON(respw, httpstatus, resp)
 }
