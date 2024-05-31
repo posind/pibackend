@@ -22,6 +22,44 @@ type PushRank struct {
 	Repos       map[string]int
 }
 
+func GetDataLaporanMasukKemarin(db *mongo.Database, waGroupId string) (msg string) {
+	msg += "*Jumlah Laporan Hari Ini :*\n"
+	ranklist := GetRankDataLaporan(db, YesterdayFilter(), waGroupId)
+	for i, data := range ranklist {
+		msg += strconv.Itoa(i+1) + ". " + data.Username + " : " + strconv.Itoa(data.TotalCommit) + "\n"
+	}
+
+	return
+}
+
+func GetRankDataLaporan(db *mongo.Database, filterhari bson.M, waGroupId string) (ranklist []PushRank) {
+	pushrepo := db.Collection("uxlaporan")
+	// Create filter to query data for today
+	filter := bson.M{"_id": filterhari, "project.wagroupid": waGroupId}
+	usernamelist, _ := atdb.GetAllDistinctDoc(db, filter, "petugas", "uxlaporan")
+	//ranklist := []PushRank{}
+	for _, username := range usernamelist {
+		filter := bson.M{"petugas": username, "_id": filterhari}
+		// Query the database
+		var pushdata []model.Laporan
+		cur, err := pushrepo.Find(context.Background(), filter)
+		if err != nil {
+			return
+		}
+		if err = cur.All(context.Background(), &pushdata); err != nil {
+			return
+		}
+		defer cur.Close(context.Background())
+		if len(pushdata) > 0 {
+			ranklist = append(ranklist, PushRank{Username: username.(string), TotalCommit: len(pushdata)})
+		}
+	}
+	sort.SliceStable(ranklist, func(i, j int) bool {
+		return ranklist[i].TotalCommit > ranklist[j].TotalCommit
+	})
+	return
+}
+
 func GetDataLaporanMasukHarian(db *mongo.Database) (msg string) {
 	msg += "*Jumlah Laporan Hari Ini :*\n"
 	ranklist := GetRankDataLayananHarian(db, TodayFilter())
@@ -67,6 +105,35 @@ func GetDataRepoMasukKemarinBukanLibur(db *mongo.Database) (msg string) {
 	usernamelist, _ := atdb.GetAllDistinctDoc(db, filter, "username", "pushrepo")
 	for _, username := range usernamelist {
 		filter := bson.M{"username": username, "_id": YesterdayNotLiburFilter()}
+		// Query the database
+		var pushdata []model.PushReport
+		cur, err := pushrepo.Find(context.Background(), filter)
+		if err != nil {
+			return
+		}
+		if err = cur.All(context.Background(), &pushdata); err != nil {
+			return
+		}
+		defer cur.Close(context.Background())
+		if len(pushdata) > 0 {
+			msg += "*" + username.(string) + " : " + strconv.Itoa(len(pushdata)) + "*\n"
+			for j, push := range pushdata {
+				msg += strconv.Itoa(j+1) + ". " + strings.TrimSpace(push.Message) + "\n"
+
+			}
+		}
+	}
+	return
+}
+
+func GetDataRepoMasukKemarin(db *mongo.Database, groupId string) (msg string) {
+	msg += "*Laporan Jumlah Push Repo Hari Ini :*\n"
+	pushrepo := db.Collection("pushrepo")
+	// Create filter to query data for today
+	filter := bson.M{"_id": YesterdayFilter(), "project.wagroupid": groupId}
+	usernamelist, _ := atdb.GetAllDistinctDoc(db, filter, "username", "pushrepo")
+	for _, username := range usernamelist {
+		filter := bson.M{"username": username, "_id": TodayFilter()}
 		// Query the database
 		var pushdata []model.PushReport
 		cur, err := pushrepo.Find(context.Background(), filter)
@@ -181,7 +248,7 @@ func YesterdayNotLiburFilter() bson.M {
 	}
 }
 
-func Yesterday() bson.M {
+func YesterdayFilter() bson.M {
 	return bson.M{
 		"$gte": primitive.NewObjectIDFromTimestamp(GetDateKemarin()),
 		"$lt":  primitive.NewObjectIDFromTimestamp(GetDateKemarin().Add(24 * time.Hour)),

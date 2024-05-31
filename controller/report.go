@@ -12,16 +12,42 @@ import (
 )
 
 func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
-	filter := bson.M{"_id": report.Yesterday()}
-	res, err := atdb.GetAllDistinctDoc(config.Mongoconn, filter, "project.wagroupid", "pushrepo")
+	var resp model.Response
+	filter := bson.M{"_id": report.YesterdayFilter()}
+	wagroupidlist, err := atdb.GetAllDistinctDoc(config.Mongoconn, filter, "project.wagroupid", "pushrepo")
 	if err != nil {
-		var resp model.Response
 		resp.Info = "Gagal Query Distincs project.wagroupid"
 		resp.Response = err.Error()
 		helper.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
-	helper.WriteJSON(respw, http.StatusOK, res)
+	for _, wagroupid := range wagroupidlist {
+		// Type assertion to convert any to string
+		groupID, ok := wagroupid.(string)
+		if !ok {
+			resp.Info = "wagroupid is not a string"
+			resp.Response = "wagroupid is not a string"
+			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+			return
+		}
+		//kirim report ke group
+		dt := &model.TextMessage{
+			To:       groupID,
+			IsGroup:  true,
+			Messages: report.GetDataRepoMasukKemarin(config.Mongoconn, groupID) + "\n" + report.GetDataLaporanMasukKemarin(config.Mongoconn, groupID),
+		}
+		resp, err := helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		if err != nil {
+			resp.Info = "Tidak berhak"
+			resp.Response = err.Error()
+			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+			return
+		}
+		helper.WriteJSON(respw, http.StatusOK, resp)
+		return
+
+	}
+	helper.WriteJSON(respw, http.StatusBadRequest, resp)
 }
 
 func GetReportHariIni(respw http.ResponseWriter, req *http.Request) {
