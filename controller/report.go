@@ -43,11 +43,8 @@ func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
 			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
 			return
 		}
-		helper.WriteJSON(respw, http.StatusOK, resp)
-		return
-
 	}
-	helper.WriteJSON(respw, http.StatusBadRequest, resp)
+	helper.WriteJSON(respw, http.StatusOK, resp)
 }
 
 func GetReportHariIni(respw http.ResponseWriter, req *http.Request) {

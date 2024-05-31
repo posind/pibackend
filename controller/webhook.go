@@ -10,6 +10,7 @@ import (
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/report"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -82,6 +83,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
 				return
 			}
+			report.TambahPoinPushRepobyGithubUsername(dokcommit.Username, 1)
 			komsg += appd
 		}
 		msg = pyl.Pusher.Name + "\n" + pyl.Sender.Login + "\n" + pyl.Repository.Name + "\n" + pyl.Ref + "\n" + pyl.Repository.URL + "\n" + komsg
