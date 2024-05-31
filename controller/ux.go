@@ -9,6 +9,7 @@ import (
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -53,6 +54,14 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		respn.Status = "Error : Data laporan tidak berhasil di update data rating"
 		respn.Response = err.Error()
 		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
+	poin := float64(rating.Rating) / 5.0
+	_, err = report.TambahPoinLaporanbyPhoneNumber(hasil.NoPetugas, poin)
+	if err != nil {
+		respn.Info = "TambahPoinPushRepobyGithubUsername gagal"
+		respn.Response = err.Error()
+		helper.WriteJSON(respw, http.StatusExpectationFailed, respn)
 		return
 	}
 	message := "*" + hasil.Petugas + "*\nsudah dinilai oleh *" + hasil.Nama + " " + hasil.Phone + "* dengan rating *" + strconv.Itoa(rating.Rating) + "* komentar:\n" + rating.Komentar
@@ -166,6 +175,14 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		respn.Status = "Gagal Insert Database"
 		respn.Response = err.Error()
 		helper.WriteJSON(respw, http.StatusNotModified, respn)
+		return
+	}
+	_, err = report.TambahPoinLaporanbyPhoneNumber(docuser.PhoneNumber, 1)
+	if err != nil {
+		var resp model.Response
+		resp.Info = "TambahPoinPushRepobyGithubUsername gagal"
+		resp.Response = err.Error()
+		helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
 		return
 	}
 	message := "*Permintaan Feedback Pekerjaan*\n" + "Petugas : " + docuser.Name + "\nDeskripsi:" + lap.Solusi + "\n Beri Nilai: " + "https://www.do.my.id/rate/#" + idlap.Hex()

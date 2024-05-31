@@ -52,7 +52,7 @@ func GetRankDataLaporanUpdateTambahPoin(db *mongo.Database, filterhari bson.M, w
 			return
 		}
 		defer cur.Close(context.Background())
-		poin, err := TambahPoinLaporanbyPhoneNumber(nopetugas.(string), pushdata)
+		poin, err := TambahPoinLaporanbyPhoneNumberw(nopetugas.(string), pushdata)
 		if err != nil {
 			return
 		}
@@ -64,7 +64,7 @@ func GetRankDataLaporanUpdateTambahPoin(db *mongo.Database, filterhari bson.M, w
 	return
 }
 
-func TambahPoinLaporanbyPhoneNumber(phonenumber string, laporans []model.Laporan) (poin float64, err error) {
+func TambahPoinLaporanbyPhoneNumberw(phonenumber string, laporans []model.Laporan) (poin float64, err error) {
 	for _, laporan := range laporans {
 		poinbaru := laporan.Rating / 5.0
 		poin += poinbaru
@@ -173,6 +173,20 @@ func GetDataRepoMasukKemarinUpdateTambahPoin(db *mongo.Database, groupId string)
 		}
 	}
 	return
+}
+
+func TambahPoinLaporanbyPhoneNumber(phonenumber string, poin float64) (res *mongo.UpdateResult, err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"phonenumber": phonenumber})
+	if err != nil {
+		return
+	}
+	usr.Poin = usr.Poin + poin
+	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"phonenumber": phonenumber}, usr)
+	if err != nil {
+		return
+	}
+	return
+
 }
 
 func TambahPoinPushRepobyGithubUsername(ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
