@@ -24,9 +24,9 @@ type PushRank struct {
 	Repos       map[string]int
 }
 
-func GetDataLaporanMasukKemarinUpdateTambahPoin(db *mongo.Database, waGroupId string) (msg string) {
-	msg += "*Jumlah Laporan Kemarin:*\n"
-	ranklist := GetRankDataLaporanUpdateTambahPoin(db, YesterdayFilter(), waGroupId)
+func GetDataLaporanMasukHariini(db *mongo.Database, waGroupId string) (msg string) {
+	msg += "*Jumlah Laporan Hari ini:*\n"
+	ranklist := GetRankDataLaporanHariini(db, TodayFilter(), waGroupId)
 	for i, data := range ranklist {
 		msg += strconv.Itoa(i+1) + ". " + data.Username + " : +" + strconv.Itoa(int(data.Poin)) + "\n"
 	}
@@ -34,32 +34,20 @@ func GetDataLaporanMasukKemarinUpdateTambahPoin(db *mongo.Database, waGroupId st
 	return
 }
 
-func GetRankDataLaporanUpdateTambahPoin(db *mongo.Database, filterhari bson.M, waGroupId string) (ranklist []PushRank) {
-	uxlaporan := db.Collection("uxlaporan")
+func GetRankDataLaporanHariini(db *mongo.Database, filterhari bson.M, waGroupId string) (ranklist []PushRank) {
+	//uxlaporan := db.Collection("uxlaporan")
 	// Create filter to query data for today
 	filter := bson.M{"_id": filterhari, "project.wagroupid": waGroupId}
-	nopetugass, _ := atdb.GetAllDistinctDoc(db, filter, "nopetugas", "uxlaporan")
+	//nopetugass, _ := atdb.GetAllDistinctDoc(db, filter, "nopetugas", "uxlaporan")
+	laps, _ := atdb.GetAllDoc[[]model.Laporan](db, "uxlaporan", filter)
+	print(len(laps))
 	//ranklist := []PushRank{}
-	for _, nopetugas := range nopetugass {
-		filter := bson.M{"nopetugas": nopetugas, "_id": filterhari}
-		// Query the database
-		var pushdata []model.Laporan
-		cur, err := uxlaporan.Find(context.Background(), filter)
-		if err != nil {
-			return
+	for _, lap := range laps {
+		if lap.Project.WAGroupID == waGroupId {
+			ranklist = append(ranklist, PushRank{Username: lap.Petugas, Poin: 1})
 		}
-		if err = cur.All(context.Background(), &pushdata); err != nil {
-			return
-		}
-		defer cur.Close(context.Background())
-		poin, err := TambahPoinLaporanbyPhoneNumberw(nopetugas.(string), pushdata)
-		if err != nil {
-			return
-		}
-		if len(pushdata) > 0 {
-			//ranklist = append(ranklist, PushRank{Username: pushdata[0].Petugas, Poin: float64(len(pushdata))})
-			ranklist = append(ranklist, PushRank{Username: pushdata[0].Petugas, Poin: poin})
-		}
+		//ranklist = append(ranklist, PushRank{Username: pushdata[0].Petugas, Poin: float64(len(pushdata))})
+
 	}
 	return
 }
@@ -149,14 +137,14 @@ func GetDataRepoMasukKemarinBukanLibur(db *mongo.Database) (msg string) {
 	return
 }
 
-func GetDataRepoMasukKemarinUpdateTambahPoin(db *mongo.Database, groupId string) (msg string) {
-	msg += "*Laporan Penambahan Poin dari Jumlah Push Repo Kemarin :*\n"
+func GetDataRepoMasukHariIni(db *mongo.Database, groupId string) (msg string) {
+	msg += "*Laporan Penambahan Poin dari Jumlah Push Repo Hari ini :*\n"
 	pushrepo := db.Collection("pushrepo")
 	// Create filter to query data for today
-	filter := bson.M{"_id": YesterdayFilter(), "project.wagroupid": groupId}
+	filter := bson.M{"_id": TodayFilter(), "project.wagroupid": groupId}
 	usernamelist, _ := atdb.GetAllDistinctDoc(db, filter, "username", "pushrepo")
 	for _, username := range usernamelist {
-		filter := bson.M{"username": username, "_id": YesterdayFilter()}
+		filter := bson.M{"username": username, "_id": TodayFilter()}
 		// Query the database
 		var pushdata []model.PushReport
 		cur, err := pushrepo.Find(context.Background(), filter)
@@ -169,7 +157,11 @@ func GetDataRepoMasukKemarinUpdateTambahPoin(db *mongo.Database, groupId string)
 		defer cur.Close(context.Background())
 		if len(pushdata) > 0 {
 			msg += "*" + username.(string) + " : +" + strconv.Itoa(len(pushdata)) + "*\n"
-			TambahPoinPushRepobyGithubUsername(username.(string), float64(len(pushdata)))
+			//TambahPoinPushRepobyGithubUsername(username.(string), float64(len(pushdata)))
+			for j, push := range pushdata {
+				msg += strconv.Itoa(j+1) + ". " + strings.TrimSpace(push.Message) + "\n"
+
+			}
 		}
 	}
 	return

@@ -34,7 +34,7 @@ func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
 		dt := &model.TextMessage{
 			To:       groupID,
 			IsGroup:  true,
-			Messages: report.GetDataRepoMasukKemarinUpdateTambahPoin(config.Mongoconn, groupID) + "\n" + report.GetDataLaporanMasukKemarinUpdateTambahPoin(config.Mongoconn, groupID),
+			Messages: report.GetDataRepoMasukHariIni(config.Mongoconn, groupID) + "\n" + report.GetDataLaporanMasukHariini(config.Mongoconn, groupID),
 		}
 		resp, err := helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {
