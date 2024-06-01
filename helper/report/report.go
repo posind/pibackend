@@ -195,6 +195,20 @@ func TambahPoinPushRepobyGithubUsername(ghuser string, poin float64) (res *mongo
 
 }
 
+func TambahPoinPushRepobyGithubEmail(ghemail string, poin float64) (res *mongo.UpdateResult, err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"email": ghemail})
+	if err != nil {
+		return
+	}
+	usr.Poin = usr.Poin + poin
+	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"email": ghemail}, usr)
+	if err != nil {
+		return
+	}
+	return
+
+}
+
 func GetDataRepoMasukHarian(db *mongo.Database) (msg string) {
 	msg += "*Laporan Jumlah Push Repo Hari Ini :*\n"
 	pushrepo := db.Collection("pushrepo")
