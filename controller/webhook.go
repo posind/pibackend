@@ -76,16 +76,16 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				}
 				dokcommit.User = *member
 			}
-			_, err = atdb.InsertOneDoc(config.Mongoconn, "pushrepo", dokcommit)
+			_, err := report.TambahPoinPushRepobyGithubUsername(dokcommit.Username, 1)
 			if err != nil {
-				resp.Info = "Tidak masuk ke database"
+				resp.Info = "User Github: " + dokcommit.Username + " tidak terhubung di user manapun di sistem Domyikado."
 				resp.Response = err.Error()
 				helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
 				return
 			}
-			_, err := report.TambahPoinPushRepobyGithubUsername(dokcommit.Username, 1)
+			_, err = atdb.InsertOneDoc(config.Mongoconn, "pushrepo", dokcommit)
 			if err != nil {
-				resp.Info = "TambahPoinPushRepobyGithubUsername gagal"
+				resp.Info = "Data Push" + kommsg + " tidak berhasil masuk ke database"
 				resp.Response = err.Error()
 				helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
 				return
