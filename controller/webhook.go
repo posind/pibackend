@@ -33,7 +33,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 	}
 	payload, err := hook.Parse(req, github.PushEvent, github.PingEvent)
 	if err != nil {
-		resp.Info = "Tidak ada Push"
+		resp.Info = "Tidak ada payload"
 		resp.Response = err.Error()
 		helper.WriteJSON(respw, http.StatusBadRequest, resp)
 		return
@@ -47,10 +47,11 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 		return
 	case github.PushPayload:
 		var komsg, msg string
+		var dokcommit model.PushReport
 		for i, komit := range pyl.Commits {
 			kommsg := strings.TrimSpace(komit.Message)
 			appd := strconv.Itoa(i+1) + ". " + kommsg + "\n_" + komit.Author.Name + "_\n"
-			dokcommit := model.PushReport{
+			dokcommit = model.PushReport{
 				ProjectName: prj.Name,
 				Project:     prj,
 				Username:    komit.Author.Username,
@@ -95,7 +96,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			}
 			komsg += appd
 		}
-		msg = pyl.Pusher.Name + "\n" + pyl.Sender.Login + "\n" + pyl.Repository.Name + "\n" + pyl.Ref + "\n" + pyl.Repository.URL + "\n" + komsg
+		msg = "Nama: " + dokcommit.User.Name + "\nUserGitHub: " + pyl.Sender.Login + "\nRepo: " + pyl.Repository.Name + "\n Branch: " + pyl.Ref + "\n" + pyl.Repository.URL + "\n" + komsg
 		dt := &model.TextMessage{
 			To:       prj.Owner.PhoneNumber,
 			IsGroup:  false,
