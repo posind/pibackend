@@ -60,7 +60,7 @@ func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string)
 	if err != nil {
 		return
 	}
-	msg += "*Laporan Pengurangan Poin Kemarin :*\n"
+	msg += "\n*Laporan Pengurangan Poin Kemarin :*\n"
 
 	// Buat map untuk menyimpan nomor telepon dari slice
 	phoneMap := make(map[string]bool)
@@ -248,6 +248,20 @@ func TambahPoinLaporanbyPhoneNumber(phonenumber string, poin float64) (res *mong
 		return
 	}
 	usr.Poin = usr.Poin + poin
+	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"phonenumber": phonenumber}, usr)
+	if err != nil {
+		return
+	}
+	return
+
+}
+
+func KurangPoinLaporanbyPhoneNumber(phonenumber string, poin float64) (res *mongo.UpdateResult, err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"phonenumber": phonenumber})
+	if err != nil {
+		return
+	}
+	usr.Poin = usr.Poin - poin
 	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"phonenumber": phonenumber}, usr)
 	if err != nil {
 		return
