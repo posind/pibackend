@@ -53,7 +53,10 @@ func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string)
 	var phoneSlice []string
 	for phoneNumber, info := range mergedCounts {
 		msg += "" + info.Name + " (" + phoneNumber + ") : +" + strconv.FormatFloat(info.Count, 'f', -1, 64) + "\n"
-		phoneSlice = append(phoneSlice, phoneNumber)
+		if info.Count >= 3 { //klo lebih dari sama dengan 3 maka tidak akan dikurangi masuk ke daftra putih
+			phoneSlice = append(phoneSlice, phoneNumber)
+		}
+
 	}
 	filter := bson.M{"wagroupid": groupId}
 	projectDocuments, err := atdb.GetAllDoc[[]model.Project](db, "project", filter)
@@ -80,6 +83,7 @@ func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string)
 			if _, exists := phoneMap[phoneNumber]; !exists {
 				if !processedUsers[member.PhoneNumber] {
 					msg += member.Name + " (" + member.PhoneNumber + ") " + doc.Name + " : -3\n"
+					KurangPoinUserbyPhoneNumber(db, member.PhoneNumber, -3)
 					processedUsers[member.PhoneNumber] = true
 				}
 			}
@@ -256,13 +260,13 @@ func TambahPoinLaporanbyPhoneNumber(phonenumber string, poin float64) (res *mong
 
 }
 
-func KurangPoinLaporanbyPhoneNumber(phonenumber string, poin float64) (res *mongo.UpdateResult, err error) {
-	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"phonenumber": phonenumber})
+func KurangPoinUserbyPhoneNumber(db *mongo.Database, phonenumber string, poin float64) (res *mongo.UpdateResult, err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"phonenumber": phonenumber})
 	if err != nil {
 		return
 	}
 	usr.Poin = usr.Poin - poin
-	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"phonenumber": phonenumber}, usr)
+	res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"phonenumber": phonenumber}, usr)
 	if err != nil {
 		return
 	}
