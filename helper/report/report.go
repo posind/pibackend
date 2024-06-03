@@ -52,11 +52,10 @@ func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string)
 	msg = "*Laporan Penambahan Poin Total Kemarin :*\n"
 	var phoneSlice []string
 	for phoneNumber, info := range mergedCounts {
-		msg += "" + info.Name + " (" + phoneNumber + ") : +" + strconv.FormatFloat(info.Count, 'f', -1, 64) + "\n"
-		if info.Count >= 3 { //klo lebih dari sama dengan 3 maka tidak akan dikurangi masuk ke daftra putih
+		msg += "✅ " + info.Name + " (" + phoneNumber + ") : +" + strconv.FormatFloat(info.Count, 'f', -1, 64) + "\n"
+		if info.Count > 2 { //klo lebih dari 2 maka tidak akan dikurangi masuk ke daftra putih
 			phoneSlice = append(phoneSlice, phoneNumber)
 		}
-
 	}
 	filter := bson.M{"wagroupid": groupId}
 	projectDocuments, err := atdb.GetAllDoc[[]model.Project](db, "project", filter)
@@ -82,7 +81,7 @@ func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string)
 			// Periksa apakah nomor telepon ada dalam map
 			if _, exists := phoneMap[phoneNumber]; !exists {
 				if !processedUsers[member.PhoneNumber] {
-					msg += member.Name + " (" + member.PhoneNumber + ") " + doc.Name + " : -3\n"
+					msg += "⛔ " + member.Name + " (" + member.PhoneNumber + ") " + doc.Name + " : -3\n"
 					KurangPoinUserbyPhoneNumber(db, member.PhoneNumber, -3)
 					processedUsers[member.PhoneNumber] = true
 				}
