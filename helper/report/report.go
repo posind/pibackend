@@ -34,6 +34,49 @@ func GetDataLaporanMasukHariini(db *mongo.Database, waGroupId string) (msg strin
 	return
 }
 
+func GenerateRekapMessageHariIniPerWAGroupID(db *mongo.Database, groupId string) (msg string, err error) {
+	pushReportCounts, err := GetDataRepoMasukHariIniPerWaGroupID(db, groupId)
+	if err != nil {
+		return
+	}
+	laporanCounts, err := GetDataLaporanHariiniPerWAGroupID(db, groupId)
+	if err != nil {
+		return
+	}
+	mergedCounts := MergePhoneNumberCounts(pushReportCounts, laporanCounts)
+	msg = "*Laporan Penambahan Poin Total Hari ini :*\n"
+	for phoneNumber, info := range mergedCounts {
+		msg += "" + info.Name + " (" + phoneNumber + ") : +" + strconv.FormatFloat(info.Count, 'f', -1, 64) + "\n"
+	}
+	return
+}
+
+func GetDataRepoMasukHariIniPerWaGroupID(db *mongo.Database, groupId string) (phoneNumberCount map[string]PhoneNumberInfo, err error) {
+	//msg += "*Laporan Penambahan Poin dari Jumlah Push Repo Hari ini :*\n"
+	// Create filter to query data for today
+	filter := bson.M{"_id": TodayFilter(), "project.wagroupid": groupId}
+	pushrepodata, err := atdb.GetAllDoc[[]model.PushReport](db, "pushrepo", filter)
+	if err != nil {
+		return
+	}
+	phoneNumberCount = CountDuplicatePhoneNumbersWithName(pushrepodata)
+	// for phoneNumber, info := range phoneNumberCount {
+	// 	msg += "" + info.Name + " (****" + phoneNumber[len(phoneNumber)-5:] + ") : +" + strconv.FormatFloat(info.Count, 'f', -1, 64) + "\n"
+	// }
+
+	return
+}
+
+func GetDataLaporanHariiniPerWAGroupID(db *mongo.Database, waGroupId string) (phoneNumberCount map[string]PhoneNumberInfo, err error) {
+	filter := bson.M{"_id": TodayFilter(), "project.wagroupid": waGroupId}
+	laps, err := atdb.GetAllDoc[[]model.Laporan](db, "uxlaporan", filter)
+	if err != nil {
+		return
+	}
+	phoneNumberCount = CountDuplicatePhoneNumbersLaporan(laps)
+	return
+}
+
 func GetRankDataLaporanHariini(db *mongo.Database, filterhari bson.M, waGroupId string) (ranklist []PushRank) {
 	//uxlaporan := db.Collection("uxlaporan")
 	// Create filter to query data for today
@@ -134,19 +177,6 @@ func GetDataRepoMasukKemarinBukanLibur(db *mongo.Database) (msg string) {
 			}
 		}
 	}
-	return
-}
-
-func GetDataRepoMasukHariIniPerWaGroupID(db *mongo.Database, groupId string) (msg string) {
-	msg += "*Laporan Penambahan Poin dari Jumlah Push Repo Hari ini :*\n"
-	// Create filter to query data for today
-	filter := bson.M{"_id": TodayFilter(), "project.wagroupid": groupId}
-	pushrepodata, _ := atdb.GetAllDoc[[]model.PushReport](db, "pushrepo", filter)
-	phoneNumberCount := CountDuplicatePhoneNumbersWithName(pushrepodata)
-	for phoneNumber, info := range phoneNumberCount {
-		msg += "" + info.Name + " (****" + phoneNumber[len(phoneNumber)-5:] + ") : +" + strconv.Itoa(info.Count) + "\n"
-	}
-
 	return
 }
 

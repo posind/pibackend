@@ -17,7 +17,7 @@ var Mongoconn, ErrorMongoconn = helper.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
 	gid := "6281313112053-1492882006"
-	results := GetDataRepoMasukHariIniPerWaGroupID(Mongoconn, gid) // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
+	results, _ := GenerateRekapMessageHariIniPerWAGroupID(Mongoconn, gid) // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
 	print(results)
 
 }
