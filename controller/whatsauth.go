@@ -69,7 +69,7 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 		//return
 	}
 	//kirim report ke group
-	report.RekapTengahMalam(respw, req)
+	report.RekapPagiHari(respw, req)
 
 }
 

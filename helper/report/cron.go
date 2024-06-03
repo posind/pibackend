@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func RekapTengahMalam(respw http.ResponseWriter, req *http.Request) {
+func RekapPagiHari(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response
 	filter := bson.M{"_id": TodayFilter()}
 	wagroupidlist, err := atdb.GetAllDistinctDoc(config.Mongoconn, filter, "project.wagroupid", "pushrepo")
