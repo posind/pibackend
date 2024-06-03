@@ -137,6 +137,37 @@ func GetDataRepoMasukKemarinBukanLibur(db *mongo.Database) (msg string) {
 	return
 }
 
+func GetDataRepoMasukHariIniPerWaGroupID(db *mongo.Database, groupId string) (msg string) {
+	msg += "*Laporan Penambahan Poin dari Jumlah Push Repo Hari ini :*\n"
+	pushrepo := db.Collection("pushrepo")
+	// Create filter to query data for today
+	filter := bson.M{"_id": TodayFilter(), "project.wagroupid": groupId}
+	usernamelist, _ := atdb.GetAllDistinctDoc(db, filter, "username", "pushrepo")
+	//pushrepodata, _ := atdb.GetAllDoc[model.PushReport](db, "pushrepo", filter)
+	for _, username := range usernamelist {
+		filter := bson.M{"username": username, "_id": TodayFilter()}
+		// Query the database
+		var pushdata []model.PushReport
+		cur, err := pushrepo.Find(context.Background(), filter)
+		if err != nil {
+			return
+		}
+		if err = cur.All(context.Background(), &pushdata); err != nil {
+			return
+		}
+		defer cur.Close(context.Background())
+		if len(pushdata) > 0 {
+			msg += "*" + username.(string) + " : +" + strconv.Itoa(len(pushdata)) + "*\n"
+			//TambahPoinPushRepobyGithubUsername(username.(string), float64(len(pushdata)))
+			for j, push := range pushdata {
+				msg += strconv.Itoa(j+1) + ". " + strings.TrimSpace(push.Message) + "\n"
+
+			}
+		}
+	}
+	return
+}
+
 func GetDataRepoMasukHariIni(db *mongo.Database, groupId string) (msg string) {
 	msg += "*Laporan Penambahan Poin dari Jumlah Push Repo Hari ini :*\n"
 	pushrepo := db.Collection("pushrepo")
