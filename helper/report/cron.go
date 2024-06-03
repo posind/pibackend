@@ -29,7 +29,7 @@ func RekapTengahMalam(respw http.ResponseWriter, req *http.Request) {
 			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
 			return
 		}
-		msg, err := GenerateRekapMessageHariIniPerWAGroupID(config.Mongoconn, groupID)
+		msg, err := GenerateRekapMessageKemarinPerWAGroupID(config.Mongoconn, groupID)
 		if err != nil {
 			resp.Info = "Gagal Membuat Rekapitulasi perhitungan per wa group id"
 			resp.Response = err.Error()

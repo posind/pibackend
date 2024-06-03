@@ -2,6 +2,7 @@ package report
 
 import (
 	"context"
+	"errors"
 	"log"
 	"sort"
 	"strconv"
@@ -34,41 +35,72 @@ func GetDataLaporanMasukHariini(db *mongo.Database, waGroupId string) (msg strin
 	return
 }
 
-func GenerateRekapMessageHariIniPerWAGroupID(db *mongo.Database, groupId string) (msg string, err error) {
-	pushReportCounts, err := GetDataRepoMasukHariIniPerWaGroupID(db, groupId)
+func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string) (msg string, err error) {
+	pushReportCounts, err := GetDataRepoMasukKemarinPerWaGroupID(db, groupId)
 	if err != nil {
 		return
 	}
-	laporanCounts, err := GetDataLaporanHariiniPerWAGroupID(db, groupId)
+	laporanCounts, err := GetDataLaporanKemarinPerWAGroupID(db, groupId)
 	if err != nil {
 		return
 	}
 	mergedCounts := MergePhoneNumberCounts(pushReportCounts, laporanCounts)
-	msg = "*Laporan Penambahan Poin Total Hari ini :*\n"
+	if len(mergedCounts) == 0 {
+		err = errors.New("tidak ada aktifitas push dan laporan")
+		return
+	}
+	msg = "*Laporan Penambahan Poin Total Kemarin :*\n"
+	var phoneSlice []string
 	for phoneNumber, info := range mergedCounts {
 		msg += "" + info.Name + " (" + phoneNumber + ") : +" + strconv.FormatFloat(info.Count, 'f', -1, 64) + "\n"
+		phoneSlice = append(phoneSlice, phoneNumber)
 	}
+	filter := bson.M{"wagroupid": groupId}
+	projectDocuments, err := atdb.GetAllDoc[[]model.Project](db, "project", filter)
+	if err != nil {
+		return
+	}
+	msg += "*Laporan Pengurangan Poin Kemarin :*\n"
+
+	// Buat map untuk menyimpan nomor telepon dari slice
+	phoneMap := make(map[string]bool)
+
+	// Masukkan semua nomor telepon dari slice ke dalam map
+	for _, phoneNumber := range phoneSlice {
+		phoneMap[phoneNumber] = true
+	}
+	// Buat map untuk melacak pengguna yang sudah diproses
+	processedUsers := make(map[string]bool)
+
+	// Iterasi melalui nomor telepon dalam dokumen MongoDB
+	for _, doc := range projectDocuments {
+		for _, member := range doc.Members {
+			phoneNumber := member.PhoneNumber
+			// Periksa apakah nomor telepon ada dalam map
+			if _, exists := phoneMap[phoneNumber]; !exists {
+				if !processedUsers[member.PhoneNumber] {
+					msg += member.Name + " (" + member.PhoneNumber + ") " + doc.Name + " : -3\n"
+					processedUsers[member.PhoneNumber] = true
+				}
+			}
+		}
+	}
+
 	return
 }
 
-func GetDataRepoMasukHariIniPerWaGroupID(db *mongo.Database, groupId string) (phoneNumberCount map[string]PhoneNumberInfo, err error) {
-	//msg += "*Laporan Penambahan Poin dari Jumlah Push Repo Hari ini :*\n"
-	// Create filter to query data for today
-	filter := bson.M{"_id": TodayFilter(), "project.wagroupid": groupId}
+func GetDataRepoMasukKemarinPerWaGroupID(db *mongo.Database, groupId string) (phoneNumberCount map[string]PhoneNumberInfo, err error) {
+	filter := bson.M{"_id": YesterdayFilter(), "project.wagroupid": groupId}
 	pushrepodata, err := atdb.GetAllDoc[[]model.PushReport](db, "pushrepo", filter)
 	if err != nil {
 		return
 	}
 	phoneNumberCount = CountDuplicatePhoneNumbersWithName(pushrepodata)
-	// for phoneNumber, info := range phoneNumberCount {
-	// 	msg += "" + info.Name + " (****" + phoneNumber[len(phoneNumber)-5:] + ") : +" + strconv.FormatFloat(info.Count, 'f', -1, 64) + "\n"
-	// }
-
 	return
 }
 
-func GetDataLaporanHariiniPerWAGroupID(db *mongo.Database, waGroupId string) (phoneNumberCount map[string]PhoneNumberInfo, err error) {
-	filter := bson.M{"_id": TodayFilter(), "project.wagroupid": waGroupId}
+func GetDataLaporanKemarinPerWAGroupID(db *mongo.Database, waGroupId string) (phoneNumberCount map[string]PhoneNumberInfo, err error) {
+	filter := bson.M{"_id": YesterdayFilter(), "project.wagroupid": waGroupId}
 	laps, err := atdb.GetAllDoc[[]model.Laporan](db, "uxlaporan", filter)
 	if err != nil {
 		return

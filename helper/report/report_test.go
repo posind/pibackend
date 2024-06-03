@@ -16,8 +16,13 @@ var mongoinfo = model.DBInfo{
 var Mongoconn, ErrorMongoconn = helper.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
-	gid := "6281313112053-1492882006"
-	results, _ := GenerateRekapMessageHariIniPerWAGroupID(Mongoconn, gid) // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
+	//gid := "6281313112053-1492882006"
+	gid := "6281312000300-1488324890"
+	results, err := GenerateRekapMessageKemarinPerWAGroupID(Mongoconn, gid) // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
+	if err != nil {
+		print(err.Error())
+	}
+
 	print(results)
 
 }

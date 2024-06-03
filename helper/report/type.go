@@ -5,3 +5,9 @@ type NewLiburNasional struct {
 	Keterangan string `json:"keterangan"`
 	IsCuti     bool   `json:"is_cuti"`
 }
+
+type RekapUser struct {
+	Nama        string
+	PhoneNumber string
+	NamaProject string
+}
