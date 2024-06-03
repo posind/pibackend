@@ -82,7 +82,7 @@ func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string)
 			if _, exists := phoneMap[phoneNumber]; !exists {
 				if !processedUsers[member.PhoneNumber] {
 					msg += "⛔ " + member.Name + " (" + member.PhoneNumber + ") " + doc.Name + " : -3\n"
-					KurangPoinUserbyPhoneNumber(db, member.PhoneNumber, -3)
+					KurangPoinUserbyPhoneNumber(db, member.PhoneNumber, 3)
 					processedUsers[member.PhoneNumber] = true
 				}
 			}
