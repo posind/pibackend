@@ -29,10 +29,17 @@ func RekapTengahMalam(respw http.ResponseWriter, req *http.Request) {
 			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
 			return
 		}
+		msg, err := GenerateRekapMessageHariIniPerWAGroupID(config.Mongoconn, groupID)
+		if err != nil {
+			resp.Info = "Gagal Membuat Rekapitulasi perhitungan per wa group id"
+			resp.Response = err.Error()
+			helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
+			return
+		}
 		dt := &model.TextMessage{
 			To:       groupID,
 			IsGroup:  true,
-			Messages: GetDataRepoMasukHariIniPerWaGroupID(config.Mongoconn, groupID) + "\n" + GetDataLaporanMasukHariini(config.Mongoconn, groupID),
+			Messages: msg,
 		}
 		resp, err = helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {
