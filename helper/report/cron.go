@@ -32,7 +32,7 @@ func RekapTengahMalam(respw http.ResponseWriter, req *http.Request) {
 		dt := &model.TextMessage{
 			To:       groupID,
 			IsGroup:  true,
-			Messages: GetDataRepoMasukHariIni(config.Mongoconn, groupID) + "\n" + GetDataLaporanMasukHariini(config.Mongoconn, groupID),
+			Messages: GetDataRepoMasukHariIniPerWaGroupID(config.Mongoconn, groupID) + "\n" + GetDataLaporanMasukHariini(config.Mongoconn, groupID),
 		}
 		resp, err = helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {

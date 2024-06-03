@@ -17,12 +17,12 @@ var Mongoconn, ErrorMongoconn = helper.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
 	gid := "6281313112053-1492882006"
-	results := GetDataRepoMasukHariIni(Mongoconn, gid) // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
+	results := GetDataRepoMasukHariIniPerWaGroupID(Mongoconn, gid) // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
 	print(results)
 
 }
 
-func TestGenerateReportLayanan(t *testing.T) {
+/* func TestGenerateReportLayanan(t *testing.T) {
 	gid := "6281313112053-1492882006"
 	results := GetDataLaporanMasukHariini(Mongoconn, gid) //GetDataLaporanMasukHarian
 	print(results)
@@ -34,4 +34,4 @@ func TestGenerateReportLay(t *testing.T) {
 	results := GetDataLaporanMasukHarian(Mongoconn) //GetDataLaporanMasukHarian
 	print(results)
 
-}
+} */
