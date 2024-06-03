@@ -50,7 +50,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 		var dokcommit model.PushReport
 		for i, komit := range pyl.Commits {
 			kommsg := strings.TrimSpace(komit.Message)
-			appd := strconv.Itoa(i+1) + ". " + kommsg + "\n_" + strings.Join(komit.Modified[:], "\n") + "_\n"
+			appd := strconv.Itoa(i+1) + ". " + kommsg + "\n:" + strings.Join(komit.Modified[:], "\n") + "\n"
 			dokcommit = model.PushReport{
 				ProjectName: prj.Name,
 				Project:     prj,
@@ -96,7 +96,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			}
 			komsg += appd
 		}
-		msg = "Nama: " + dokcommit.User.Name + "\nUserGitHub: " + pyl.Sender.Login + "\nRepo: " + pyl.Repository.Name + "\nBranch: " + pyl.Ref + "\n" + pyl.Compare + "\n" + komsg
+		msg = "*" + prj.Name + "*\n" + "Nama: " + dokcommit.User.Name + "\nUserGitHub: " + pyl.Sender.Login + "\nRepo: " + pyl.Repository.Name + "\nBranch: " + pyl.Ref + "\n" + pyl.Compare + "\n" + komsg
 		dt := &model.TextMessage{
 			To:       prj.Owner.PhoneNumber,
 			IsGroup:  false,
