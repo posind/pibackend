@@ -12,6 +12,7 @@ type PushReport struct {
 	Ref         string        `bson:"ref" json:"ref"`
 	Message     string        `bson:"message" json:"message"`
 	Modified    string        `bson:"modified,omitempty" json:"modified,omitempty"`
+	RemoteAddr  string        `bson:"remoteaddr,omitempty" json:"remoteaddr,omitempty"`
 }
 
 type Project struct {

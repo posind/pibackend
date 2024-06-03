@@ -59,6 +59,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				Repo:        pyl.Repository.URL,
 				Ref:         pyl.Ref,
 				Message:     kommsg,
+				RemoteAddr:  req.RemoteAddr,
 			}
 			if (prj.Owner.Email == komit.Author.Email) || (prj.Owner.GithubUsername == komit.Author.Username) {
 				dokcommit.User = prj.Owner
