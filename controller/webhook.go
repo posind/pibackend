@@ -50,7 +50,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 		var dokcommit model.PushReport
 		for i, komit := range pyl.Commits {
 			kommsg := strings.TrimSpace(komit.Message)
-			appd := strconv.Itoa(i+1) + ". " + kommsg + ":\n" + strings.Join(komit.Modified[:], "\n") + "\n"
+			appd := strconv.Itoa(i+1) + ". " + kommsg + " :\n" + strings.Join(komit.Modified[:], "\n") + "\n"
 			dokcommit = model.PushReport{
 				ProjectName: prj.Name,
 				Project:     prj,

@@ -31,6 +31,7 @@ func GetDataUser(respw http.ResponseWriter, req *http.Request) {
 		helper.WriteJSON(respw, http.StatusNotFound, docuser)
 		return
 	}
+	docuser.Name = payload.Alias
 	helper.WriteJSON(respw, http.StatusOK, docuser)
 }
 
@@ -70,6 +71,7 @@ func PostDataUser(respw http.ResponseWriter, req *http.Request) {
 		helper.WriteJSON(respw, http.StatusOK, usr)
 		return
 	}
+	docuser.Name = payload.Alias
 	docuser.Email = usr.Email
 	docuser.GitHostUsername = usr.GitHostUsername
 	docuser.GitlabUsername = usr.GitlabUsername
