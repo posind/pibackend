@@ -89,7 +89,7 @@ func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string)
 		}
 	}
 
-	if HariLibur(GetDateSekarang()) {
+	if !HariLibur(GetDateSekarang()) {
 		msg += "\n\n\n*SEMANGAT BEKERJA,KERJA, KERJA, KERJA!!!*\n"
 
 	} else {

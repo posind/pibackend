@@ -12,7 +12,7 @@ import (
 
 func RekapPagiHari(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response
-	filter := bson.M{"_id": TodayFilter()}
+	filter := bson.M{"_id": YesterdayFilter()}
 	wagroupidlist, err := atdb.GetAllDistinctDoc(config.Mongoconn, filter, "project.wagroupid", "pushrepo")
 	if err != nil {
 		resp.Info = "Gagal Query Distincs project.wagroupid"
