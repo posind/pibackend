@@ -17,11 +17,11 @@ var Mongoconn, ErrorMongoconn = helper.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
 	//gid := "6281313112053-1492882006"
-	gid := "6281312000300-1488324890"
-	results, err := GenerateRekapMessageKemarinPerWAGroupID(Mongoconn, gid) // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
-	if err != nil {
-		print(err.Error())
-	}
+	//gid := "6281312000300-1488324890"
+	results := HariLibur(GetDateKemarin()) // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
+
+	print(results)
+	results = HariLibur(GetDateSekarang()) // + "\n" + GetDataLaporanMasukKemarin(Mongoconn)
 
 	print(results)
 
