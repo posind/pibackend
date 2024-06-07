@@ -57,12 +57,14 @@ func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string)
 			phoneSlice = append(phoneSlice, phoneNumber)
 		}
 	}
-	filter := bson.M{"wagroupid": groupId}
-	projectDocuments, err := atdb.GetAllDoc[[]model.Project](db, "project", filter)
-	if err != nil {
-		return
-	}
+
 	if !HariLibur(GetDateKemarin()) { //kalo bukan kemaren hari libur maka akan ada pengurangan poin
+		filter := bson.M{"wagroupid": groupId}
+		var projectDocuments []model.Project
+		projectDocuments, err = atdb.GetAllDoc[[]model.Project](db, "project", filter)
+		if err != nil {
+			return
+		}
 		msg += "\n*Laporan Pengurangan Poin Kemarin :*\n"
 
 		// Buat map untuk menyimpan nomor telepon dari slice
