@@ -62,38 +62,41 @@ func GenerateRekapMessageKemarinPerWAGroupID(db *mongo.Database, groupId string)
 	if err != nil {
 		return
 	}
-	msg += "\n*Laporan Pengurangan Poin Kemarin :*\n"
+	if !HariLibur(GetDateKemarin()) { //kalo bukan kemaren hari libur maka akan ada pengurangan poin
+		msg += "\n*Laporan Pengurangan Poin Kemarin :*\n"
 
-	// Buat map untuk menyimpan nomor telepon dari slice
-	phoneMap := make(map[string]bool)
+		// Buat map untuk menyimpan nomor telepon dari slice
+		phoneMap := make(map[string]bool)
 
-	// Masukkan semua nomor telepon dari slice ke dalam map
-	for _, phoneNumber := range phoneSlice {
-		phoneMap[phoneNumber] = true
-	}
-	// Buat map untuk melacak pengguna yang sudah diproses
-	processedUsers := make(map[string]bool)
+		// Masukkan semua nomor telepon dari slice ke dalam map
+		for _, phoneNumber := range phoneSlice {
+			phoneMap[phoneNumber] = true
+		}
+		// Buat map untuk melacak pengguna yang sudah diproses
+		processedUsers := make(map[string]bool)
 
-	// Iterasi melalui nomor telepon dalam dokumen MongoDB
-	for _, doc := range projectDocuments {
-		for _, member := range doc.Members {
-			phoneNumber := member.PhoneNumber
-			// Periksa apakah nomor telepon ada dalam map
-			if _, exists := phoneMap[phoneNumber]; !exists {
-				if !processedUsers[member.PhoneNumber] {
-					msg += "⛔ " + member.Name + " (" + member.PhoneNumber + ") : -3\n"
-					KurangPoinUserbyPhoneNumber(db, member.PhoneNumber, 3)
-					processedUsers[member.PhoneNumber] = true
+		// Iterasi melalui nomor telepon dalam dokumen MongoDB
+		for _, doc := range projectDocuments {
+			for _, member := range doc.Members {
+				phoneNumber := member.PhoneNumber
+				// Periksa apakah nomor telepon ada dalam map
+				if _, exists := phoneMap[phoneNumber]; !exists {
+					if !processedUsers[member.PhoneNumber] {
+						msg += "⛔ " + member.Name + " (" + member.PhoneNumber + ") : -3\n"
+						KurangPoinUserbyPhoneNumber(db, member.PhoneNumber, 3)
+						processedUsers[member.PhoneNumber] = true
+					}
 				}
 			}
 		}
-	}
-
-	if !HariLibur(GetDateSekarang()) {
-		msg += "\n\n*SEMANGAT BEKERJA,KERJA, KERJA, KERJA!!!*"
-
+		msg += "\n\n*Klo hari ini kurang dari 3 poin, maka dikurangi 3 poin ya ka. Cemunguddhh..*"
 	} else {
-		msg += "\n\n*Selamat Berlibur, Have a nice trip :)*"
+		if HariLibur(GetDateSekarang()) {
+			msg += "\n\n*Have a nice day :)*"
+		} else {
+			msg += "\n\n*Yuk bisa yuk... Semangat untuk hari ini...*"
+		}
+
 	}
 
 	return
