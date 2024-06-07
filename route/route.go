@@ -10,8 +10,7 @@ import (
 
 func URL(w http.ResponseWriter, r *http.Request) {
 	if config.SetAccessControlHeaders(w, r) {
-		// If it's a preflight request, return early.
-		return
+		return // If it's a preflight request, return early.
 	}
 	config.SetEnv()
 

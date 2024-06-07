@@ -24,6 +24,11 @@ type IteungMessage struct {
 	LiveLoc            bool    `json:"liveloc,omitempty" bson:"liveloc,omitempty"`
 }
 
+type WebHook struct {
+	URL    string `bson:"url" json:"url"`
+	Secret string `bson:"secret" json:"secret"`
+}
+
 type Profile struct {
 	Token       string `bson:"token"`
 	Phonenumber string `bson:"phonenumber"`
@@ -31,11 +36,6 @@ type Profile struct {
 	URL         string `bson:"url"`
 	QRKeyword   string `bson:"qrkeyword"`
 	PublicKey   string `bson:"publickey"`
-}
-
-type WebHook struct {
-	URL    string `bson:"url" json:"url"`
-	Secret string `bson:"secret" json:"secret"`
 }
 
 type User struct {
