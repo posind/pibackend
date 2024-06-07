@@ -7,7 +7,8 @@ import (
 	"strings"
 
 	"github.com/gocroot/config"
-	"github.com/gocroot/helper"
+	"github.com/gocroot/helper/at"
+	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/watoken"
@@ -23,23 +24,23 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		respn.Status = "Error : Body tidak valid"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	objectId, err := primitive.ObjectIDFromHex(rating.ID)
 	if err != nil {
 		respn.Status = "Error : ObjectID Tidak Valid"
-		respn.Info = helper.GetSecretFromHeader(req)
+		respn.Info = at.GetSecretFromHeader(req)
 		respn.Location = "Encode Object ID Error"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	hasil, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
 	if err != nil {
 		respn.Status = "Error : Data laporan tidak di temukan"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
 	filter := bson.M{"_id": bson.M{"$eq": hasil.ID}}
@@ -53,7 +54,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		respn.Status = "Error : Data laporan tidak berhasil di update data rating"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
 	poin := float64(rating.Rating) / 5.0
@@ -61,7 +62,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		respn.Info = "TambahPoinPushRepobyGithubUsername gagal"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusExpectationFailed, respn)
+		at.WriteJSON(respw, http.StatusExpectationFailed, respn)
 		return
 	}
 	message := "*" + hasil.Petugas + "*\nsudah dinilai oleh *" + hasil.Nama + " " + hasil.Phone + "* dengan rating *" + strconv.Itoa(rating.Rating) + "* komentar:\n" + rating.Komentar
@@ -70,28 +71,28 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		IsGroup:  false,
 		Messages: message,
 	}
-	resp, err := helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+		at.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
 	respn.Response = strconv.Itoa(int(res.ModifiedCount))
 	respn.Info = hasil.Nama
-	helper.WriteJSON(respw, http.StatusOK, respn)
+	at.WriteJSON(respw, http.StatusOK, respn)
 }
 
 func GetLaporan(respw http.ResponseWriter, req *http.Request) {
-	id := helper.GetParam(req)
+	id := at.GetParam(req)
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : ObjectID Tidak Valid"
-		respn.Info = helper.GetSecretFromHeader(req)
+		respn.Info = at.GetSecretFromHeader(req)
 		respn.Location = "Encode Object ID Error"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	hasil, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
@@ -99,22 +100,22 @@ func GetLaporan(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Error : Data laporan tidak di temukan"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
-	helper.WriteJSON(respw, http.StatusOK, hasil)
+	at.WriteJSON(respw, http.StatusOK, hasil)
 }
 
 func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 	//otorisasi dan validasi inputan
-	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, helper.GetLoginFromHeader(req))
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Token Tidak Valid"
-		respn.Info = helper.GetSecretFromHeader(req)
+		respn.Info = at.GetSecretFromHeader(req)
 		respn.Location = "Decode Token Error"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusForbidden, respn)
+		at.WriteJSON(respw, http.StatusForbidden, respn)
 		return
 	}
 	var lap model.Laporan
@@ -123,14 +124,14 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Error : Body tidak valid"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	if lap.Solusi == "" {
 		var respn model.Response
 		respn.Status = "Error : Telepon atau nama atau solusi tidak diisi"
 		respn.Response = "Isi lebih lengkap dahulu"
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	//check validasi user
@@ -139,7 +140,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Error : Data user tidak di temukan: " + payload.Id
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
 	//ambil data project
@@ -150,7 +151,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		respn.Info = lap.Kode
 		respn.Location = "Encode Object ID Error"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	prjuser, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": prjobjectId})
@@ -158,7 +159,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Error : Data project tidak di temukan: " + lap.Kode
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
 	//lojik inputan post
@@ -174,7 +175,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Gagal Insert Database"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusNotModified, respn)
+		at.WriteJSON(respw, http.StatusNotModified, respn)
 		return
 	}
 	_, err = report.TambahPoinLaporanbyPhoneNumber(docuser.PhoneNumber, 1)
@@ -182,7 +183,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		var resp model.Response
 		resp.Info = "TambahPoinPushRepobyGithubUsername gagal"
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
+		at.WriteJSON(respw, http.StatusExpectationFailed, resp)
 		return
 	}
 	message := "*Permintaan Feedback Pekerjaan*\n" + "Petugas : " + docuser.Name + "\nDeskripsi:" + lap.Solusi + "\n Beri Nilai: " + "https://www.do.my.id/rate/#" + idlap.Hex()
@@ -191,27 +192,27 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		IsGroup:  false,
 		Messages: message,
 	}
-	resp, err := helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+		at.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
-	helper.WriteJSON(respw, http.StatusOK, lap)
+	at.WriteJSON(respw, http.StatusOK, lap)
 
 }
 
 func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 	//otorisasi dan validasi inputan
-	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, helper.GetLoginFromHeader(req))
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Token Tidak Valid"
-		respn.Info = helper.GetSecretFromHeader(req)
+		respn.Info = at.GetSecretFromHeader(req)
 		respn.Location = "Decode Token Error"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusForbidden, respn)
+		at.WriteJSON(respw, http.StatusForbidden, respn)
 		return
 	}
 	var lap model.Laporan
@@ -220,14 +221,14 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Error : Body tidak valid"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	if lap.Phone == "" || lap.Nama == "" || lap.Solusi == "" {
 		var respn model.Response
 		respn.Status = "Error : Telepon atau nama atau solusi tidak diisi"
 		respn.Response = "Isi lebih lengkap dahulu"
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	//validasi eksistensi user di db
@@ -236,7 +237,7 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Error : Data user tidak di temukan"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
 	//ambil data project
@@ -247,7 +248,7 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		respn.Info = lap.Kode
 		respn.Location = "Encode Object ID Error"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	prjuser, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": prjobjectId})
@@ -255,7 +256,7 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Error : Data project tidak di temukan: " + lap.Kode
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusNotImplemented, respn)
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
 	//lojik inputan post
@@ -270,7 +271,7 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Gagal Insert Database"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusNotModified, respn)
+		at.WriteJSON(respw, http.StatusNotModified, respn)
 		return
 	}
 	message := "*Permintaan Feedback Pekerjaan*\n" + "Petugas : " + docuser.Name + "\nDeskripsi:" + lap.Solusi + "\n Beri Nilai: " + "https://www.do.my.id/rate/#" + idlap.Hex()
@@ -279,14 +280,14 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		IsGroup:  false,
 		Messages: message,
 	}
-	resp, err := helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+		at.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
-	helper.WriteJSON(respw, http.StatusOK, lap)
+	at.WriteJSON(respw, http.StatusOK, lap)
 
 }
 

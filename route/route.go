@@ -5,7 +5,7 @@ import (
 
 	"github.com/gocroot/config"
 	"github.com/gocroot/controller"
-	"github.com/gocroot/helper"
+	"github.com/gocroot/helper/at"
 )
 
 func URL(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +34,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostDataMemberProject(w, r)
 	case method == "POST" && path == "/data/proyek":
 		controller.PostDataProject(w, r)
-	case method == "POST" && helper.URLParam(path, "/webhook/github/:proyek"):
+	case method == "POST" && at.URLParam(path, "/webhook/github/:proyek"):
 		controller.PostWebHookGithub(w, r)
 	case method == "POST" && path == "/notif/ux/postlaporan":
 		controller.PostLaporan(w, r)
@@ -42,9 +42,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostFeedback(w, r)
 	case method == "POST" && path == "/notif/ux/postrating":
 		controller.PostRatingLaporan(w, r)
-	case method == "GET" && helper.URLParam(path, "/notif/ux/getlaporan/:id"):
+	case method == "GET" && at.URLParam(path, "/notif/ux/getlaporan/:id"):
 		controller.GetLaporan(w, r)
-	case method == "POST" && helper.URLParam(path, "/webhook/nomor/:nomorwa"):
+	case method == "POST" && at.URLParam(path, "/webhook/nomor/:nomorwa"):
 		controller.PostInboxNomor(w, r)
 	default:
 		controller.NotFound(w, r)

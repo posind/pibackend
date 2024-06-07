@@ -1,8 +1,10 @@
-package helper
+package whatsauth
 
 import (
 	"strings"
 
+	"github.com/gocroot/helper/atapi"
+	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/model"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,13 +27,13 @@ func RefreshToken(dt *model.WebHook, WAPhoneNumber, WAAPIGetToken string, db *mo
 	}
 	var resp model.User
 	if profile.Token != "" {
-		resp, err = PostStructWithToken[model.User]("Token", profile.Token, dt, WAAPIGetToken)
+		resp, err = atapi.PostStructWithToken[model.User]("Token", profile.Token, dt, WAAPIGetToken)
 		if err != nil {
 			return
 		}
 		profile.Phonenumber = resp.PhoneNumber
 		profile.Token = resp.Token
-		res, err = ReplaceOneDoc(db, "profile", bson.M{"phonenumber": resp.PhoneNumber}, profile)
+		res, err = atdb.ReplaceOneDoc(db, "profile", bson.M{"phonenumber": resp.PhoneNumber}, profile)
 		if err != nil {
 			return
 		}
@@ -57,7 +59,7 @@ func HandlerQRLogin(msg model.IteungMessage, WAKeyword string, WAPhoneNumber str
 	if err != nil {
 		return
 	}
-	resp, err = PostStructWithToken[model.Response]("Token", structtoken.Token, dt, WAAPIQRLogin)
+	resp, err = atapi.PostStructWithToken[model.Response]("Token", structtoken.Token, dt, WAAPIQRLogin)
 	return
 }
 
@@ -76,7 +78,7 @@ func HandlerIncomingMessage(msg model.IteungMessage, WAPhoneNumber string, db *m
 		if err != nil {
 			return
 		}
-		resp, err = PostStructWithToken[model.Response]("Token", profile.Token, dt, WAAPIMessage)
+		resp, err = atapi.PostStructWithToken[model.Response]("Token", profile.Token, dt, WAAPIMessage)
 		if err != nil {
 			return
 		}
@@ -85,7 +87,7 @@ func HandlerIncomingMessage(msg model.IteungMessage, WAPhoneNumber string, db *m
 }
 
 func GetRandomReplyFromMongo(msg model.IteungMessage, db *mongo.Database) string {
-	rply, err := GetRandomDoc[model.Reply](db, "reply", 1)
+	rply, err := atdb.GetRandomDoc[model.Reply](db, "reply", 1)
 	if err != nil {
 		return "Koneksi Database Gagal: " + err.Error()
 	}
@@ -96,7 +98,7 @@ func GetRandomReplyFromMongo(msg model.IteungMessage, db *mongo.Database) string
 
 func GetAppProfile(phonenumber string, db *mongo.Database) (apitoken model.Profile, err error) {
 	filter := bson.M{"phonenumber": phonenumber}
-	apitoken, err = GetOneDoc[model.Profile](db, "profile", filter)
+	apitoken, err = atdb.GetOneDoc[model.Profile](db, "profile", filter)
 
 	return
 }

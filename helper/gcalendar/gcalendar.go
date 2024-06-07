@@ -9,8 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gocroot/helper"
-	"github.com/gocroot/model"
+	"github.com/gocroot/helper/atdb"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
@@ -23,12 +22,12 @@ import (
 const credCol = "credentials"
 const tokenCol = "tokens"
 
-var mongoinfo = model.DBInfo{
+var mongoinfo = atdb.DBInfo{
 	DBString: os.Getenv("MONGOSTRINGTEST"),
 	DBName:   "domyid",
 }
 
-var Mongoconn, ErrorMongoconn = helper.MongoConnect(mongoinfo)
+var Mongoconn, ErrorMongoconn = atdb.MongoConnect(mongoinfo)
 
 // Struct to hold the credentials data from MongoDB
 type Credentials struct {

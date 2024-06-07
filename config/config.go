@@ -3,13 +3,13 @@ package config
 import (
 	"log"
 
-	"github.com/gocroot/helper"
+	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var IPPort, Net = helper.GetAddress()
+var IPPort, Net = at.GetAddress()
 
 var PhoneNumber string
 

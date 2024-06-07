@@ -1,4 +1,4 @@
-package helper
+package at
 
 import (
 	"errors"
@@ -41,7 +41,7 @@ func GetAddress() (ipport string, network string) {
 	return
 }
 
-func getClientIP(r *http.Request) (string, error) {
+func GetClientIP(r *http.Request) (string, error) {
 	ips := r.Header.Get("X-Forwarded-For")
 	splitIps := strings.Split(ips, ",")
 

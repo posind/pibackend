@@ -4,16 +4,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gocroot/helper"
-	"github.com/gocroot/model"
+	"github.com/gocroot/helper/atdb"
 )
 
-var mongoinfo = model.DBInfo{
+var mongoinfo = atdb.DBInfo{
 	DBString: os.Getenv("MONGODOMYID"),
 	DBName:   "domyid",
 }
 
-var Mongoconn, ErrorMongoconn = helper.MongoConnect(mongoinfo)
+var Mongoconn, ErrorMongoconn = atdb.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
 	//gid := "6281313112053-1492882006"

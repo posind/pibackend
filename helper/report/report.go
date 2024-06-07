@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gocroot/config"
-	"github.com/gocroot/helper"
+	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -447,7 +447,7 @@ func HariLibur(thedate time.Time) (libur bool) {
 	tglskr := thedate.Format("2006-01-02")
 	tgl := int(thedate.Month())
 	urltarget := "https://dayoffapi.vercel.app/api?month=" + strconv.Itoa(tgl)
-	hasil, _ := helper.Get[[]NewLiburNasional](urltarget)
+	hasil, _ := atapi.Get[[]NewLiburNasional](urltarget)
 	for _, v := range hasil {
 		if v.Tanggal == tglskr {
 			libur = true

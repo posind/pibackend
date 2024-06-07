@@ -8,42 +8,42 @@ import (
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"github.com/gocroot/helper"
+	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/watoken"
 )
 
 func GetDataUser(respw http.ResponseWriter, req *http.Request) {
-	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, helper.GetLoginFromHeader(req))
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Token Tidak Valid"
-		respn.Info = helper.GetSecretFromHeader(req)
+		respn.Info = at.GetSecretFromHeader(req)
 		respn.Location = "Decode Token Error"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusForbidden, respn)
+		at.WriteJSON(respw, http.StatusForbidden, respn)
 		return
 	}
 	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
 	if err != nil {
 		docuser.PhoneNumber = payload.Id
 		docuser.Name = payload.Alias
-		helper.WriteJSON(respw, http.StatusNotFound, docuser)
+		at.WriteJSON(respw, http.StatusNotFound, docuser)
 		return
 	}
 	docuser.Name = payload.Alias
-	helper.WriteJSON(respw, http.StatusOK, docuser)
+	at.WriteJSON(respw, http.StatusOK, docuser)
 }
 
 func PostDataUser(respw http.ResponseWriter, req *http.Request) {
-	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, helper.GetLoginFromHeader(req))
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Token Tidak Valid"
-		respn.Info = helper.GetSecretFromHeader(req)
+		respn.Info = at.GetSecretFromHeader(req)
 		respn.Location = "Decode Token Error"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusForbidden, respn)
+		at.WriteJSON(respw, http.StatusForbidden, respn)
 		return
 	}
 	var usr model.Userdomyikado
@@ -52,7 +52,7 @@ func PostDataUser(respw http.ResponseWriter, req *http.Request) {
 		var respn model.Response
 		respn.Status = "Error : Body tidak valid"
 		respn.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusBadRequest, respn)
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
 	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
@@ -64,11 +64,11 @@ func PostDataUser(respw http.ResponseWriter, req *http.Request) {
 			var respn model.Response
 			respn.Status = "Gagal Insert Database"
 			respn.Response = err.Error()
-			helper.WriteJSON(respw, http.StatusNotModified, respn)
+			at.WriteJSON(respw, http.StatusNotModified, respn)
 			return
 		}
 		usr.ID = idusr
-		helper.WriteJSON(respw, http.StatusOK, usr)
+		at.WriteJSON(respw, http.StatusOK, usr)
 		return
 	}
 	docuser.Name = payload.Alias
@@ -77,5 +77,5 @@ func PostDataUser(respw http.ResponseWriter, req *http.Request) {
 	docuser.GitlabUsername = usr.GitlabUsername
 	docuser.GithubUsername = usr.GithubUsername
 	atdb.ReplaceOneDoc(config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id}, docuser)
-	helper.WriteJSON(respw, http.StatusOK, docuser)
+	at.WriteJSON(respw, http.StatusOK, docuser)
 }

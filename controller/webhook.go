@@ -8,7 +8,8 @@ import (
 
 	"github.com/go-playground/webhooks/v6/github"
 	"github.com/gocroot/config"
-	"github.com/gocroot/helper"
+	"github.com/gocroot/helper/at"
+	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/model"
@@ -17,25 +18,25 @@ import (
 
 func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response
-	prj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"name": helper.GetParam(req)})
+	prj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"name": at.GetParam(req)})
 	if err != nil {
 		resp.Info = "Tidak terdaftar"
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusUnavailableForLegalReasons, resp)
+		at.WriteJSON(respw, http.StatusUnavailableForLegalReasons, resp)
 		return
 	}
 	hook, err := github.New(github.Options.Secret(prj.Secret))
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+		at.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
 	payload, err := hook.Parse(req, github.PushEvent, github.PingEvent)
 	if err != nil {
 		resp.Info = "Tidak ada payload"
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusBadRequest, resp)
+		at.WriteJSON(respw, http.StatusBadRequest, resp)
 		return
 	}
 	switch pyl := payload.(type) {
@@ -43,7 +44,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 		resp.Response = prj.Description
 		resp.Info = prj.Name
 		resp.Status = prj.Owner.Name
-		helper.WriteJSON(respw, http.StatusOK, resp)
+		at.WriteJSON(respw, http.StatusOK, resp)
 		return
 	case github.PushPayload:
 		var komsg, msg string
@@ -72,7 +73,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 						resp.Location = komit.Author.Email + " | " + komit.Author.Username
 						resp.Info = "Username dan Email di GitHub tidak terdaftar"
 						resp.Response = err.Error()
-						helper.WriteJSON(respw, http.StatusLocked, resp)
+						at.WriteJSON(respw, http.StatusLocked, resp)
 						return
 					}
 				}
@@ -84,7 +85,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				if err != nil {
 					resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
 					resp.Response = err.Error()
-					helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
+					at.WriteJSON(respw, http.StatusExpectationFailed, resp)
 					return
 				}
 			}
@@ -92,7 +93,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				resp.Info = "Data Push" + kommsg + " tidak berhasil masuk ke database"
 				resp.Response = err.Error()
-				helper.WriteJSON(respw, http.StatusExpectationFailed, resp)
+				at.WriteJSON(respw, http.StatusExpectationFailed, resp)
 				return
 			}
 			komsg += appd
@@ -107,15 +108,15 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			dt.To = prj.WAGroupID
 			dt.IsGroup = true
 		}
-		resp, err = helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		resp, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {
 			resp.Info = "Tidak berhak"
 			resp.Response = err.Error()
-			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+			at.WriteJSON(respw, http.StatusUnauthorized, resp)
 			return
 		}
 	}
-	helper.WriteJSON(respw, http.StatusOK, resp)
+	at.WriteJSON(respw, http.StatusOK, resp)
 }
 
 func getMemberByAttributeInProject(project model.Project, attribute string, value string) (*model.Userdomyikado, error) {

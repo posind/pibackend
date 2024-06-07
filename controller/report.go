@@ -4,7 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gocroot/config"
-	"github.com/gocroot/helper"
+	"github.com/gocroot/helper/at"
+	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/model"
@@ -18,7 +19,7 @@ func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		resp.Info = "Gagal Query Distincs project.wagroupid"
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+		at.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
 	for _, wagroupid := range wagroupidlist {
@@ -27,7 +28,7 @@ func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
 		if !ok {
 			resp.Info = "wagroupid is not a string"
 			resp.Response = "wagroupid is not a string"
-			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+			at.WriteJSON(respw, http.StatusUnauthorized, resp)
 			return
 		}
 		//kirim report ke group
@@ -36,15 +37,15 @@ func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
 			IsGroup:  true,
 			Messages: report.GetDataRepoMasukHariIni(config.Mongoconn, groupID) + "\n" + report.GetDataLaporanMasukHariini(config.Mongoconn, groupID),
 		}
-		resp, err := helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {
 			resp.Info = "Tidak berhak"
 			resp.Response = err.Error()
-			helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+			at.WriteJSON(respw, http.StatusUnauthorized, resp)
 			return
 		}
 	}
-	helper.WriteJSON(respw, http.StatusOK, resp)
+	at.WriteJSON(respw, http.StatusOK, resp)
 }
 
 func GetReportHariIni(respw http.ResponseWriter, req *http.Request) {
@@ -55,12 +56,12 @@ func GetReportHariIni(respw http.ResponseWriter, req *http.Request) {
 		IsGroup:  true,
 		Messages: report.GetDataRepoMasukHarian(config.Mongoconn) + "\n" + report.GetDataLaporanMasukHarian(config.Mongoconn),
 	}
-	resp, err := helper.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, http.StatusUnauthorized, resp)
+		at.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
-	helper.WriteJSON(respw, http.StatusOK, resp)
+	at.WriteJSON(respw, http.StatusOK, resp)
 }

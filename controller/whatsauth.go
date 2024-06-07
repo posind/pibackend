@@ -5,15 +5,18 @@ import (
 	"net/http"
 
 	"github.com/gocroot/config"
-	"github.com/gocroot/helper"
+	"github.com/gocroot/helper/at"
+	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/report"
+	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func GetHome(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response
-	resp.Response = helper.GetIPaddress()
-	helper.WriteJSON(respw, http.StatusOK, resp)
+	resp.Response = at.GetIPaddress()
+	at.WriteJSON(respw, http.StatusOK, resp)
 }
 
 func PostInboxNomor(respw http.ResponseWriter, req *http.Request) {
@@ -21,34 +24,34 @@ func PostInboxNomor(respw http.ResponseWriter, req *http.Request) {
 	var msg model.IteungMessage
 	httpstatus := http.StatusUnauthorized
 	resp.Response = "Wrong Secret"
-	waphonenumber := helper.GetParam(req)
-	prof, err := helper.GetAppProfile(waphonenumber, config.Mongoconn)
+	waphonenumber := at.GetParam(req)
+	prof, err := whatsauth.GetAppProfile(waphonenumber, config.Mongoconn)
 	if err != nil {
 		resp.Response = err.Error()
 		httpstatus = http.StatusServiceUnavailable
 	}
-	if helper.GetSecretFromHeader(req) == prof.Secret {
+	if at.GetSecretFromHeader(req) == prof.Secret {
 		err := json.NewDecoder(req.Body).Decode(&msg)
 		if err != nil {
 			resp.Response = err.Error()
 		} else {
-			resp, err = helper.WebHook(prof.QRKeyword, waphonenumber, config.WAAPIQRLogin, config.WAAPIMessage, msg, config.Mongoconn)
+			resp, err = whatsauth.WebHook(prof.QRKeyword, waphonenumber, config.WAAPIQRLogin, config.WAAPIMessage, msg, config.Mongoconn)
 			if err != nil {
 				resp.Response = err.Error()
 			}
 		}
 	}
-	helper.WriteJSON(respw, httpstatus, resp)
+	at.WriteJSON(respw, httpstatus, resp)
 }
 
 func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response
 	httpstatus := http.StatusServiceUnavailable
 	//prof, err := helper.GetAppProfile(config.WAPhoneNumber, config.Mongoconn)
-	profs, err := helper.GetAllDoc[[]model.Profile](config.Mongoconn, "profile")
+	profs, err := atdb.GetAllDoc[[]model.Profile](config.Mongoconn, "profile", bson.M{})
 	if err != nil {
 		resp.Response = err.Error()
-		helper.WriteJSON(respw, httpstatus, resp)
+		at.WriteJSON(respw, httpstatus, resp)
 		return
 	} else {
 		for _, prof := range profs {
@@ -56,12 +59,12 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 				URL:    prof.URL,
 				Secret: prof.Secret,
 			}
-			res, err := helper.RefreshToken(dt, prof.Phonenumber, config.WAAPIGetToken, config.Mongoconn)
+			res, err := whatsauth.RefreshToken(dt, prof.Phonenumber, config.WAAPIGetToken, config.Mongoconn)
 			if err != nil {
 				resp.Response = err.Error()
 				break
 			} else {
-				resp.Response = helper.Jsonstr(res.ModifiedCount)
+				resp.Response = at.Jsonstr(res.ModifiedCount)
 				httpstatus = http.StatusOK
 			}
 		}
@@ -76,5 +79,5 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 func NotFound(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response
 	resp.Response = "Not Found"
-	helper.WriteJSON(respw, http.StatusNotFound, resp)
+	at.WriteJSON(respw, http.StatusNotFound, resp)
 }
