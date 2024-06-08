@@ -1,22 +1,25 @@
 package normalize
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
-func digitToLetter(digit int) string {
-	return string('A' + digit - 1)
-}
-
+// Fungsi untuk mengonversi angka menjadi representasi huruf
 func NumberToAlphabet(num int) string {
-	if num <= 0 {
-		return ""
-	}
+	// Mengonversi angka menjadi string
+	numStr := strconv.Itoa(num)
 
+	// Array untuk menyimpan huruf-huruf hasil konversi
 	var result []string
-	for num > 0 {
-		digit := num % 10
-		result = append([]string{digitToLetter(digit)}, result...)
-		num /= 10
+
+	// Iterasi melalui setiap karakter dalam string angka
+	for _, char := range numStr {
+		// Mengubah karakter digit menjadi huruf sesuai dengan urutan abjad
+		letter := string('a' + (char - '0') - 1)
+		result = append(result, letter)
 	}
 
+	// Gabungkan hasil ke dalam satu string
 	return strings.Join(result, "")
 }
