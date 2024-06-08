@@ -54,6 +54,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 		var komsg, msg string
 		var dokcommit model.PushReport
 		for i, komit := range pyl.Commits {
+			//membuat list file yang diubah
 			//ambil dari api jumlah baris yang dirubah
 			commitURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/commits/%s", pyl.Repository.Owner.Login, pyl.Repository.Name, komit.ID)
 			statuscode, komitdtl, err := atapi.Get[ghapi.CommitDetails](commitURL)
@@ -62,7 +63,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				for n, file := range komitdtl.Files {
 					fileChangesinfo += "> " + normalize.NumberToAlphabet(n+1) + ". " + file.Filename + ": _++" + strconv.Itoa(file.Additions) + " --" + strconv.Itoa(file.Deletions) + "_\n"
 				}
-			} else {
+			} else { //jika api tidak ada akses maka tanpa jumlah baris
 				fileChangesinfo = strings.Join(komit.Modified[:], "\n")
 			}
 			//membuat list commit message yang masuk
