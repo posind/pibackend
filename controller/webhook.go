@@ -13,6 +13,7 @@ import (
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/ghapi"
+	"github.com/gocroot/helper/normalize"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
@@ -59,7 +60,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			var fileChangesinfo string
 			if err == nil && statuscode == http.StatusOK {
 				for n, file := range komitdtl.Files {
-					fileChangesinfo += "> " + strconv.Itoa(n+1) + ". " + file.Filename + ": _++" + strconv.Itoa(file.Additions) + " --" + strconv.Itoa(file.Deletions) + "_\n"
+					fileChangesinfo += "> " + normalize.NumberToAlphabet(n+1) + ". " + file.Filename + ": _++" + strconv.Itoa(file.Additions) + " --" + strconv.Itoa(file.Deletions) + "_\n"
 				}
 			} else {
 				fileChangesinfo = strings.Join(komit.Modified[:], "\n")
