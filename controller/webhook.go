@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/ghapi"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
@@ -51,8 +53,20 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 		var komsg, msg string
 		var dokcommit model.PushReport
 		for i, komit := range pyl.Commits {
+			//ambil dari api jumlah baris yang dirubah
+			commitURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/commits/%s", pyl.Repository.Owner.Login, pyl.Repository.Name, komit.ID)
+			statuscode, komitdtl, err := atapi.Get[ghapi.CommitDetails](commitURL)
+			var fileChangesinfo string
+			if err == nil && statuscode == http.StatusOK {
+				for n, file := range komitdtl.Files {
+					fileChangesinfo += "> " + strconv.Itoa(n+1) + ". " + file.Filename + ": _++" + strconv.Itoa(file.Additions) + " --" + strconv.Itoa(file.Deletions) + "_\n"
+				}
+			} else {
+				fileChangesinfo = strings.Join(komit.Modified[:], "\n")
+			}
+			//membuat list commit message yang masuk
 			kommsg := strings.TrimSpace(komit.Message)
-			appd := strconv.Itoa(i+1) + ". " + kommsg + " :\n" + strings.Join(komit.Modified[:], "\n") + "\n"
+			appd := strconv.Itoa(i+1) + ". " + kommsg + " :\n" + fileChangesinfo + "\n"
 			dokcommit = model.PushReport{
 				ProjectName: prj.Name,
 				Project:     prj,
@@ -80,7 +94,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				}
 				dokcommit.User = *member
 			}
-			_, err := report.TambahPoinPushRepobyGithubUsername(dokcommit.Username, 1)
+			_, err = report.TambahPoinPushRepobyGithubUsername(dokcommit.Username, 1)
 			if err != nil {
 				_, err := report.TambahPoinPushRepobyGithubEmail(dokcommit.Email, 1)
 				if err != nil {
