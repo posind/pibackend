@@ -12,6 +12,7 @@ import (
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/report"
+	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -99,7 +100,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			komsg += appd
 		}
 		msg = "*" + prj.Name + "*\n" + "Nama: " + dokcommit.User.Name + "\nUserGitHub: " + pyl.Sender.Login + "\nRepo: " + pyl.Repository.Name + "\nBranch: " + pyl.Ref + "\n" + pyl.Compare + "\n" + komsg
-		dt := &model.TextMessage{
+		dt := &whatsauth.TextMessage{
 			To:       prj.Owner.PhoneNumber,
 			IsGroup:  false,
 			Messages: msg,

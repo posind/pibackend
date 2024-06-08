@@ -8,6 +8,7 @@ import (
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/report"
+	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -32,7 +33,7 @@ func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
 			return
 		}
 		//kirim report ke group
-		dt := &model.TextMessage{
+		dt := &whatsauth.TextMessage{
 			To:       groupID,
 			IsGroup:  true,
 			Messages: report.GetDataRepoMasukHariIni(config.Mongoconn, groupID) + "\n" + report.GetDataLaporanMasukHariini(config.Mongoconn, groupID),
@@ -51,7 +52,7 @@ func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
 func GetReportHariIni(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response
 	//kirim report ke group
-	dt := &model.TextMessage{
+	dt := &whatsauth.TextMessage{
 		To:       "6281313112053-1492882006",
 		IsGroup:  true,
 		Messages: report.GetDataRepoMasukHarian(config.Mongoconn) + "\n" + report.GetDataLaporanMasukHarian(config.Mongoconn),

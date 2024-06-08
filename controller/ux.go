@@ -12,6 +12,7 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/watoken"
+	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -66,7 +67,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	message := "*" + hasil.Petugas + "*\nsudah dinilai oleh *" + hasil.Nama + " " + hasil.Phone + "* dengan rating *" + strconv.Itoa(rating.Rating) + "* komentar:\n" + rating.Komentar
-	dt := &model.TextMessage{
+	dt := &whatsauth.TextMessage{
 		To:       hasil.NoPetugas,
 		IsGroup:  false,
 		Messages: message,
@@ -187,7 +188,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	message := "*Permintaan Feedback Pekerjaan*\n" + "Petugas : " + docuser.Name + "\nDeskripsi:" + lap.Solusi + "\n Beri Nilai: " + "https://www.do.my.id/rate/#" + idlap.Hex()
-	dt := &model.TextMessage{
+	dt := &whatsauth.TextMessage{
 		To:       lap.Phone,
 		IsGroup:  false,
 		Messages: message,
@@ -275,7 +276,7 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	message := "*Permintaan Feedback Pekerjaan*\n" + "Petugas : " + docuser.Name + "\nDeskripsi:" + lap.Solusi + "\n Beri Nilai: " + "https://www.do.my.id/rate/#" + idlap.Hex()
-	dt := &model.TextMessage{
+	dt := &whatsauth.TextMessage{
 		To:       lap.Phone,
 		IsGroup:  false,
 		Messages: message,

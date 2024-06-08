@@ -20,8 +20,8 @@ func GetHome(respw http.ResponseWriter, req *http.Request) {
 }
 
 func PostInboxNomor(respw http.ResponseWriter, req *http.Request) {
-	var resp model.Response
-	var msg model.IteungMessage
+	var resp whatsauth.Response
+	var msg whatsauth.IteungMessage
 	httpstatus := http.StatusUnauthorized
 	resp.Response = "Wrong Secret"
 	waphonenumber := at.GetParam(req)
@@ -55,7 +55,7 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 		return
 	} else {
 		for _, prof := range profs {
-			dt := &model.WebHook{
+			dt := &whatsauth.WebHookInfo{
 				URL:    prof.URL,
 				Secret: prof.Secret,
 			}

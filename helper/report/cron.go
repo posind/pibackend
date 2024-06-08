@@ -7,6 +7,7 @@ import (
 	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -37,7 +38,7 @@ func RekapPagiHari(respw http.ResponseWriter, req *http.Request) {
 			at.WriteJSON(respw, http.StatusExpectationFailed, resp)
 			return
 		}
-		dt := &model.TextMessage{
+		dt := &whatsauth.TextMessage{
 			To:       groupID,
 			IsGroup:  true,
 			Messages: msg,
