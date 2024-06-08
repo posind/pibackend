@@ -128,6 +128,11 @@ func GetOneDoc[T any](db *mongo.Database, collection string, filter bson.M) (doc
 	return
 }
 
+func DeleteOneDoc(db *mongo.Database, collection string, filter bson.M) error {
+	_, err := db.Collection(collection).DeleteOne(context.Background(), filter)
+	return err
+}
+
 func GetOneLatestDoc[T any](db *mongo.Database, collection string, filter bson.M) (doc T, err error) {
 	opts := options.FindOne().SetSort(bson.M{"$natural": -1})
 	err = db.Collection(collection).FindOne(context.TODO(), filter, opts).Decode(&doc)
