@@ -113,6 +113,7 @@ func GetDataProject(respw http.ResponseWriter, req *http.Request) {
 }
 
 func DeleteDataProject(respw http.ResponseWriter, req *http.Request) {
+	// Dekode token dari header permintaan
 	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
 	if err != nil {
 		var respn model.Response
@@ -124,8 +125,11 @@ func DeleteDataProject(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var prj model.Project
-	err = json.NewDecoder(req.Body).Decode(&prj)
+	// Dekode nama proyek dari body permintaan
+	var reqBody struct {
+		ProjectName string `json:"project_name"`
+	}
+	err = json.NewDecoder(req.Body).Decode(&reqBody)
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Body tidak valid"
@@ -134,6 +138,7 @@ func DeleteDataProject(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Dapatkan data pengguna berdasarkan ID dari payload token
 	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
 	if err != nil {
 		var respn model.Response
@@ -143,15 +148,17 @@ func DeleteDataProject(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	existingprj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": prj.ID, "owner._id": docuser.ID})
+	// Cek apakah proyek dengan nama yang diberikan ada dan dimiliki oleh pengguna
+	existingprj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"name": reqBody.ProjectName, "owner._id": docuser.ID})
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Data project tidak di temukan"
-		respn.Response = err.Error()
+		respn.Response = "Proyek dengan nama tersebut tidak ditemukan atau bukan milik Anda"
 		at.WriteJSON(respw, http.StatusNotFound, respn)
 		return
 	}
 
+	// Hapus proyek dari koleksi "project" di MongoDB
 	err = atdb.DeleteOneDoc(config.Mongoconn, "project", primitive.M{"_id": existingprj.ID})
 	if err != nil {
 		var respn model.Response
@@ -161,6 +168,7 @@ func DeleteDataProject(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Berhasil menghapus proyek
 	at.WriteJSON(respw, http.StatusOK, map[string]string{"status": "Project berhasil dihapus"})
 }
 
