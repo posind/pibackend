@@ -27,9 +27,8 @@ func PostPresensi(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusBadRequest, resp)
 		return
 	}
-	if at.GetSecretFromHeader(req) == prof.Secret {
+	if at.GetSecretFromHeader(req) != prof.Secret {
 		resp.Response = "Salah secret: " + at.GetSecretFromHeader(req)
-		resp.Info = prof.Secret
 		at.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
