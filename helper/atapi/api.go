@@ -34,11 +34,12 @@ func PostStructWithToken[T any](tokenkey string, tokenvalue string, structname i
 	return
 }
 
-func Get[T any](urltarget string) (result T, err error) {
+func Get[T any](urltarget string) (statusCode int, result T, err error) {
 	resp, err := http.Get(urltarget)
 	if err != nil {
 		return
 	}
+	statusCode = resp.StatusCode
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

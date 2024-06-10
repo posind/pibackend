@@ -447,7 +447,7 @@ func HariLibur(thedate time.Time) (libur bool) {
 	tglskr := thedate.Format("2006-01-02")
 	tgl := int(thedate.Month())
 	urltarget := "https://dayoffapi.vercel.app/api?month=" + strconv.Itoa(tgl)
-	hasil, _ := atapi.Get[[]NewLiburNasional](urltarget)
+	_, hasil, _ := atapi.Get[[]NewLiburNasional](urltarget)
 	for _, v := range hasil {
 		if v.Tanggal == tglskr {
 			libur = true

@@ -5,6 +5,7 @@ go 1.22.3
 require (
 	aidanwoods.dev/go-paseto v1.5.1
 	github.com/GoogleCloudPlatform/functions-framework-go v1.8.1
+	github.com/go-playground/webhooks v5.17.0+incompatible
 	github.com/go-playground/webhooks/v6 v6.3.0
 	go.mongodb.org/mongo-driver v1.15.0
 	golang.org/x/oauth2 v0.11.0
