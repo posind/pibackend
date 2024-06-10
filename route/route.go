@@ -27,14 +27,14 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	case method == "POST" && path == "/data/user":
 		controller.PostDataUser(w, r)
 	case method == "GET" && path == "/data/proyek":
+		controller.PostDataProject(w, r)
+	case method == "POST" && path == "/data/proyek":
 		controller.GetDataProject(w, r)
 	case method == "DELETE" && path == "/data/proyek":
 		controller.DeleteDataProject(w, r)
 	case method == "GET" && path == "/data/proyek/anggota":
 		controller.GetDataMemberProject(w, r)
 	case method == "POST" && path == "/data/proyek/anggota":
-		controller.PostDataMemberProject(w, r)
-	case method == "POST" && path == "/data/proyek":
 		controller.PostDataMemberProject(w, r)
 	case method == "DELETE" && path == "/data/proyek":
 		controller.DeleteDataMemberProject(w, r)
