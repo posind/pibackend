@@ -7,6 +7,7 @@ require (
 	github.com/GoogleCloudPlatform/functions-framework-go v1.8.1
 	github.com/go-playground/webhooks v5.17.0+incompatible
 	github.com/go-playground/webhooks/v6 v6.3.0
+	github.com/whatsauth/itmodel v0.0.2
 	go.mongodb.org/mongo-driver v1.15.0
 	golang.org/x/oauth2 v0.11.0
 	google.golang.org/api v0.128.0

@@ -46,6 +46,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostFeedback(w, r)
 	case method == "POST" && path == "/notif/ux/postrating":
 		controller.PostRatingLaporan(w, r)
+	case method == "POST" && at.URLParam(path, "/notif/ux/postpresensi/:id"):
+		controller.PostPresensi(w, r)
 	case method == "GET" && at.URLParam(path, "/notif/ux/getlaporan/:id"):
 		controller.GetLaporan(w, r)
 	case method == "POST" && at.URLParam(path, "/webhook/nomor/:nomorwa"):

@@ -14,9 +14,55 @@ import (
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
+	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+func PostPresensi(respw http.ResponseWriter, req *http.Request) {
+	var resp itmodel.Response
+	prof, err := whatsauth.GetAppProfile(at.GetParam(req), config.Mongoconn)
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, resp)
+		return
+	}
+	if at.GetSecretFromHeader(req) == prof.Secret {
+		resp.Response = "Salah secret"
+		at.WriteJSON(respw, http.StatusUnauthorized, resp)
+		return
+	}
+	var presensi model.PresensiDomyikado
+	err = json.NewDecoder(req.Body).Decode(&presensi)
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, resp)
+		return
+	}
+	docusr, err := atdb.GetOneLatestDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": presensi.PhoneNumber})
+	if err != nil {
+		resp.Response = "Error : user tidak di temukan " + err.Error()
+		at.WriteJSON(respw, http.StatusForbidden, resp)
+		return
+	}
+	_, err = atdb.InsertOneDoc(config.Mongoconn, "presensi", presensi)
+	if err != nil {
+		resp.Info = "Kakak sudah melaporkan presensi sebelumnya"
+		resp.Response = "Error : tidak bisa insert ke database " + err.Error()
+		at.WriteJSON(respw, http.StatusForbidden, resp)
+		return
+	}
+	res, err := report.TambahPoinLaporanbyPhoneNumber(presensi.PhoneNumber, presensi.Skor)
+	if err != nil {
+		resp.Info = "Tambah Poin Presensi gagal"
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusExpectationFailed, resp)
+		return
+	}
+	resp.Response = strconv.Itoa(int(res.ModifiedCount))
+	resp.Info = docusr.Name
+	at.WriteJSON(respw, http.StatusOK, resp)
+}
 
 func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 	var rating model.Rating

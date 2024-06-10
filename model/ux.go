@@ -21,3 +21,11 @@ type Rating struct {
 	Komentar string `json:"komentar,omitempty" bson:"komentar,omitempty"`
 	Rating   int    `json:"rating,omitempty" bson:"rating,omitempty"`
 }
+
+type PresensiDomyikado struct {
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	PhoneNumber string             `json:"phonenumber,omitempty" bson:"phonenumber,omitempty"`
+	Skor        float64            `json:"skor,omitempty" bson:"skor,omitempty"`
+	KetJam      string             `json:"ketjam,omitempty" bson:"ketjam,omitempty"`
+	LamaDetik   float64            `json:"lamadetik,omitempty" bson:"lamadetik,omitempty"`
+}
