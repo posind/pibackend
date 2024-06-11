@@ -52,8 +52,10 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.GetLaporan(w, r)
 	case method == "POST" && at.URLParam(path, "/webhook/nomor/:nomorwa"):
 		controller.PostInboxNomor(w, r)
-	case method == "GET" && path == "/auth/users":
-		controller.GetUserData(w, r)
+	// Google Auth
+	case method == "POST" && path == "/auth/users":
+		controller.Auth(w, r)
+	// Google Auth
 	default:
 		controller.NotFound(w, r)
 	}
