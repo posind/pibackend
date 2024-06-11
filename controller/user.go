@@ -76,6 +76,13 @@ func PostDataUser(respw http.ResponseWriter, req *http.Request) {
 	docuser.GitHostUsername = usr.GitHostUsername
 	docuser.GitlabUsername = usr.GitlabUsername
 	docuser.GithubUsername = usr.GithubUsername
-	atdb.ReplaceOneDoc(config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id}, docuser)
+	_, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id}, docuser)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Gagal replaceonedoc"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusConflict, respn)
+		return
+	}
 	at.WriteJSON(respw, http.StatusOK, docuser)
 }
