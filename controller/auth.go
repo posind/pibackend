@@ -40,7 +40,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 	userInfo := model.Userdomyikado{
 		Name:    payload.Claims["name"].(string),
 		Email:   payload.Claims["email"].(string),
-		GoogleProfilePicture: payload.Claims["googleprofilepicture"].(string),
+		GoogleProfilePicture: payload.Claims["picture"].(string),
 	}
 
 	// Simpan atau perbarui informasi pengguna di database

@@ -35,7 +35,7 @@ type Userdomyikado struct {
 	GitlabUsername  string             `bson:"gitlabusername,omitempty" json:"gitlabusername,omitempty"`
 	GitHostUsername string             `bson:"githostusername,omitempty" json:"githostusername,omitempty"`
 	Poin            float64            `bson:"poin,omitempty" json:"poin,omitempty"`
-	GoogleProfilePicture string        `bson:"googleprofilepicture,omitempty" json:"googleprofilepicture,omitempty"`
+	GoogleProfilePicture string        `bson:"googleprofilepicture,omitempty" json:"picture,omitempty"`
 }
 
 type Task struct {
