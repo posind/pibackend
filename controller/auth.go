@@ -61,7 +61,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{
 			Name:     "user_login",
 			Value:    request.Token,
-			Expires:  time.Now().Add(24 * time.Hour),
+			Expires:  time.Now().Add(18 * time.Hour),
 			HttpOnly: true,
 		})
 		response, _ := json.Marshal(existingUser)
