@@ -57,20 +57,20 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 	var existingUser model.Userdomyikado
 	err = collection.FindOne(ctx, filter).Decode(&existingUser)
 	if err == nil && existingUser.PhoneNumber != "" {
-		// User exists and has a phone number, set login cookie
-		http.SetCookie(w, &http.Cookie{
-			Name:     "user_login",
-			Value:    request.Token,
-			Expires:  time.Now().Add(18 * time.Hour),
-			HttpOnly: true,
-		})
+		// User exists and has a phone number
 		response, _ := json.Marshal(existingUser)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
 		return
-	} else if existingUser.PhoneNumber == "" {
+	} else if err == nil && existingUser.PhoneNumber == "" {
 		// User exists but has no phone number, request QR scan
-		http.Error(w, "Please scan the QR code to provide your phone number", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		response, _ := json.Marshal(map[string]interface{}{
+			"message": "Please scan the QR code to provide your phone number",
+			"user":    existingUser,
+		})
+		w.Write(response)
 		return
 	}
 
