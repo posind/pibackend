@@ -56,13 +56,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 
 	var existingUser model.Userdomyikado
 	err = collection.FindOne(ctx, filter).Decode(&existingUser)
-	if err == nil && existingUser.PhoneNumber != "" {
-		// User exists and has a phone number
-		response, _ := json.Marshal(existingUser)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
-		return
-	} else if err == nil && existingUser.PhoneNumber == "" {
+	if err == nil && existingUser.PhoneNumber == "" {
 		// User exists but has no phone number, request QR scan
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
