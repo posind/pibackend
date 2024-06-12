@@ -26,14 +26,14 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 	// Ambil kredensial dari database
 	creds, err := atdb.GetOneDoc[auth.GoogleCredential](config.Mongoconn, "credentials", bson.M{})
 	if err != nil {
-		http.Error(w, "Database Connection Problem", http.StatusBadGateway)
+		http.Error(w, "Database Connection Problem: Unable to fetch credentials", http.StatusBadGateway)
 		return
 	}
 
 	// Verifikasi ID token menggunakan client_id
 	payload, err := auth.VerifyIDToken(request.Token, creds.ClientID)
 	if err != nil {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		http.Error(w, "Invalid token: Token verification failed", http.StatusUnauthorized)
 		return
 	}
 
@@ -76,13 +76,13 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 
 	_, err = collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
-		http.Error(w, "Failed to save user info", http.StatusInternalServerError)
+		http.Error(w, "Failed to save user info: Database update failed", http.StatusInternalServerError)
 		return
 	}
 
 	response, err := json.Marshal(userInfo)
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, "Internal server error: JSON marshaling failed", http.StatusInternalServerError)
 		return
 	}
 
