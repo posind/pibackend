@@ -38,8 +38,8 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userInfo := model.Userdomyikado{
-		Name:    payload.Claims["name"].(string),
-		Email:   payload.Claims["email"].(string),
+		Name:                payload.Claims["name"].(string),
+		Email:               payload.Claims["email"].(string),
 		GoogleProfilePicture: payload.Claims["picture"].(string),
 	}
 
@@ -49,25 +49,25 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 
 	collection := config.Mongoconn.Collection("user")
 	filter := bson.M{"email": userInfo.Email}
-	update := bson.M{
-		"$set": userInfo,
-	}
-	opts := options.Update().SetUpsert(true)
 
 	var existingUser model.Userdomyikado
 	err = collection.FindOne(ctx, filter).Decode(&existingUser)
-	if err == nil && existingUser.PhoneNumber == "" {
-		// User exists but has no phone number, request QR scan
+	if err != nil || existingUser.PhoneNumber == "" {
+		// User does not exist or exists but has no phone number, request QR scan
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
 		response, _ := json.Marshal(map[string]interface{}{
 			"message": "Please scan the QR code to provide your phone number",
-			"user":    existingUser,
+			"user":    userInfo,
 		})
 		w.Write(response)
 		return
 	}
 
+	update := bson.M{
+		"$set": userInfo,
+	}
+	opts := options.Update().SetUpsert(true)
 	_, err = collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		http.Error(w, "Failed to save user info: Database update failed", http.StatusInternalServerError)
@@ -83,3 +83,4 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 }
+
