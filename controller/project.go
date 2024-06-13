@@ -277,8 +277,12 @@ func DeleteDataMemberProject(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var idprjuser model.Userdomyikado
-	err = json.NewDecoder(req.Body).Decode(&idprjuser)
+	var requestPayload struct {
+		ProjectName string `json:"project_name"`
+		PhoneNumber string `json:"phone_number"`
+	}
+
+	err = json.NewDecoder(req.Body).Decode(&requestPayload)
 	if err != nil {
 		respn.Status = "Error : Body tidak valid"
 		respn.Response = err.Error()
@@ -288,23 +292,23 @@ func DeleteDataMemberProject(respw http.ResponseWriter, req *http.Request) {
 
 	docuserowner, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
 	if err != nil {
-		respn.Status = "Error : Data owner tidak di temukan"
+		respn.Status = "Error : Data owner tidak ditemukan"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
 
-	existingprj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": idprjuser.ID, "owner._id": docuserowner.ID})
+	existingprj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"name": requestPayload.ProjectName, "owner._id": docuserowner.ID})
 	if err != nil {
-		respn.Status = "Error : Data project tidak di temukan"
+		respn.Status = "Error : Data project tidak ditemukan"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusNotFound, respn)
 		return
 	}
 
 	// Menghapus member dari project
-	memberToDelete := model.Userdomyikado{PhoneNumber: idprjuser.PhoneNumber}
-	rest, err := atdb.DeleteDocFromArray[model.Userdomyikado](config.Mongoconn, "project", idprjuser.ID, "members", memberToDelete)
+	memberToDelete := model.Userdomyikado{PhoneNumber: requestPayload.PhoneNumber}
+	rest, err := atdb.DeleteDocFromArray[model.Userdomyikado](config.Mongoconn, "project", existingprj.ID, "members", memberToDelete)
 	if err != nil {
 		respn.Status = "Error : Gagal menghapus member dari project"
 		respn.Response = err.Error()
