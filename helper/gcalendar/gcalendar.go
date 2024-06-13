@@ -64,15 +64,6 @@ func getClient(db *mongo.Database, config *oauth2.Config) (*http.Client, error) 
 	tok, err := tokenFromDB(db)
 	if err != nil {
 		return nil, err
-		// jika token habis buka ini dan jalankan di lokal
-		// tok, err = GetTokenFromWeb(config)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// err = SaveToken(db, tok)
-		// if err != nil {
-		// 	return nil, err
-		// }
 	}
 	return config.Client(context.Background(), tok), nil
 }
