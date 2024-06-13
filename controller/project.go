@@ -159,7 +159,7 @@ func DeleteDataProject(respw http.ResponseWriter, req *http.Request) {
 	}
 
 	// Hapus proyek dari koleksi "project" di MongoDB
-	err = atdb.DeleteOneDoc(config.Mongoconn, "project", primitive.M{"_id": existingprj.ID})
+	_, err = atdb.DeleteOneDoc(config.Mongoconn, "project", primitive.M{"_id": existingprj.ID})
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Gagal menghapus project"
