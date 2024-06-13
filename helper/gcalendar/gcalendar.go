@@ -3,8 +3,6 @@ package gcalendar
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gocroot/helper/atdb"
@@ -14,7 +12,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Retrieve a token from MongoDB
@@ -37,43 +34,15 @@ func tokenFromDB(db *mongo.Database) (*oauth2.Token, error) {
 	return token, nil
 }
 
-// Saves a token to MongoDB
-func saveToken(db *mongo.Database, token *oauth2.Token) {
-	collection := db.Collection("tokens")
-	tokenRecord := bson.M{
-		"token":         token.AccessToken,
-		"refresh_token": token.RefreshToken,
-		"expiry":        token.Expiry,
-	}
-
-	_, err := collection.UpdateOne(
-		context.TODO(),
-		bson.M{},
-		bson.M{"$set": tokenRecord},
-		options.Update().SetUpsert(true),
-	)
-	if err != nil {
-		log.Fatalf("Unable to save oauth token: %v", err)
-	}
-}
-
 // Retrieve credentials.json from MongoDB
-func credentialsFromDB() (*oauth2.Config, error) {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb+srv://ulbi:k0dGfeYgAorMKDAz@cluster0.fvazjna.mongodb.net/"))
-	if err != nil {
-		return nil, err
-	}
-	defer client.Disconnect(context.TODO())
-
-	collection := client.Database("domyid").Collection("credentials")
-	var credentialRecord CredentialRecord
-	err = collection.FindOne(context.TODO(), bson.M{}).Decode(&credentialRecord)
+func credentialsFromDB(db *mongo.Database) (*oauth2.Config, error) {
+	credentialRecord, err := atdb.GetOneDoc[CredentialRecord](db, "credentials", bson.M{})
 	if err != nil {
 		return nil, err
 	}
 
 	if len(credentialRecord.RedirectURIs) == 0 {
-		return nil, fmt.Errorf("no redirect URIs found in credentials")
+		return nil, errors.New("no redirect URIs found in credentials")
 	}
 
 	config := &oauth2.Config{
@@ -91,47 +60,41 @@ func credentialsFromDB() (*oauth2.Config, error) {
 }
 
 // Retrieve a token, saves the token, then returns the generated client
-func getClient(db *mongo.Database, config *oauth2.Config) *http.Client {
+func getClient(db *mongo.Database, config *oauth2.Config) (*http.Client, error) {
 	tok, err := tokenFromDB(db)
 	if err != nil {
-		tok = getTokenFromWeb(config)
-		saveToken(db, tok)
+		return nil, err
+		// jika token habis buka ini dan jalankan di lokal
+		// tok, err = GetTokenFromWeb(config)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// err = SaveToken(db, tok)
+		// if err != nil {
+		// 	return nil, err
+		// }
 	}
-	return config.Client(context.Background(), tok)
+	return config.Client(context.Background(), tok), nil
 }
 
-// Request a token from the web, then returns the retrieved token
-func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("Go to the following link in your browser then type the authorization code: \n%v\n", authURL)
-
-	var authCode string
-	if _, err := fmt.Scan(&authCode); err != nil {
-		log.Fatalf("Unable to read authorization code: %v", err)
-	}
-
-	tok, err := config.Exchange(context.TODO(), authCode)
-	if err != nil {
-		log.Fatalf("Unable to retrieve token from web: %v", err)
-	}
-	return tok
-}
-
-func Run(db *mongo.Database) {
+func HandlerCalendar(db *mongo.Database) (event *calendar.Event, err error) {
 	ctx := context.Background()
 
-	config, err := credentialsFromDB()
+	config, err := credentialsFromDB(db)
 	if err != nil {
-		log.Fatalf("Unable to retrieve client secret from DB: %v", err)
+		return
 	}
 
-	client := getClient(db, config)
+	client, err := getClient(db, config)
+	if err != nil {
+		return
+	}
 	srv, err := calendar.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
-		log.Fatalf("Unable to retrieve Calendar client: %v", err)
+		return
 	}
 
-	event := &calendar.Event{
+	event = &calendar.Event{
 		Summary:     "Google I/O 2024",
 		Location:    "800 Howard St., San Francisco, CA 94103",
 		Description: "A chance to hear more about Google's developer products.",
@@ -152,7 +115,7 @@ func Run(db *mongo.Database) {
 	calendarId := "primary"
 	event, err = srv.Events.Insert(calendarId, event).Do()
 	if err != nil {
-		log.Fatalf("Unable to create event: %v", err)
+		return
 	}
-	fmt.Printf("Event created: %s\n", event.HtmlLink)
+	return
 }
