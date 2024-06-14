@@ -1,5 +1,5 @@
 // blogger.go
-package gcalendar
+package gcallapi
 
 import (
 	"context"

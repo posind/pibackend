@@ -1,4 +1,4 @@
-package gcalendar
+package gcallapi
 
 import (
 	"context"

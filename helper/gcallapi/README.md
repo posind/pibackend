@@ -1,4 +1,4 @@
-# Gcalendar
+# gcallapi
 
 Untuk mendapatkan token pertama kali,juga jika token habis buka ini dan jalankan di lokal:
 
@@ -36,7 +36,7 @@ gmail
     attachmentPaths := []string{"path/to/attachment1.pdf", "path/to/attachment2.jpg"}
 
     // Send the email
-    err = gcalendar.SendEmailWithAttachment(db, to, subject, body, attachmentPaths)
+    err = gcallapi.SendEmailWithAttachment(db, to, subject, body, attachmentPaths)
     if err != nil {
         log.Fatalf("Error sending email: %v", err)
     }
@@ -49,7 +49,7 @@ gmail
  body := "This is a test email."
 
  // Send the email
- err = gcalendar.SendEmail(db, to, subject, body)
+ err = gcallapi.SendEmail(db, to, subject, body)
  if err != nil {
   log.Fatalf("Error sending email: %v", err)
  }
@@ -74,7 +74,7 @@ blogger
  `
 
  // Post to Blogger
- post, err := gcalendar.PostToBlogger(db, blogID, title, content)
+ post, err := gcallapi.PostToBlogger(db, blogID, title, content)
  if err != nil {
   log.Fatalf("Error posting to Blogger: %v", err)
  }
@@ -82,7 +82,7 @@ blogger
  blogID := "your-blog-id"
  postID := "your-post-id"
 
- err = gcalendar.DeletePostFromBlogger(db, blogID, postID)
+ err = gcallapi.DeletePostFromBlogger(db, blogID, postID)
  if err != nil {
   log.Fatalf("Failed to delete post: %v", err)
  }
@@ -95,7 +95,7 @@ drive
 fileID := "your-file-id"
  newTitle := "Duplicated File"
 
- duplicatedFile, err := gcalendar.DuplicateFileInDrive(db, fileID, newTitle)
+ duplicatedFile, err := gcallapi.DuplicateFileInDrive(db, fileID, newTitle)
  if err != nil {
   log.Fatalf("Failed to duplicate file: %v", err)
  }
@@ -110,7 +110,7 @@ docID := "your-doc-id"
   "oldText2": "newText2",
  }
 
- err = gcalendar.ReplaceStringsInDoc(db, docID, replacements)
+ err = gcallapi.ReplaceStringsInDoc(db, docID, replacements)
  if err != nil {
   log.Fatalf("Failed to replace strings in document: %v", err)
  }
@@ -122,7 +122,7 @@ pdf
 docID := "your-doc-id"
  outputFileName := "output.pdf"
 
- fileID, err := gcalendar.GeneratePDF(db, docID, outputFileName)
+ fileID, err := gcallapi.GeneratePDF(db, docID, outputFileName)
  if err != nil {
   log.Fatalf("Failed to generate PDF: %v", err)
  }
