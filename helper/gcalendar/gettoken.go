@@ -2,6 +2,7 @@ package gcalendar
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -10,25 +11,57 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Request a token from the web, then returns the retrieved token
-func GetTokenFromWeb(config *oauth2.Config) (*oauth2.Token, error) {
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("Go to the following link in your browser then type the authorization code: \n%v\n", authURL)
-
-	var authCode string
-	if _, err := fmt.Scan(&authCode); err != nil {
-		return nil, err
-	}
-
-	tok, err := config.Exchange(context.TODO(), authCode)
+// Retrieve credentials.json from MongoDB
+func credentialsFromDB(db *mongo.Database) (*oauth2.Config, error) {
+	collection := db.Collection("credentials")
+	var credentialRecord CredentialRecord
+	err := collection.FindOne(context.TODO(), bson.M{}).Decode(&credentialRecord)
 	if err != nil {
 		return nil, err
 	}
-	return tok, nil
+
+	if len(credentialRecord.RedirectURIs) == 0 {
+		return nil, errors.New("no redirect URIs found in credentials")
+	}
+
+	config := &oauth2.Config{
+		ClientID:     credentialRecord.ClientID,
+		ClientSecret: credentialRecord.ClientSecret,
+		Scopes:       credentialRecord.Scopes,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  credentialRecord.AuthURI,
+			TokenURL: credentialRecord.TokenURI,
+		},
+		RedirectURL: credentialRecord.RedirectURIs[0], // Using the first redirect URI
+	}
+
+	return config, nil
+}
+
+// Retrieve a token from MongoDB
+func tokenFromDB(db *mongo.Database) (*oauth2.Token, error) {
+	collection := db.Collection("tokens")
+	var tokenRecord CredentialRecord
+	err := collection.FindOne(context.TODO(), bson.M{}).Decode(&tokenRecord)
+	if err != nil {
+		return nil, err
+	}
+
+	token := &oauth2.Token{
+		AccessToken:  tokenRecord.Token,
+		RefreshToken: tokenRecord.RefreshToken,
+		TokenType:    "Bearer",
+		Expiry:       tokenRecord.Expiry,
+	}
+	if tokenRecord.Token == "" {
+		return nil, errors.New("token tidak ada")
+	}
+
+	return token, nil
 }
 
 // Saves a token to MongoDB
-func SaveToken(db *mongo.Database, token *oauth2.Token) (err error) {
+func saveToken(db *mongo.Database, token *oauth2.Token) error {
 	collection := db.Collection("tokens")
 	tokenRecord := bson.M{
 		"token":         token.AccessToken,
@@ -36,14 +69,41 @@ func SaveToken(db *mongo.Database, token *oauth2.Token) (err error) {
 		"expiry":        token.Expiry,
 	}
 
-	_, err = collection.UpdateOne(
+	_, err := collection.UpdateOne(
 		context.TODO(),
 		bson.M{},
 		bson.M{"$set": tokenRecord},
 		options.Update().SetUpsert(true),
 	)
 	if err != nil {
-		return
+		return err
 	}
-	return
+	return nil
+}
+
+// Refresh the token using the refresh token
+func refreshToken(config *oauth2.Config, token *oauth2.Token) (*oauth2.Token, error) {
+	ts := config.TokenSource(context.Background(), token)
+	newToken, err := ts.Token()
+	if err != nil {
+		return nil, err
+	}
+	return newToken, nil
+}
+
+// Request a token from the web, then returns the retrieved token
+func GetTokenFromWeb(config *oauth2.Config) *oauth2.Token {
+	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	fmt.Printf("Go to the following link in your browser then type the authorization code: \n%v\n", authURL)
+
+	var authCode string
+	if _, err := fmt.Scan(&authCode); err != nil {
+		panic(fmt.Sprintf("Unable to read authorization code: %v", err))
+	}
+
+	tok, err := config.Exchange(context.TODO(), authCode)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to retrieve token from web: %v", err))
+	}
+	return tok
 }

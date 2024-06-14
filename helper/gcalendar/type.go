@@ -16,3 +16,13 @@ type CredentialRecord struct {
 	JavascriptOrigins   []string  `bson:"javascript_origins"`
 	Scopes              []string  `bson:"scopes"`
 }
+
+type SimpleEvent struct {
+	Summary     string
+	Location    string
+	Description string
+	Date        string // YYYY-MM-DD
+	TimeStart   string // HH:MM:SS
+	TimeEnd     string // HH:MM:SS
+	Attendees   []string
+}
