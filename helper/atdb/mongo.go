@@ -150,17 +150,23 @@ func InsertOneDoc(db *mongo.Database, collection string, doc interface{}) (inser
 	return insertResult.InsertedID.(primitive.ObjectID), nil
 }
 
-// With ReplaceOneDoc() you can only replace the entire document,
-// while UpdateDoc() allows for updating fields. Since ReplaceOneDoc() replaces the entire document - fields in the old document not contained in the new will be lost.
-// With UpdateDoc() new fields can be added without losing the fields in the old document.
-func UpdateDoc(db *mongo.Database, collection string, filter bson.M, updatefield bson.M) (updateresult *mongo.UpdateResult, err error) {
-	updateresult, err = db.Collection(collection).UpdateOne(context.TODO(), filter, updatefield)
+// With UpdateOneDoc() allows for updating fields, new fields can be added without losing the fields in the old document.
+//
+//	updatefields := bson.M{
+//		"token":         token.AccessToken,
+//		"refresh_token": token.RefreshToken,
+//		"expiry":        token.Expiry,
+//	}
+func UpdateOneDoc(db *mongo.Database, collection string, filter bson.M, updatefields bson.M) (updateresult *mongo.UpdateResult, err error) {
+	updateresult, err = db.Collection(collection).UpdateOne(context.TODO(), filter, bson.M{"$set": updatefields}, options.Update().SetUpsert(true))
 	if err != nil {
 		return
 	}
 	return
 }
 
+// With ReplaceOneDoc() you can only replace the entire document,
+// while UpdateOneDoc() allows for updating fields. Since ReplaceOneDoc() replaces the entire document - fields in the old document not contained in the new will be lost.
 func ReplaceOneDoc(db *mongo.Database, collection string, filter bson.M, doc interface{}) (updatereseult *mongo.UpdateResult, err error) {
 	updatereseult, err = db.Collection(collection).ReplaceOne(context.TODO(), filter, doc)
 	if err != nil {

@@ -91,13 +91,11 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	filter := bson.M{"_id": bson.M{"$eq": hasil.ID}}
-	update := bson.M{
-		"$set": bson.M{
-			"rating":   rating.Rating,
-			"komentar": rating.Komentar,
-		},
+	fields := bson.M{
+		"rating":   rating.Rating,
+		"komentar": rating.Komentar,
 	}
-	res, err := atdb.UpdateDoc(config.Mongoconn, "uxlaporan", filter, update)
+	res, err := atdb.UpdateOneDoc(config.Mongoconn, "uxlaporan", filter, fields)
 	if err != nil {
 		respn.Status = "Error : Data laporan tidak berhasil di update data rating"
 		respn.Response = err.Error()

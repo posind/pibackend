@@ -153,7 +153,7 @@ func TambahPoinLaporanbyPhoneNumberw(phonenumber string, laporans []model.Lapora
 		return
 	}
 	poinbaru := usr.Poin + poin
-	_, err = atdb.UpdateDoc(config.Mongoconn, "user", bson.M{"phonenumber": phonenumber}, bson.M{"poin": poinbaru})
+	_, err = atdb.UpdateOneDoc(config.Mongoconn, "user", bson.M{"phonenumber": phonenumber}, bson.M{"poin": poinbaru})
 	if err != nil {
 		return
 	}
