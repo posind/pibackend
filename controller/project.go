@@ -56,14 +56,6 @@ func PostDataProject(respw http.ResponseWriter, req *http.Request) {
 			return
 		}
 		prj.ID = idprj
-		// _, err = atdb.AddDocToArray[model.Userdomyikado](config.Mongoconn.Collection("project"), prj.ID, "members", docuser)
-		// if err != nil {
-		// 	var respn model.Response
-		// 	respn.Status = "Gagal Menambahkan member ke proyek"
-		// 	respn.Response = err.Error()
-		// 	at.WriteJSON(respw, http.StatusNotExtended, respn)
-		// 	return
-		// }
 		at.WriteJSON(respw, http.StatusOK, prj)
 	} else {
 		var respn model.Response
@@ -249,7 +241,7 @@ func PostDataMemberProject(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusConflict, respn)
 		return
 	}
-	docusermember.Poin = 0
+	docusermember.Poin = 0 //set user poin per project, jika baru dimasukkan maka set0 karena belum ada kontribusi di project ini
 	rest, err := atdb.AddDocToArray[model.Userdomyikado](config.Mongoconn, "project", idprjuser.ID, "members", docusermember)
 	if err != nil {
 		respn.Status = "Error : Gagal menambahkan member ke project"
