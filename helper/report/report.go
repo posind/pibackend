@@ -285,37 +285,6 @@ func KurangPoinUserbyPhoneNumber(db *mongo.Database, phonenumber string, poin fl
 
 }
 
-func TambahPoinPerProjectPushRepobyGithubUsername(db *mongo.Database, projectID primitive.ObjectID, ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
-	// Menentukan kondisi filter untuk elemen array yang ingin diupdate
-	filterCondition := bson.M{"githubusername": ghuser}
-	// eksistingpoin, err := GetPreviousPoin(db, "project", projectID, "members", filterCondition)
-	// if err != nil {
-	// 	return
-	// }
-	poinupdate := poin + poin
-	// Nilai baru yang ingin diupdate
-	updatedFields := bson.M{"poin": poinupdate}
-	res, err = atdb.EditDocInArray(db, "project", projectID, "members", filterCondition, updatedFields)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func TambahPoinPerProjectPushRepobyGithubEmail(db *mongo.Database, projectID primitive.ObjectID, ghemail string, poin float64) (res *mongo.UpdateResult, err error) {
-	// Menentukan kondisi filter untuk elemen array yang ingin diupdate
-	filterCondition := bson.M{"email": ghemail}
-	//eksistingpoin, err := GetPreviousPoin(db, "project", projectID, "members", filterCondition)
-	poinupdate := poin + poin
-	// Nilai baru yang ingin diupdate
-	updatedFields := bson.M{"poin": poinupdate}
-	res, err = atdb.EditDocInArray(db, "project", projectID, "members", filterCondition, updatedFields)
-	if err != nil {
-		return
-	}
-	return
-}
-
 func TambahPoinPushRepobyGithubUsername(db *mongo.Database, ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
 	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"githubusername": ghuser})
 	if err != nil {
