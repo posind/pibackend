@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gocroot/config"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/model"
@@ -238,16 +237,61 @@ func GetDataRepoMasukHariIni(db *mongo.Database, groupId string) (msg string) {
 	return
 }
 
-func TambahPoinLaporanbyPhoneNumber(phonenumber string, poin float64) (res *mongo.UpdateResult, err error) {
-	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"phonenumber": phonenumber})
+// menambah poin untuk presensi
+func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lokasi string, poin float64, activity string) (res *mongo.UpdateResult, err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"phonenumber": phonenumber})
 	if err != nil {
 		return
 	}
 	usr.Poin = usr.Poin + poin
-	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"phonenumber": phonenumber}, usr)
+	res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"phonenumber": phonenumber}, usr)
 	if err != nil {
 		return
 	}
+	logpoin := LogPoin{
+		UserID:      usr.ID,
+		Name:        usr.Name,
+		PhoneNumber: usr.PhoneNumber,
+		Email:       usr.Email,
+		Poin:        poin,
+		ProjectName: lokasi,
+		Activity:    activity,
+	}
+	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
+	if err != nil {
+		return
+	}
+
+	return
+
+}
+
+// menambah poin untuk laporan
+func TambahPoinLaporanbyPhoneNumber(db *mongo.Database, prj model.Project, phonenumber string, poin float64, activity string) (res *mongo.UpdateResult, err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"phonenumber": phonenumber})
+	if err != nil {
+		return
+	}
+	usr.Poin = usr.Poin + poin
+	res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"phonenumber": phonenumber}, usr)
+	if err != nil {
+		return
+	}
+	logpoin := LogPoin{
+		UserID:      usr.ID,
+		Name:        usr.Name,
+		PhoneNumber: usr.PhoneNumber,
+		Email:       usr.Email,
+		ProjectID:   prj.ID,
+		ProjectName: prj.Name,
+		Poin:        poin,
+		Activity:    activity,
+	}
+	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
+	if err != nil {
+		return
+	}
+
 	return
 
 }

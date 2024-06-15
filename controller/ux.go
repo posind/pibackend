@@ -52,7 +52,7 @@ func PostPresensi(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusForbidden, resp)
 		return
 	}
-	res, err := report.TambahPoinLaporanbyPhoneNumber(presensi.PhoneNumber, presensi.Skor)
+	res, err := report.TambahPoinPresensibyPhoneNumber(config.Mongoconn, presensi.PhoneNumber, presensi.Lokasi, presensi.Skor, "presensi")
 	if err != nil {
 		resp.Info = "Tambah Poin Presensi gagal"
 		resp.Response = err.Error()
@@ -103,7 +103,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	poin := float64(rating.Rating) / 5.0
-	_, err = report.TambahPoinLaporanbyPhoneNumber(hasil.NoPetugas, poin)
+	_, err = report.TambahPoinLaporanbyPhoneNumber(config.Mongoconn, hasil.Project, hasil.NoPetugas, poin, "rating")
 	if err != nil {
 		respn.Info = "TambahPoinPushRepobyGithubUsername gagal"
 		respn.Response = err.Error()
@@ -223,7 +223,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusNotModified, respn)
 		return
 	}
-	_, err = report.TambahPoinLaporanbyPhoneNumber(docuser.PhoneNumber, 1)
+	_, err = report.TambahPoinLaporanbyPhoneNumber(config.Mongoconn, prjuser, docuser.PhoneNumber, 1, "laporan")
 	if err != nil {
 		var resp model.Response
 		resp.Info = "TambahPoinPushRepobyGithubUsername gagal"
@@ -319,7 +319,15 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusNotModified, respn)
 		return
 	}
-	message := "*Permintaan Feedback Pekerjaan*\n" + "Petugas : " + docuser.Name + "\nDeskripsi:" + lap.Solusi + "\n Beri Nilai: " + "https://www.do.my.id/rate/#" + idlap.Hex()
+	_, err = report.TambahPoinLaporanbyPhoneNumber(config.Mongoconn, prjuser, docuser.PhoneNumber, 1, "feedback")
+	if err != nil {
+		var resp model.Response
+		resp.Info = "TambahPoinLaporanbyPhoneNumber gagal"
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusExpectationFailed, resp)
+		return
+	}
+	message := "*Permintaan Feedback*\n" + "Petugas : " + docuser.Name + "\nDeskripsi:" + lap.Solusi + "\n Beri Nilai: " + "https://www.do.my.id/rate/#" + idlap.Hex()
 	dt := &whatsauth.TextMessage{
 		To:       lap.Phone,
 		IsGroup:  false,
