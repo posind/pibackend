@@ -10,6 +10,7 @@ import (
 	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/gcallapi"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/helper/whatsauth"
@@ -149,6 +150,82 @@ func GetLaporan(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	at.WriteJSON(respw, http.StatusOK, hasil)
+}
+
+func PostMeeting(w http.ResponseWriter, r *http.Request) {
+	var respn model.Response
+	//otorisasi dan validasi inputan
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(r))
+	if err != nil {
+		respn.Status = "Error : Token Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(r)
+		respn.Location = "Decode Token Error"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusForbidden, respn)
+		return
+	}
+	var event gcallapi.SimpleEvent
+	err = json.NewDecoder(r.Body).Decode(&event)
+	if err != nil {
+		respn.Status = "Error : Body tidak valid"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusBadRequest, respn)
+		return
+	}
+	//check validasi user
+	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
+	if err != nil {
+		respn.Status = "Error : Data user tidak di temukan: " + payload.Id
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusNotImplemented, respn)
+		return
+	}
+	prjuser, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": event.ProjectID})
+	if err != nil {
+		respn.Status = "Error : Data project tidak di temukan: " + event.ProjectID.Hex()
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusNotImplemented, respn)
+		return
+	}
+	//lojik inputan post
+	var lap model.Laporan
+	lap.User = docuser
+	lap.Project = prjuser
+	lap.Phone = prjuser.Owner.PhoneNumber
+	lap.Nama = prjuser.Owner.Name
+	lap.Petugas = docuser.Name
+	lap.NoPetugas = docuser.PhoneNumber
+	lap.Solusi = event.Description
+
+	idlap, err := atdb.InsertOneDoc(config.Mongoconn, "uxlaporan", lap)
+	if err != nil {
+		respn.Status = "Gagal Insert Database"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusNotModified, respn)
+		return
+	}
+	_, err = report.TambahPoinLaporanbyPhoneNumber(config.Mongoconn, prjuser, docuser.PhoneNumber, 1, "meeting")
+	if err != nil {
+		var resp model.Response
+		resp.Info = "TambahPoinPushRepobyGithubUsername gagal"
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusExpectationFailed, resp)
+		return
+	}
+	message := "*Meeting " + event.Summary + "*" + "\nAgenda: " + event.Description + "\nTanggal: " + event.Date + "\nJam: " + event.TimeStart + " - " + event.TimeEnd + "\nPembuat : " + docuser.Name + "\nURL Risalah Pertemuan: " + "https://www.do.my.id/rate/#" + idlap.Hex()
+	dt := &whatsauth.TextMessage{
+		To:       lap.Phone,
+		IsGroup:  false,
+		Messages: message,
+	}
+	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	if err != nil {
+		resp.Info = "Tidak berhak"
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusUnauthorized, resp)
+		return
+	}
+	at.WriteJSON(w, http.StatusOK, lap)
 }
 
 func PostLaporan(respw http.ResponseWriter, req *http.Request) {

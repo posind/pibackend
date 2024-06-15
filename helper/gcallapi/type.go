@@ -1,6 +1,10 @@
 package gcallapi
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type CredentialRecord struct {
 	Token               string    `bson:"token"`
@@ -18,11 +22,12 @@ type CredentialRecord struct {
 }
 
 type SimpleEvent struct {
-	Summary     string
-	Location    string
-	Description string
-	Date        string // YYYY-MM-DD
-	TimeStart   string // HH:MM:SS
-	TimeEnd     string // HH:MM:SS
+	ProjectID   primitive.ObjectID `json:"project_id"`
+	Summary     string             `json:"summary"`
+	Location    string             `json:"location"`
+	Description string             `json:"description"`
+	Date        string             `json:"date"`      // YYYY-MM-DD
+	TimeStart   string             `json:"timestart"` // HH:MM:SS
+	TimeEnd     string             `json:"timeend"`   // HH:MM:SS
 	Attendees   []string
 }
