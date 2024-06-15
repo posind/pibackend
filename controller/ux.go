@@ -196,8 +196,15 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 	lap.Petugas = docuser.Name
 	lap.NoPetugas = docuser.PhoneNumber
 	lap.Solusi = event.Description
-
-	idlap, err := atdb.InsertOneDoc(config.Mongoconn, "uxlaporan", lap)
+	gevt, err := gcallapi.HandlerCalendar(config.Mongoconn, event)
+	if err != nil {
+		respn.Status = "Gagal Membuat Google Calendar"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusNotModified, respn)
+		return
+	}
+	lap.Kode = gevt.HtmlLink
+	lap.ID, err = atdb.InsertOneDoc(config.Mongoconn, "uxlaporan", lap)
 	if err != nil {
 		respn.Status = "Gagal Insert Database"
 		respn.Response = err.Error()
@@ -212,7 +219,7 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 		at.WriteJSON(w, http.StatusExpectationFailed, resp)
 		return
 	}
-	message := "*Meeting " + event.Summary + "*" + "\nAgenda: " + event.Description + "\nTanggal: " + event.Date + "\nJam: " + event.TimeStart + " - " + event.TimeEnd + "\nPembuat : " + docuser.Name + "\nURL Risalah Pertemuan: " + "https://www.do.my.id/rate/#" + idlap.Hex()
+	message := "*Meeting " + event.Summary + "*\n" + lap.Kode + "\nAgenda: " + event.Description + "\nTanggal: " + event.Date + "\nJam: " + event.TimeStart + " - " + event.TimeEnd + "\nPembuat : " + docuser.Name + "\nURL Risalah Pertemuan: " + "https://www.do.my.id/rate/#" + lap.ID.Hex()
 	dt := &whatsauth.TextMessage{
 		To:       lap.Phone,
 		IsGroup:  false,
