@@ -235,9 +235,9 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 		at.WriteJSON(w, http.StatusExpectationFailed, resp)
 		return
 	}
-	message := "*Meeting " + event.Summary + "*\n" + lap.Kode + "\nAgenda: " + event.Description + "\nTanggal: " + event.Date + "\nJam: " + event.TimeStart + " - " + event.TimeEnd + "\nPembuat : " + docuser.Name + "\nURL Risalah Pertemuan: " + "https://www.do.my.id/rate/#" + lap.ID.Hex()
+	message := "*Meeting " + event.Summary + "*\n" + lap.Kode + "\nAgenda: " + event.Description + "\nTanggal: " + event.Date + "\nJam: " + event.TimeStart + " - " + event.TimeEnd + "\nNotulen : " + docuser.Name + "\nURL Input Risalah Pertemuan: " + "https://www.do.my.id/resume/#" + lap.ID.Hex()
 	dt := &whatsauth.TextMessage{
-		To:       lap.Phone,
+		To:       lap.NoPetugas,
 		IsGroup:  false,
 		Messages: message,
 	}
