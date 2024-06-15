@@ -316,13 +316,13 @@ func TambahPoinPerProjectPushRepobyGithubEmail(db *mongo.Database, projectID pri
 	return
 }
 
-func TambahPoinPushRepobyGithubUsername(ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
-	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"githubusername": ghuser})
+func TambahPoinPushRepobyGithubUsername(db *mongo.Database, ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"githubusername": ghuser})
 	if err != nil {
 		return
 	}
 	usr.Poin = usr.Poin + poin
-	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"githubusername": ghuser}, usr)
+	res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"githubusername": ghuser}, usr)
 	if err != nil {
 		return
 	}
@@ -330,13 +330,13 @@ func TambahPoinPushRepobyGithubUsername(ghuser string, poin float64) (res *mongo
 
 }
 
-func TambahPoinPushRepobyGithubEmail(ghemail string, poin float64) (res *mongo.UpdateResult, err error) {
-	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"email": ghemail})
+func TambahPoinPushRepobyGithubEmail(db *mongo.Database, ghemail string, poin float64) (res *mongo.UpdateResult, err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"email": ghemail})
 	if err != nil {
 		return
 	}
 	usr.Poin = usr.Poin + poin
-	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"email": ghemail}, usr)
+	res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"email": ghemail}, usr)
 	if err != nil {
 		return
 	}
