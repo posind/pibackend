@@ -142,25 +142,6 @@ func GetRankDataLaporanHariini(db *mongo.Database, filterhari bson.M, waGroupId 
 	return
 }
 
-func TambahPoinLaporanbyPhoneNumberw(phonenumber string, laporans []model.Laporan) (poin float64, err error) {
-	for _, laporan := range laporans {
-		poinbaru := laporan.Rating / 5.0
-		poin += poinbaru
-	}
-	poin += float64(len(laporans))
-	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"phonenumber": phonenumber})
-	if err != nil {
-		return
-	}
-	poinbaru := usr.Poin + poin
-	_, err = atdb.UpdateOneDoc(config.Mongoconn, "user", bson.M{"phonenumber": phonenumber}, bson.M{"poin": poinbaru})
-	if err != nil {
-		return
-	}
-	return
-
-}
-
 func GetDataLaporanMasukHarian(db *mongo.Database) (msg string) {
 	msg += "*Jumlah Laporan Hari Ini :*\n"
 	ranklist := GetRankDataLayananHarian(db, TodayFilter())
