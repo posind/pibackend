@@ -288,11 +288,11 @@ func KurangPoinUserbyPhoneNumber(db *mongo.Database, phonenumber string, poin fl
 func TambahPoinPerProjectPushRepobyGithubUsername(db *mongo.Database, projectID primitive.ObjectID, ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
 	// Menentukan kondisi filter untuk elemen array yang ingin diupdate
 	filterCondition := bson.M{"githubusername": ghuser}
-	eksistingpoin, err := GetPreviousPoin(db, "project", projectID, "members", filterCondition)
-	if err != nil {
-		return
-	}
-	poinupdate := eksistingpoin + poin
+	// eksistingpoin, err := GetPreviousPoin(db, "project", projectID, "members", filterCondition)
+	// if err != nil {
+	// 	return
+	// }
+	poinupdate := poin + poin
 	// Nilai baru yang ingin diupdate
 	updatedFields := bson.M{"poin": poinupdate}
 	res, err = atdb.EditDocInArray(db, "project", projectID, "members", filterCondition, updatedFields)
