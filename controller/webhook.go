@@ -96,16 +96,16 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				}
 				dokcommit.User = *member
 			}
-			_, err = report.TambahPoinPerProjectPushRepobyGithubUsername(config.Mongoconn, prj.ID, dokcommit.Username, 1)
-			if err != nil {
-				_, err := report.TambahPoinPerProjectPushRepobyGithubEmail(config.Mongoconn, prj.ID, dokcommit.Email, 1)
-				if err != nil {
-					resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
-					resp.Response = err.Error()
-					at.WriteJSON(respw, http.StatusExpectationFailed, resp)
-					return
-				}
-			}
+			// _, err = report.TambahPoinPerProjectPushRepobyGithubUsername(config.Mongoconn, prj.ID, dokcommit.Username, 1)
+			// if err != nil {
+			// 	_, err := report.TambahPoinPerProjectPushRepobyGithubEmail(config.Mongoconn, prj.ID, dokcommit.Email, 1)
+			// 	if err != nil {
+			// 		resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
+			// 		resp.Response = err.Error()
+			// 		at.WriteJSON(respw, http.StatusExpectationFailed, resp)
+			// 		return
+			// 	}
+			// }
 
 			_, err = report.TambahPoinPushRepobyGithubUsername(dokcommit.Username, 1)
 			if err != nil {
