@@ -285,6 +285,19 @@ func KurangPoinUserbyPhoneNumber(db *mongo.Database, phonenumber string, poin fl
 
 }
 
+func TambahPoinPerProjectPushRepobyGithubUsername(projectID primitive.ObjectID, ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
+	prj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", bson.M{"_id": projectID})
+	if err != nil {
+		return
+	}
+	usr.Poin = usr.Poin + poin
+	res, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", bson.M{"githubusername": ghuser}, usr)
+	if err != nil {
+		return
+	}
+	return
+
+}
 func TambahPoinPushRepobyGithubUsername(ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
 	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"githubusername": ghuser})
 	if err != nil {
