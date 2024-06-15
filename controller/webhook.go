@@ -107,9 +107,9 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			// 	}
 			// }
 
-			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, dokcommit.Username, 1)
+			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit.Username, 1)
 			if err != nil {
-				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, dokcommit.Email, 1)
+				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit.Email, 1)
 				if err != nil {
 					resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
 					resp.Response = err.Error()

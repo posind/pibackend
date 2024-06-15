@@ -285,7 +285,7 @@ func KurangPoinUserbyPhoneNumber(db *mongo.Database, phonenumber string, poin fl
 
 }
 
-func TambahPoinPushRepobyGithubUsername(db *mongo.Database, ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
+func TambahPoinPushRepobyGithubUsername(db *mongo.Database, prj model.Project, ghuser string, poin float64) (res *mongo.UpdateResult, err error) {
 	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"githubusername": ghuser})
 	if err != nil {
 		return
@@ -295,11 +295,25 @@ func TambahPoinPushRepobyGithubUsername(db *mongo.Database, ghuser string, poin 
 	if err != nil {
 		return
 	}
+	logpoin := LogPoin{
+		UserID:      usr.ID,
+		Name:        usr.Name,
+		PhoneNumber: usr.PhoneNumber,
+		Email:       usr.Email,
+		ProjectID:   prj.ID,
+		ProjectName: prj.Name,
+		Poin:        poin,
+		Activity:    "Push Repo",
+	}
+	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
+	if err != nil {
+		return
+	}
 	return
 
 }
 
-func TambahPoinPushRepobyGithubEmail(db *mongo.Database, ghemail string, poin float64) (res *mongo.UpdateResult, err error) {
+func TambahPoinPushRepobyGithubEmail(db *mongo.Database, prj model.Project, ghemail string, poin float64) (res *mongo.UpdateResult, err error) {
 	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"email": ghemail})
 	if err != nil {
 		return
@@ -309,8 +323,21 @@ func TambahPoinPushRepobyGithubEmail(db *mongo.Database, ghemail string, poin fl
 	if err != nil {
 		return
 	}
+	logpoin := LogPoin{
+		UserID:      usr.ID,
+		Name:        usr.Name,
+		PhoneNumber: usr.PhoneNumber,
+		Email:       usr.Email,
+		ProjectID:   prj.ID,
+		ProjectName: prj.Name,
+		Poin:        poin,
+		Activity:    "Push Repo",
+	}
+	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
+	if err != nil {
+		return
+	}
 	return
-
 }
 
 func GetDataRepoMasukHarian(db *mongo.Database) (msg string) {
