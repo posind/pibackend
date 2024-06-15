@@ -27,15 +27,15 @@ type Project struct {
 }
 
 type Userdomyikado struct {
-	ID              primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	Name            string             `bson:"name,omitempty" json:"name,omitempty"`
-	PhoneNumber     string             `bson:"phonenumber,omitempty" json:"phonenumber,omitempty"`
-	Email           string             `bson:"email,omitempty" json:"email,omitempty"`
-	GithubUsername  string             `bson:"githubusername,omitempty" json:"githubusername,omitempty"`
-	GitlabUsername  string             `bson:"gitlabusername,omitempty" json:"gitlabusername,omitempty"`
-	GitHostUsername string             `bson:"githostusername,omitempty" json:"githostusername,omitempty"`
-	Poin            float64            `bson:"poin,omitempty" json:"poin,omitempty"`
-	GoogleProfilePicture string        `bson:"googleprofilepicture,omitempty" json:"picture,omitempty"`
+	ID                   primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Name                 string             `bson:"name,omitempty" json:"name,omitempty"`
+	PhoneNumber          string             `bson:"phonenumber,omitempty" json:"phonenumber,omitempty"`
+	Email                string             `bson:"email,omitempty" json:"email,omitempty"`
+	GithubUsername       string             `bson:"githubusername,omitempty" json:"githubusername,omitempty"`
+	GitlabUsername       string             `bson:"gitlabusername,omitempty" json:"gitlabusername,omitempty"`
+	GitHostUsername      string             `bson:"githostusername,omitempty" json:"githostusername,omitempty"`
+	Poin                 float64            `bson:"poin,omitempty" json:"poin,omitempty"`
+	GoogleProfilePicture string             `bson:"googleprofilepicture,omitempty" json:"picture,omitempty"`
 }
 
 type Task struct {

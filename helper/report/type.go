@@ -1,6 +1,10 @@
 package report
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/gocroot/helper/gcallapi"
+	"github.com/gocroot/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type NewLiburNasional struct {
 	Tanggal    string `json:"tanggal"`
@@ -28,6 +32,7 @@ type LogPoin struct {
 
 type TaskList struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	MeetID      primitive.ObjectID `json:"meetid,omitempty" bson:"meetid,omitempty"`
 	UserID      primitive.ObjectID `json:"userid,omitempty" bson:"userid,omitempty"`
 	Name        string             `json:"name,omitempty" bson:"name,omitempty"`
 	PhoneNumber string             `json:"phonenumber,omitempty" bson:"phonenumber,omitempty"`
@@ -36,4 +41,35 @@ type TaskList struct {
 	ProjectName string             `json:"projectname,omitempty" bson:"projectname,omitempty"`
 	Task        string             `json:"task,omitempty" bson:"task,omitempty"`
 	IsDone      bool               `json:"isdone,omitempty" bson:"isdone,omitempty"`
+}
+
+type Laporan struct {
+	ID        primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty" query:"id" url:"_id,omitempty" reqHeader:"_id"`
+	MeetID    primitive.ObjectID   `json:"meetid,omitempty" bson:"meetid,omitempty"`
+	MeetEvent gcallapi.SimpleEvent `json:"meetevent,omitempty" bson:"meetevent,omitempty"`
+	Project   model.Project        `json:"project,omitempty" bson:"project,omitempty"`
+	User      model.Userdomyikado  `json:"user,omitempty" bson:"user,omitempty"`
+	Petugas   string               `json:"petugas,omitempty" bson:"petugas,omitempty"`
+	NoPetugas string               `json:"nopetugas,omitempty" bson:"nopetugas,omitempty"`
+	Kode      string               `json:"kode,omitempty" bson:"kode,omitempty"`
+	Nama      string               `json:"nama,omitempty" bson:"nama,omitempty"`
+	Phone     string               `json:"phone,omitempty" bson:"phone,omitempty"`
+	Solusi    string               `json:"solusi,omitempty" bson:"solusi,omitempty"`
+	Komentar  string               `json:"komentar,omitempty" bson:"komentar,omitempty"`
+	Rating    float64              `json:"rating,omitempty" bson:"rating,omitempty"`
+}
+
+type Rating struct {
+	ID       string `json:"id,omitempty" bson:"id,omitempty" query:"id" url:"id,omitempty" reqHeader:"id"`
+	Komentar string `json:"komentar,omitempty" bson:"komentar,omitempty"`
+	Rating   int    `json:"rating,omitempty" bson:"rating,omitempty"`
+}
+
+type PresensiDomyikado struct {
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	PhoneNumber string             `json:"phonenumber,omitempty" bson:"phonenumber,omitempty"`
+	Skor        float64            `json:"skor,omitempty" bson:"skor,omitempty"`
+	KetJam      string             `json:"ketjam,omitempty" bson:"ketjam,omitempty"`
+	LamaDetik   float64            `json:"lamadetik,omitempty" bson:"lamadetik,omitempty"`
+	Lokasi      string             `json:"lokasi,omitempty" bson:"lokasi,omitempty"`
 }

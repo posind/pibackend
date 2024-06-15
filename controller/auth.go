@@ -38,8 +38,8 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userInfo := model.Userdomyikado{
-		Name:                payload.Claims["name"].(string),
-		Email:               payload.Claims["email"].(string),
+		Name:                 payload.Claims["name"].(string),
+		Email:                payload.Claims["email"].(string),
 		GoogleProfilePicture: payload.Claims["picture"].(string),
 	}
 
@@ -83,4 +83,3 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 }
-

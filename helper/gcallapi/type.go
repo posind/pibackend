@@ -22,12 +22,13 @@ type CredentialRecord struct {
 }
 
 type SimpleEvent struct {
-	ProjectID   primitive.ObjectID `json:"project_id"`
-	Summary     string             `json:"summary"`
-	Location    string             `json:"location"`
-	Description string             `json:"description"`
-	Date        string             `json:"date"`      // YYYY-MM-DD
-	TimeStart   string             `json:"timestart"` // HH:MM:SS
-	TimeEnd     string             `json:"timeend"`   // HH:MM:SS
-	Attendees   []string
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ProjectID   primitive.ObjectID `json:"project_id,omitempty" bson:"project_id,omitempty"`
+	Summary     string             `json:"summary,omitempty" bson:"summary,omitempty"`
+	Location    string             `json:"location,omitempty" bson:"location,omitempty"`
+	Description string             `json:"description,omitempty" bson:"description,omitempty"`
+	Date        string             `json:"date,omitempty" bson:"date,omitempty"`           // YYYY-MM-DD
+	TimeStart   string             `json:"timestart,omitempty" bson:"timestart,omitempty"` // HH:MM:SS
+	TimeEnd     string             `json:"timeend,omitempty" bson:"timeend,omitempty"`     // HH:MM:SS
+	Attendees   []string           `json:"attendees,omitempty" bson:"attendees,omitempty"`
 }

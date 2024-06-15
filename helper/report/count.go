@@ -38,7 +38,7 @@ func MergePhoneNumberCounts(counts1, counts2 map[string]PhoneNumberInfo) map[str
 // 	for phoneNumber, info := range phoneNumberCount {
 // 		fmt.Printf("Phone Number: %s, Count: %d, Name: %s\n", phoneNumber, info.Count, info.Name)
 // 	}
-func CountDuplicatePhoneNumbersLaporan(laporans []model.Laporan) map[string]PhoneNumberInfo {
+func CountDuplicatePhoneNumbersLaporan(laporans []Laporan) map[string]PhoneNumberInfo {
 	phoneNumberCount := make(map[string]PhoneNumberInfo)
 
 	for _, laporan := range laporans {

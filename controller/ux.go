@@ -33,7 +33,7 @@ func PostPresensi(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusUnauthorized, resp)
 		return
 	}
-	var presensi model.PresensiDomyikado
+	var presensi report.PresensiDomyikado
 	err = json.NewDecoder(req.Body).Decode(&presensi)
 	if err != nil {
 		resp.Response = err.Error()
@@ -66,7 +66,7 @@ func PostPresensi(respw http.ResponseWriter, req *http.Request) {
 }
 
 func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
-	var rating model.Rating
+	var rating report.Rating
 	var respn model.Response
 	err := json.NewDecoder(req.Body).Decode(&rating)
 	if err != nil {
@@ -84,7 +84,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
-	hasil, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
+	hasil, err := atdb.GetOneLatestDoc[report.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
 	if err != nil {
 		respn.Status = "Error : Data laporan tidak di temukan"
 		respn.Response = err.Error()
@@ -141,7 +141,7 @@ func GetLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
-	hasil, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
+	hasil, err := atdb.GetOneLatestDoc[report.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Data laporan tidak di temukan"
@@ -188,7 +188,7 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//lojik inputan post
-	var lap model.Laporan
+	var lap report.Laporan
 	lap.User = docuser
 	lap.Project = prjuser
 	lap.Phone = prjuser.Owner.PhoneNumber
@@ -210,6 +210,15 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 		at.WriteJSON(w, http.StatusNotModified, respn)
 		return
 	}
+	event.ID, err = atdb.InsertOneDoc(config.Mongoconn, "meeting", event)
+	if err != nil {
+		respn.Status = "Gagal Insert Database meeting"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusNotModified, respn)
+		return
+	}
+	lap.MeetID = event.ID
+	lap.MeetEvent = event
 	lap.Kode = gevt.HtmlLink
 	lap.ID, err = atdb.InsertOneDoc(config.Mongoconn, "uxlaporan", lap)
 	if err != nil {
@@ -254,7 +263,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusForbidden, respn)
 		return
 	}
-	var lap model.Laporan
+	var lap report.Laporan
 	err = json.NewDecoder(req.Body).Decode(&lap)
 	if err != nil {
 		var respn model.Response
@@ -351,7 +360,7 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusForbidden, respn)
 		return
 	}
-	var lap model.Laporan
+	var lap report.Laporan
 	err = json.NewDecoder(req.Body).Decode(&lap)
 	if err != nil {
 		var respn model.Response
