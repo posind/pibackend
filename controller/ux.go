@@ -196,6 +196,13 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 	lap.Petugas = docuser.Name
 	lap.NoPetugas = docuser.PhoneNumber
 	lap.Solusi = event.Description
+	//mengambil daftar email dari project member
+	var attendees []string
+	for _, member := range prjuser.Members {
+		attendees = append(attendees, member.Email)
+	}
+	event.Attendees = attendees
+
 	gevt, err := gcallapi.HandlerCalendar(config.Mongoconn, event)
 	if err != nil {
 		respn.Status = "Gagal Membuat Google Calendar"
