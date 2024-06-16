@@ -3,7 +3,6 @@ package gcallapi
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -89,21 +88,4 @@ func refreshToken(config *oauth2.Config, token *oauth2.Token) (*oauth2.Token, er
 		return nil, err
 	}
 	return newToken, nil
-}
-
-// Request a token from the web, then returns the retrieved token
-func GetTokenFromWeb(config *oauth2.Config) *oauth2.Token {
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("Go to the following link in your browser then type the authorization code: \n%v\n", authURL)
-
-	var authCode string
-	if _, err := fmt.Scan(&authCode); err != nil {
-		panic(fmt.Sprintf("Unable to read authorization code: %v", err))
-	}
-
-	tok, err := config.Exchange(context.TODO(), authCode)
-	if err != nil {
-		panic(fmt.Sprintf("Unable to retrieve token from web: %v", err))
-	}
-	return tok
 }

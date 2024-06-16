@@ -3,13 +3,35 @@
 Untuk mendapatkan token pertama kali,juga jika token habis buka ini dan jalankan di lokal:
 
 ```go
-tok, err = GetTokenFromWeb(config)
-if err != nil {
-    return nil, err
+func main() {
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb+srv://a98jiu"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Disconnect(context.TODO())
+
+	db := client.Database("dbname")
+	conf, _ := credentialsFromDB(db)
+	tok := GetTokenFromWeb(conf)
+	saveToken(db, tok)
 }
-err = SaveToken(db, tok)
-if err != nil {
-    return nil, err
+
+// Request a token from the web, then returns the retrieved token
+func GetTokenFromWeb(config *oauth2.Config) *oauth2.Token {
+	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	fmt.Printf("Go to the following link in your browser then type the authorization code: \n%v\n", authURL)
+
+	var authCode string
+	if _, err := fmt.Scan(&authCode); err != nil {
+		panic(fmt.Sprintf("Unable to read authorization code: %v", err))
+	}
+
+	tok, err := config.Exchange(context.TODO(), authCode)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to retrieve token from web: %v", err))
+	}
+	return tok
 }
 ```
 ## Cara pakai

@@ -4,7 +4,8 @@ package gcallapi
 import (
 	"context"
 	"encoding/base64"
-	"io/ioutil"
+	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -81,7 +82,7 @@ func SendEmailWithAttachment(db *mongo.Database, to string, subject string, body
 	msg.WriteString("\r\n" + body + "\r\n")
 
 	for _, path := range attachmentPaths {
-		content, err := ioutil.ReadFile(path)
+		content, err := readFile(path)
 		if err != nil {
 			return err
 		}
@@ -133,4 +134,28 @@ func SendEmail(db *mongo.Database, to string, subject string, body string) error
 	}
 
 	return nil
+}
+
+// Helper function to read a file and return its content
+func readFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	fileSize := fileInfo.Size()
+	buffer := make([]byte, fileSize)
+
+	bytesRead, err := file.Read(buffer)
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
+
+	return buffer[:bytesRead], nil
 }
