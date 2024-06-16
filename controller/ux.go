@@ -20,6 +20,64 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func PostTaskList(w http.ResponseWriter, r *http.Request) {
+	var resp itmodel.Response
+	prof, err := whatsauth.GetAppProfile(at.GetParam(r), config.Mongoconn)
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusBadRequest, resp)
+		return
+	}
+	if at.GetSecretFromHeader(r) != prof.Secret {
+		resp.Response = "Salah secret: " + at.GetSecretFromHeader(r)
+		at.WriteJSON(w, http.StatusUnauthorized, resp)
+		return
+	}
+	var tasklists []report.TaskList
+	err = json.NewDecoder(r.Body).Decode(&tasklists)
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusBadRequest, resp)
+		return
+	}
+	docusr, err := atdb.GetOneLatestDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": tasklists[0].PhoneNumber})
+	if err != nil {
+		resp.Response = "Error : user tidak di temukan " + err.Error()
+		at.WriteJSON(w, http.StatusForbidden, resp)
+		return
+	}
+	lapuser, err := atdb.GetOneLatestDoc[report.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": tasklists[0].LaporanID})
+	if err != nil {
+		resp.Response = "Error : user tidak di temukan " + err.Error()
+		at.WriteJSON(w, http.StatusForbidden, resp)
+		return
+	}
+	for _, task := range tasklists {
+		task.ProjectID = lapuser.Project.ID
+		task.ProjectName = lapuser.Project.Name
+		task.Email = docusr.Email
+		task.UserID = docusr.ID
+		task.MeetID = lapuser.MeetID
+		_, err = atdb.InsertOneDoc(config.Mongoconn, "tasklist", task)
+		if err != nil {
+			resp.Info = "Kakak sudah melaporkan tasklist sebelumnya"
+			resp.Response = "Error : tidak bisa insert ke database " + err.Error()
+			at.WriteJSON(w, http.StatusForbidden, resp)
+			return
+		}
+	}
+	res, err := report.TambahPoinTasklistbyPhoneNumber(config.Mongoconn, docusr.PhoneNumber, lapuser.Project.ID, lapuser.Project.Name, float64(len(tasklists)), "tasklist")
+	if err != nil {
+		resp.Info = "Tambah Poin Tasklist gagal"
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusExpectationFailed, resp)
+		return
+	}
+	resp.Response = strconv.Itoa(int(res.ModifiedCount))
+	resp.Info = docusr.Name
+	at.WriteJSON(w, http.StatusOK, resp)
+}
+
 func PostPresensi(respw http.ResponseWriter, req *http.Request) {
 	var resp itmodel.Response
 	prof, err := whatsauth.GetAppProfile(at.GetParam(req), config.Mongoconn)

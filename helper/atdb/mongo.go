@@ -155,6 +155,21 @@ func InsertOneDoc(db *mongo.Database, collection string, doc interface{}) (inser
 	return insertResult.InsertedID.(primitive.ObjectID), nil
 }
 
+// Fungsi untuk menyisipkan banyak dokumen ke dalam koleksi: insertedIDs, err := InsertManyDocs(db, collection, docs)
+func InsertManyDocs[T any](db *mongo.Database, collection string, docs []T) (insertedIDs []interface{}, err error) {
+	// Konversi []T ke []interface{}
+	interfaceDocs := make([]interface{}, len(docs))
+	for i, v := range docs {
+		interfaceDocs[i] = v
+	}
+
+	insertResult, err := db.Collection(collection).InsertMany(context.TODO(), interfaceDocs)
+	if err != nil {
+		return nil, err
+	}
+	return insertResult.InsertedIDs, nil
+}
+
 // With UpdateOneDoc() allows for updating fields, new fields can be added without losing the fields in the old document.
 //
 //	updatefields := bson.M{

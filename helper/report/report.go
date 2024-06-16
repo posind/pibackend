@@ -238,6 +238,36 @@ func GetDataRepoMasukHariIni(db *mongo.Database, groupId string) (msg string) {
 }
 
 // menambah poin untuk presensi
+func TambahPoinTasklistbyPhoneNumber(db *mongo.Database, phonenumber string, projectID primitive.ObjectID, projectname string, poin float64, activity string) (res *mongo.UpdateResult, err error) {
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"phonenumber": phonenumber})
+	if err != nil {
+		return
+	}
+	usr.Poin = usr.Poin + poin
+	res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"phonenumber": phonenumber}, usr)
+	if err != nil {
+		return
+	}
+	logpoin := LogPoin{
+		UserID:      usr.ID,
+		Name:        usr.Name,
+		PhoneNumber: usr.PhoneNumber,
+		Email:       usr.Email,
+		Poin:        poin,
+		ProjectID:   projectID,
+		ProjectName: projectname,
+		Activity:    activity,
+	}
+	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
+	if err != nil {
+		return
+	}
+
+	return
+
+}
+
+// menambah poin untuk presensi
 func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lokasi string, poin float64, activity string) (res *mongo.UpdateResult, err error) {
 	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"phonenumber": phonenumber})
 	if err != nil {
