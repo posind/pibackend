@@ -128,6 +128,11 @@ func GetOneDoc[T any](db *mongo.Database, collection string, filter bson.M) (doc
 	return
 }
 
+func DeleteManyDocs(db *mongo.Database, collection string, filter bson.M) (deleteresult *mongo.DeleteResult, err error) {
+	deleteresult, err = db.Collection(collection).DeleteMany(context.Background(), filter)
+	return
+}
+
 func DeleteOneDoc(db *mongo.Database, collection string, filter bson.M) (updateresult *mongo.DeleteResult, err error) {
 	updateresult, err = db.Collection(collection).DeleteOne(context.Background(), filter)
 	return
