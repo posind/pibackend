@@ -21,6 +21,12 @@ type CredentialRecord struct {
 	Scopes              []string  `bson:"scopes"`
 }
 
+type Attachment struct {
+	FileUrl  string `json:"fileurl,omitempty" bson:"fileurl,omitempty"`
+	MimeType string `json:"mimetype,omitempty" bson:"mimetype,omitempty"`
+	Title    string `json:"title,omitempty" bson:"title,omitempty"`
+}
+
 type SimpleEvent struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	ProjectID   primitive.ObjectID `json:"project_id,omitempty" bson:"project_id,omitempty"`
@@ -31,4 +37,6 @@ type SimpleEvent struct {
 	TimeStart   string             `json:"timestart,omitempty" bson:"timestart,omitempty"` // HH:MM:SS
 	TimeEnd     string             `json:"timeend,omitempty" bson:"timeend,omitempty"`     // HH:MM:SS
 	Attendees   []string           `json:"attendees,omitempty" bson:"attendees,omitempty"`
+	Attachments []Attachment       `json:"attachments,omitempty" bson:"attachments,omitempty"` // New field for attachments
+
 }

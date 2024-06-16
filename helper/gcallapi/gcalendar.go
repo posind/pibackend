@@ -66,6 +66,17 @@ func HandlerCalendar(db *mongo.Database, simpleEvent SimpleEvent) (*calendar.Eve
 		},
 		Attendees: attendees,
 	}
+	if len(simpleEvent.Attachments) > 0 {
+		event.Attachments = make([]*calendar.EventAttachment, len(simpleEvent.Attachments))
+		for i, attachment := range simpleEvent.Attachments {
+			event.Attachments[i] = &calendar.EventAttachment{
+				FileUrl:  attachment.FileUrl,
+				MimeType: attachment.MimeType,
+				Title:    attachment.Title,
+			}
+		}
+
+	}
 
 	calendarId := "primary"
 	event, err = srv.Events.Insert(calendarId, event).Do()
