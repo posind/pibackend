@@ -210,6 +210,13 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 		at.WriteJSON(w, http.StatusNotModified, respn)
 		return
 	}
+	_, err = atdb.InsertOneDoc(config.Mongoconn, "meetinglog", gevt)
+	if err != nil {
+		respn.Status = "Gagal Insert Database meetinglog"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusNotModified, respn)
+		return
+	}
 	event.ID, err = atdb.InsertOneDoc(config.Mongoconn, "meeting", event)
 	if err != nil {
 		respn.Status = "Gagal Insert Database meeting"
