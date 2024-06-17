@@ -42,6 +42,11 @@ This boilerplate has several folders with different functions, such as:
 * helper: helper folder with a list of functions only called by others file
 * route: all routes URL
 
+How to run in local, just open terminal and type:
+```sh
+go run .\run\main.go
+```
+
 ## GCP Cloud Function CI/CD setup
 
 To get an auth in Google Cloud, you can do the following:
