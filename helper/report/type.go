@@ -33,6 +33,8 @@ type LogPoin struct {
 type TaskList struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	MeetID      primitive.ObjectID `json:"meetid,omitempty" bson:"meetid,omitempty"`
+	MeetGoal    string             `json:"meetgoal,omitempty" bson:"meetgoal,omitempty"`
+	MeetDate    string             `json:"meetdate,omitempty" bson:"meetdate,omitempty"`
 	LaporanID   primitive.ObjectID `json:"laporanid,omitempty" bson:"laporanid,omitempty"`
 	UserID      primitive.ObjectID `json:"userid,omitempty" bson:"userid,omitempty"`
 	Name        string             `json:"name,omitempty" bson:"name,omitempty"`
