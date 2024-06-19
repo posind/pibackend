@@ -24,9 +24,11 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.GetYesterdayDistincWAGroup(w, r)
 	case method == "GET" && path == "/data/user":
 		controller.GetDataUser(w, r)
-	case method == "GET" && path == "/data/user/task":
+	case method == "GET" && path == "/data/user/task/todo":
 		controller.GetTaskUser(w, r)
-	case method == "PUT" && path == "/data/user/task":
+	case method == "GET" && path == "/data/user/task/doing":
+		controller.GetTaskDoing(w, r)
+	case method == "PUT" && path == "/data/user/task/doing":
 		controller.PutTaskUser(w, r)
 	case method == "POST" && path == "/data/user":
 		controller.PostDataUser(w, r)
