@@ -296,7 +296,7 @@ func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lok
 		PhoneNumber: usr.PhoneNumber,
 		Email:       usr.Email,
 		Poin:        poin,
-		ProjectName: lokasi,
+		Lokasi:      lokasi,
 		Activity:    activity,
 	}
 	//memasukkan detil task ke dalam log
@@ -309,6 +309,7 @@ func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lok
 			logpoin.Task = taskdoing.Task
 			logpoin.LaporanID = taskdoing.LaporanID
 			logpoin.ProjectID = taskdoing.ProjectID
+			logpoin.ProjectName = taskdoing.ProjectName
 		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)

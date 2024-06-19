@@ -29,6 +29,7 @@ type LogPoin struct {
 	Email       string             `json:"email,omitempty" bson:"email,omitempty"`
 	ProjectID   primitive.ObjectID `json:"projectid,omitempty" bson:"projectid,omitempty"`
 	ProjectName string             `json:"projectname,omitempty" bson:"projectname,omitempty"`
+	Lokasi      string             `json:"lokasi,omitempty" bson:"lokasi,omitempty"`
 	Poin        float64            `json:"poin,omitempty" bson:"poin,omitempty"`
 	Activity    string             `json:"activity,omitempty" bson:"activity,omitempty"`
 }
