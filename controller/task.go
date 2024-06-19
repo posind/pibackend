@@ -158,7 +158,7 @@ func GetTaskUser(respw http.ResponseWriter, req *http.Request) {
 		"phonenumber": docuser.PhoneNumber,
 	}
 	taskuser, err := atdb.GetAllDoc[[]report.TaskList](config.Mongoconn, "tasklist", filter)
-	if err != nil {
+	if err != nil || len(taskuser) == 0 {
 		at.WriteJSON(respw, http.StatusNotFound, taskuser)
 		return
 	}
