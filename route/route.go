@@ -30,6 +30,10 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.GetTaskDoing(w, r)
 	case method == "PUT" && path == "/data/user/task/doing":
 		controller.PutTaskUser(w, r)
+	case method == "GET" && path == "/data/user/task/done":
+		controller.GetTaskDone(w, r)
+	case method == "POST" && path == "/data/user/task/done":
+		controller.PostTaskUser(w, r)
 	case method == "POST" && path == "/data/user":
 		controller.PostDataUser(w, r)
 	case method == "POST" && path == "/data/proyek":
