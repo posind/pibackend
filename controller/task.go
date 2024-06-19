@@ -106,3 +106,31 @@ func GetTaskUser(respw http.ResponseWriter, req *http.Request) {
 	}
 	at.WriteJSON(respw, http.StatusOK, taskuser)
 }
+
+func GetTaskDoing(respw http.ResponseWriter, req *http.Request) {
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : Token Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(req)
+		respn.Location = "Decode Token Error"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusForbidden, respn)
+		return
+	}
+	//check eksistensi user
+	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
+	if err != nil {
+		docuser.PhoneNumber = payload.Id
+		docuser.Name = payload.Alias
+		at.WriteJSON(respw, http.StatusNotFound, docuser)
+		return
+	}
+	docuser.Name = payload.Alias
+	taskdoing, err := atdb.GetOneLatestDoc[report.TaskList](config.Mongoconn, "taskdoing", bson.M{"phonenumber": docuser.PhoneNumber})
+	if err != nil {
+		at.WriteJSON(respw, http.StatusNotFound, taskdoing)
+		return
+	}
+	at.WriteJSON(respw, http.StatusOK, taskdoing)
+}
