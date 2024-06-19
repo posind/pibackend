@@ -248,6 +248,7 @@ func TambahPoinTasklistbyPhoneNumber(db *mongo.Database, phonenumber string, pro
 	if err != nil {
 		return
 	}
+
 	logpoin := LogPoin{
 		UserID:      usr.ID,
 		Name:        usr.Name,
@@ -257,6 +258,17 @@ func TambahPoinTasklistbyPhoneNumber(db *mongo.Database, phonenumber string, pro
 		ProjectID:   projectID,
 		ProjectName: projectname,
 		Activity:    activity,
+	}
+	//memasukkan detil task ke dalam log
+	taskdoing, err := atdb.GetOneLatestDoc[TaskList](db, "taskdoing", bson.M{"phonenumber": usr.PhoneNumber})
+	if err == nil {
+		taskdoing.Poin = taskdoing.Poin + poin
+		res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"_id": taskdoing.ID}, usr)
+		if err == nil {
+			logpoin.TaskID = taskdoing.ID
+			logpoin.Task = taskdoing.Task
+			logpoin.LaporanID = taskdoing.LaporanID
+		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
 	if err != nil {
@@ -287,6 +299,18 @@ func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lok
 		ProjectName: lokasi,
 		Activity:    activity,
 	}
+	//memasukkan detil task ke dalam log
+	taskdoing, err := atdb.GetOneLatestDoc[TaskList](db, "taskdoing", bson.M{"phonenumber": usr.PhoneNumber})
+	if err == nil {
+		taskdoing.Poin = taskdoing.Poin + poin
+		res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"_id": taskdoing.ID}, usr)
+		if err == nil {
+			logpoin.TaskID = taskdoing.ID
+			logpoin.Task = taskdoing.Task
+			logpoin.LaporanID = taskdoing.LaporanID
+			logpoin.ProjectID = taskdoing.ProjectID
+		}
+	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
 	if err != nil {
 		return
@@ -316,6 +340,17 @@ func TambahPoinLaporanbyPhoneNumber(db *mongo.Database, prj model.Project, phone
 		ProjectName: prj.Name,
 		Poin:        poin,
 		Activity:    activity,
+	}
+	//memasukkan detil task ke dalam log
+	taskdoing, err := atdb.GetOneLatestDoc[TaskList](db, "taskdoing", bson.M{"phonenumber": usr.PhoneNumber})
+	if err == nil {
+		taskdoing.Poin = taskdoing.Poin + poin
+		res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"_id": taskdoing.ID}, usr)
+		if err == nil {
+			logpoin.TaskID = taskdoing.ID
+			logpoin.Task = taskdoing.Task
+			logpoin.LaporanID = taskdoing.LaporanID
+		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
 	if err != nil {
@@ -360,6 +395,17 @@ func TambahPoinPushRepobyGithubUsername(db *mongo.Database, prj model.Project, g
 		Poin:        poin,
 		Activity:    "Push Repo",
 	}
+	//memasukkan detil task ke dalam log
+	taskdoing, err := atdb.GetOneLatestDoc[TaskList](db, "taskdoing", bson.M{"phonenumber": usr.PhoneNumber})
+	if err == nil {
+		taskdoing.Poin = taskdoing.Poin + poin
+		res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"_id": taskdoing.ID}, usr)
+		if err == nil {
+			logpoin.TaskID = taskdoing.ID
+			logpoin.Task = taskdoing.Task
+			logpoin.LaporanID = taskdoing.LaporanID
+		}
+	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
 	if err != nil {
 		return
@@ -387,6 +433,17 @@ func TambahPoinPushRepobyGithubEmail(db *mongo.Database, prj model.Project, ghem
 		ProjectName: prj.Name,
 		Poin:        poin,
 		Activity:    "Push Repo",
+	}
+	//memasukkan detil task ke dalam log
+	taskdoing, err := atdb.GetOneLatestDoc[TaskList](db, "taskdoing", bson.M{"phonenumber": usr.PhoneNumber})
+	if err == nil {
+		taskdoing.Poin = taskdoing.Poin + poin
+		res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"_id": taskdoing.ID}, usr)
+		if err == nil {
+			logpoin.TaskID = taskdoing.ID
+			logpoin.Task = taskdoing.Task
+			logpoin.LaporanID = taskdoing.LaporanID
+		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
 	if err != nil {
