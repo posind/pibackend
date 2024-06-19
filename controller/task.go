@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper/at"
@@ -12,6 +14,63 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+func PutTaskUser(w http.ResponseWriter, r *http.Request) {
+	var respn model.Response
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(r))
+	if err != nil {
+		respn.Status = "Error : Token Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(r)
+		respn.Location = "Decode Token Error"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusForbidden, respn)
+		return
+	}
+	//check eksistensi user
+	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
+	if err != nil {
+		docuser.PhoneNumber = payload.Id
+		docuser.Name = payload.Alias
+		at.WriteJSON(w, http.StatusNotFound, docuser)
+		return
+	}
+	var task report.TaskList
+	err = json.NewDecoder(r.Body).Decode(&task)
+	if err != nil {
+		respn.Status = "Error : Body Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(r)
+		respn.Location = "Decode Body Error"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusBadRequest, respn)
+		return
+	}
+	taskuser, err := atdb.GetOneDoc[report.TaskList](config.Mongoconn, "tasklist", bson.M{"_id": task.ID})
+	if err != nil {
+		at.WriteJSON(w, http.StatusNotFound, taskuser)
+		return
+	}
+	insertid, err := atdb.InsertOneDoc(config.Mongoconn, "taskdoing", taskuser)
+	if err != nil {
+		respn.Status = "Error : Gagal insert ke doing"
+		respn.Info = insertid.Hex()
+		respn.Location = "InsertOneDoc"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusNotFound, respn)
+		return
+	}
+	rest, err := atdb.DeleteOneDoc(config.Mongoconn, "tasklist", bson.M{"_id": task.ID})
+	if err != nil {
+		respn.Status = "Error : Gagal hapus di tasklist"
+		respn.Info = strconv.FormatInt(rest.DeletedCount, 10)
+		respn.Location = "DeleteOneDoc"
+		respn.Response = err.Error()
+		at.WriteJSON(w, http.StatusNotFound, respn)
+		return
+	}
+	respn.Info = strconv.FormatInt(rest.DeletedCount, 10)
+	respn.Status = insertid.Hex()
+	at.WriteJSON(w, http.StatusOK, respn)
+}
 
 func GetTaskUser(respw http.ResponseWriter, req *http.Request) {
 	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
