@@ -238,7 +238,7 @@ func GetDataRepoMasukHariIni(db *mongo.Database, groupId string) (msg string) {
 }
 
 // menambah poin untuk presensi
-func TambahPoinTasklistbyPhoneNumber(db *mongo.Database, phonenumber string, projectID primitive.ObjectID, projectname string, poin float64, activity string) (res *mongo.UpdateResult, err error) {
+func TambahPoinTasklistbyPhoneNumber(db *mongo.Database, phonenumber string, project model.Project, poin float64, activity string) (res *mongo.UpdateResult, err error) {
 	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"phonenumber": phonenumber})
 	if err != nil {
 		return
@@ -250,14 +250,15 @@ func TambahPoinTasklistbyPhoneNumber(db *mongo.Database, phonenumber string, pro
 	}
 
 	logpoin := LogPoin{
-		UserID:      usr.ID,
-		Name:        usr.Name,
-		PhoneNumber: usr.PhoneNumber,
-		Email:       usr.Email,
-		Poin:        poin,
-		ProjectID:   projectID,
-		ProjectName: projectname,
-		Activity:    activity,
+		UserID:           usr.ID,
+		Name:             usr.Name,
+		PhoneNumber:      usr.PhoneNumber,
+		Email:            usr.Email,
+		Poin:             poin,
+		ProjectID:        project.ID,
+		ProjectName:      project.Name,
+		ProjectWAGroupID: project.WAGroupID,
+		Activity:         activity,
 	}
 	//memasukkan detil task ke dalam log
 	taskdoing, err := atdb.GetOneLatestDoc[TaskList](db, "taskdoing", bson.M{"phonenumber": usr.PhoneNumber})
@@ -268,6 +269,10 @@ func TambahPoinTasklistbyPhoneNumber(db *mongo.Database, phonenumber string, pro
 			logpoin.TaskID = taskdoing.ID
 			logpoin.Task = taskdoing.Task
 			logpoin.LaporanID = taskdoing.LaporanID
+			logpoin.ProjectWAGroupID = project.WAGroupID
+			logpoin.ProjectID = project.ID
+			logpoin.ProjectName = project.Name
+			logpoin.ProjectWAGroupID = project.WAGroupID
 		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
@@ -310,6 +315,7 @@ func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lok
 			logpoin.LaporanID = taskdoing.LaporanID
 			logpoin.ProjectID = taskdoing.ProjectID
 			logpoin.ProjectName = taskdoing.ProjectName
+			logpoin.ProjectWAGroupID = taskdoing.ProjectWAGroupID
 		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
@@ -351,6 +357,9 @@ func TambahPoinLaporanbyPhoneNumber(db *mongo.Database, prj model.Project, phone
 			logpoin.TaskID = taskdoing.ID
 			logpoin.Task = taskdoing.Task
 			logpoin.LaporanID = taskdoing.LaporanID
+			logpoin.ProjectID = prj.ID
+			logpoin.ProjectName = prj.Name
+			logpoin.ProjectWAGroupID = prj.Name
 		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
@@ -405,6 +414,9 @@ func TambahPoinPushRepobyGithubUsername(db *mongo.Database, prj model.Project, g
 			logpoin.TaskID = taskdoing.ID
 			logpoin.Task = taskdoing.Task
 			logpoin.LaporanID = taskdoing.LaporanID
+			logpoin.ProjectID = prj.ID
+			logpoin.ProjectName = prj.Name
+			logpoin.ProjectWAGroupID = prj.Name
 		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)
@@ -444,6 +456,9 @@ func TambahPoinPushRepobyGithubEmail(db *mongo.Database, prj model.Project, ghem
 			logpoin.TaskID = taskdoing.ID
 			logpoin.Task = taskdoing.Task
 			logpoin.LaporanID = taskdoing.LaporanID
+			logpoin.ProjectID = prj.ID
+			logpoin.ProjectName = prj.Name
+			logpoin.ProjectWAGroupID = prj.Name
 		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)

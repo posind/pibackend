@@ -60,6 +60,7 @@ func PostTaskList(w http.ResponseWriter, r *http.Request) {
 		task.MeetID = lapuser.MeetID
 		task.MeetGoal = lapuser.MeetEvent.Summary
 		task.MeetDate = lapuser.MeetEvent.Date
+		task.ProjectWAGroupID = lapuser.Project.WAGroupID
 		_, err = atdb.InsertOneDoc(config.Mongoconn, "tasklist", task)
 		if err != nil {
 			resp.Info = "Kakak sudah melaporkan tasklist sebelumnya"
@@ -68,7 +69,7 @@ func PostTaskList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	res, err := report.TambahPoinTasklistbyPhoneNumber(config.Mongoconn, docusr.PhoneNumber, lapuser.Project.ID, lapuser.Project.Name, float64(len(tasklists)), "tasklist")
+	res, err := report.TambahPoinTasklistbyPhoneNumber(config.Mongoconn, docusr.PhoneNumber, lapuser.Project, float64(len(tasklists)), "tasklist")
 	if err != nil {
 		resp.Info = "Tambah Poin Tasklist gagal"
 		resp.Response = err.Error()
