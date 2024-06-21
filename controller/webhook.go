@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-playground/webhooks/gitlab"
 	"github.com/go-playground/webhooks/v6/github"
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper/at"
@@ -96,17 +97,116 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				}
 				dokcommit.User = *member
 			}
-			// _, err = report.TambahPoinPerProjectPushRepobyGithubUsername(config.Mongoconn, prj.ID, dokcommit.Username, 1)
-			// if err != nil {
-			// 	_, err := report.TambahPoinPerProjectPushRepobyGithubEmail(config.Mongoconn, prj.ID, dokcommit.Email, 1)
-			// 	if err != nil {
-			// 		resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
-			// 		resp.Response = err.Error()
-			// 		at.WriteJSON(respw, http.StatusExpectationFailed, resp)
-			// 		return
-			// 	}
-			// }
+			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit.Username, 1)
+			if err != nil {
+				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit.Email, 1)
+				if err != nil {
+					resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
+					resp.Response = err.Error()
+					at.WriteJSON(respw, http.StatusExpectationFailed, resp)
+					return
+				}
+			}
+			_, err = atdb.InsertOneDoc(config.Mongoconn, "pushrepo", dokcommit)
+			if err != nil {
+				resp.Info = "Data Push" + kommsg + " tidak berhasil masuk ke database"
+				resp.Response = err.Error()
+				at.WriteJSON(respw, http.StatusExpectationFailed, resp)
+				return
+			}
+			komsg += appd
+		}
+		msg = "*" + prj.Name + "*\n" + "Nama: " + dokcommit.User.Name + "\nUserGitHub: " + pyl.Sender.Login + "\nRepo: " + pyl.Repository.Name + "\nBranch: " + pyl.Ref + "\n" + pyl.Compare + "\n" + komsg
+		dt := &whatsauth.TextMessage{
+			To:       prj.Owner.PhoneNumber,
+			IsGroup:  false,
+			Messages: msg,
+		}
+		if prj.WAGroupID != "" {
+			dt.To = prj.WAGroupID
+			dt.IsGroup = true
+		}
+		resp, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		if err != nil {
+			resp.Info = "Tidak berhak"
+			resp.Response = err.Error()
+			at.WriteJSON(respw, http.StatusUnauthorized, resp)
+			return
+		}
+	}
+	at.WriteJSON(respw, http.StatusOK, resp)
+}
 
+func PostWebHookGitlab(respw http.ResponseWriter, req *http.Request) {
+	var resp model.Response
+	prj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"name": at.GetParam(req)})
+	if err != nil {
+		resp.Info = "Tidak terdaftar"
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusUnavailableForLegalReasons, resp)
+		return
+	}
+	hook, err := gitlab.New(gitlab.Options.Secret(prj.Secret))
+	if err != nil {
+		resp.Info = "Tidak berhak"
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusUnauthorized, resp)
+		return
+	}
+	payload, err := hook.Parse(req, gitlab.PushEvents)
+	if err != nil {
+		resp.Info = "Tidak ada payload"
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, resp)
+		return
+	}
+	switch pyl := payload.(type) {
+	case github.PushPayload:
+		var komsg, msg string
+		var dokcommit model.PushReport
+		for i, komit := range pyl.Commits {
+			//membuat list file yang diubah
+			//ambil dari api jumlah baris yang dirubah
+			commitURL := fmt.Sprintf("https://gitlab.com/api/v4/projects/%s%%2F%s/repository/commits/%s", pyl.Repository.Owner.Login, pyl.Repository.Name, komit.ID)
+			statuscode, komitdtl, err := atapi.Get[ghapi.CommitDetails](commitURL)
+			var fileChangesinfo string
+			if err == nil && statuscode == http.StatusOK {
+				for n, file := range komitdtl.Files {
+					fileChangesinfo += "> " + normalize.NumberToAlphabet(n+1) + ". " + file.Filename + ": _++" + strconv.Itoa(file.Additions) + " --" + strconv.Itoa(file.Deletions) + "_\n"
+				}
+			} else { //jika api tidak ada akses maka tanpa jumlah baris
+				fileChangesinfo = strings.Join(komit.Modified[:], "\n")
+			}
+			//membuat list commit message yang masuk
+			kommsg := strings.TrimSpace(komit.Message)
+			appd := strconv.Itoa(i+1) + ". " + kommsg + " :\n" + fileChangesinfo + "\n"
+			dokcommit = model.PushReport{
+				ProjectName: prj.Name,
+				Project:     prj,
+				Username:    komit.Author.Username,
+				Email:       komit.Author.Email,
+				Repo:        pyl.Repository.URL,
+				Ref:         pyl.Ref,
+				Message:     kommsg,
+				RemoteAddr:  req.RemoteAddr,
+			}
+			if (prj.Owner.Email == komit.Author.Email) || (prj.Owner.GithubUsername == komit.Author.Username) {
+				dokcommit.User = prj.Owner
+			} else {
+				var member *model.Userdomyikado
+				member, err := getMemberByAttributeInProject(prj, "githubusername", komit.Author.Username)
+				if err != nil {
+					member, err = getMemberByAttributeInProject(prj, "email", komit.Author.Email)
+					if err != nil {
+						resp.Location = komit.Author.Email + " | " + komit.Author.Username
+						resp.Info = "Username dan Email di GitHub tidak terdaftar"
+						resp.Response = err.Error()
+						at.WriteJSON(respw, http.StatusLocked, resp)
+						return
+					}
+				}
+				dokcommit.User = *member
+			}
 			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit.Username, 1)
 			if err != nil {
 				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit.Email, 1)
