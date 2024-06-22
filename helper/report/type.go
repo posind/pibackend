@@ -6,6 +6,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type PushRank struct {
+	Username    string
+	TotalCommit int
+	Poin        float64
+	Repos       map[string]int
+}
+
 type NewLiburNasional struct {
 	Tanggal    string `json:"tanggal"`
 	Keterangan string `json:"keterangan"`

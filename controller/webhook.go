@@ -75,7 +75,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				Project:     prj,
 				Username:    komit.Author.Username,
 				Email:       komit.Author.Email,
-				Repo:        pyl.Repository.URL,
+				Repo:        pyl.Compare,
 				Ref:         pyl.Ref,
 				Message:     kommsg,
 				RemoteAddr:  req.RemoteAddr,
@@ -97,9 +97,9 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				}
 				dokcommit.User = *member
 			}
-			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit.Username, 1)
+			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit, 1)
 			if err != nil {
-				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit.Email, 1)
+				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit, 1)
 				if err != nil {
 					resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
 					resp.Response = err.Error()
@@ -185,7 +185,7 @@ func PostWebHookGitlab(respw http.ResponseWriter, req *http.Request) {
 				Project:     prj,
 				Username:    komit.Author.Username,
 				Email:       komit.Author.Email,
-				Repo:        pyl.Repository.URL,
+				Repo:        pyl.Compare,
 				Ref:         pyl.Ref,
 				Message:     kommsg,
 				RemoteAddr:  req.RemoteAddr,
@@ -207,9 +207,9 @@ func PostWebHookGitlab(respw http.ResponseWriter, req *http.Request) {
 				}
 				dokcommit.User = *member
 			}
-			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit.Username, 1)
+			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit, 1)
 			if err != nil {
-				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit.Email, 1)
+				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit, 1)
 				if err != nil {
 					resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
 					resp.Response = err.Error()
