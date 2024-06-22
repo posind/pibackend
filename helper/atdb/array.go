@@ -26,10 +26,11 @@ func AddDocToArray[T any](db *mongo.Database, collection string, ObjectID primit
 	return
 }
 
-func DeleteDocFromArray[T any](db *mongo.Database, collection string, ObjectID primitive.ObjectID, arrayname string, Doc T) (result *mongo.UpdateResult, err error) {
+// memberToDelete := model.Userdomyikado{PhoneNumber: docuser.PhoneNumber}
+func DeleteDocFromArray[T any](db *mongo.Database, collection string, ObjectID primitive.ObjectID, arrayname string, memberToDelete T) (result *mongo.UpdateResult, err error) {
 	filter := bson.M{"_id": ObjectID}
 	update := bson.M{
-		"$pull": bson.M{arrayname: Doc},
+		"$pull": bson.M{arrayname: memberToDelete},
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
