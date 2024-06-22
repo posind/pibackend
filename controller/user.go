@@ -87,11 +87,8 @@ func PostDataUser(respw http.ResponseWriter, req *http.Request) {
 	//melakukan update di seluruh member project
 	//ambil project yang member sebagai anggota
 	existingprjs, err := atdb.GetAllDoc[[]model.Project](config.Mongoconn, "project", primitive.M{"members._id": docuser.ID})
-	if err != nil {
-		var respn model.Response
-		respn.Status = "Error : Data project tidak di temukan"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusNotFound, respn)
+	if err != nil { //kalo belum jadi anggota project manapun aman langsung ok
+		at.WriteJSON(respw, http.StatusOK, docuser)
 		return
 	}
 	if len(existingprjs) == 0 { //kalo belum jadi anggota project manapun aman langsung ok
