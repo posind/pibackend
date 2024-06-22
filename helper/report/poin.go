@@ -152,13 +152,13 @@ func KurangPoinUserbyPhoneNumber(db *mongo.Database, phonenumber string, poin fl
 
 }
 
-func TambahPoinPushRepobyGithubUsername(db *mongo.Database, prj model.Project, report model.PushReport, poin float64) (res *mongo.UpdateResult, err error) {
-	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"githubusername": report.Username})
+func TambahPoinPushRepobyGithubUsername(db *mongo.Database, prj model.Project, report model.PushReport, poin float64) (usr model.Userdomyikado, err error) {
+	usr, err = atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"githubusername": report.Username})
 	if err != nil {
 		return
 	}
 	usr.Poin = usr.Poin + poin
-	res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"githubusername": report.Username}, usr)
+	_, err = atdb.ReplaceOneDoc(db, "user", bson.M{"githubusername": report.Username}, usr)
 	if err != nil {
 		return
 	}
@@ -179,7 +179,7 @@ func TambahPoinPushRepobyGithubUsername(db *mongo.Database, prj model.Project, r
 	taskdoing, err := atdb.GetOneLatestDoc[TaskList](db, "taskdoing", bson.M{"phonenumber": usr.PhoneNumber})
 	if err == nil {
 		taskdoing.Poin = taskdoing.Poin + poin
-		res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"_id": taskdoing.ID}, usr)
+		_, err = atdb.ReplaceOneDoc(db, "user", bson.M{"_id": taskdoing.ID}, usr)
 		if err == nil {
 			logpoin.TaskID = taskdoing.ID
 			logpoin.Task = taskdoing.Task
@@ -197,13 +197,13 @@ func TambahPoinPushRepobyGithubUsername(db *mongo.Database, prj model.Project, r
 
 }
 
-func TambahPoinPushRepobyGithubEmail(db *mongo.Database, prj model.Project, report model.PushReport, poin float64) (res *mongo.UpdateResult, err error) {
-	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"email": report.Email})
+func TambahPoinPushRepobyGithubEmail(db *mongo.Database, prj model.Project, report model.PushReport, poin float64) (usr model.Userdomyikado, err error) {
+	usr, err = atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"email": report.Email})
 	if err != nil {
 		return
 	}
 	usr.Poin = usr.Poin + poin
-	res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"email": report.Email}, usr)
+	_, err = atdb.ReplaceOneDoc(db, "user", bson.M{"email": report.Email}, usr)
 	if err != nil {
 		return
 	}
@@ -224,7 +224,7 @@ func TambahPoinPushRepobyGithubEmail(db *mongo.Database, prj model.Project, repo
 	taskdoing, err := atdb.GetOneLatestDoc[TaskList](db, "taskdoing", bson.M{"phonenumber": usr.PhoneNumber})
 	if err == nil {
 		taskdoing.Poin = taskdoing.Poin + poin
-		res, err = atdb.ReplaceOneDoc(db, "user", bson.M{"_id": taskdoing.ID}, usr)
+		_, err = atdb.ReplaceOneDoc(db, "user", bson.M{"_id": taskdoing.ID}, usr)
 		if err == nil {
 			logpoin.TaskID = taskdoing.ID
 			logpoin.Task = taskdoing.Task

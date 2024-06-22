@@ -54,6 +54,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 	case github.PushPayload:
 		var komsg, msg string
 		var dokcommit model.PushReport
+		var usr model.Userdomyikado
 		for i, komit := range pyl.Commits {
 			//membuat list file yang diubah
 			//ambil dari api jumlah baris yang dirubah
@@ -97,9 +98,9 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 				}
 				dokcommit.User = *member
 			}
-			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit, 1)
+			usr, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit, 1)
 			if err != nil {
-				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit, 1)
+				usr, err = report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit, 1)
 				if err != nil {
 					resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
 					resp.Response = err.Error()
@@ -116,7 +117,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			}
 			komsg += appd
 		}
-		msg = "*" + prj.Name + "*\n" + "Nama: " + dokcommit.User.Name + "\nUserGitHub: " + pyl.Sender.Login + "\nRepo: " + pyl.Repository.Name + "\nBranch: " + pyl.Ref + "\n" + pyl.Compare + "\n" + komsg
+		msg = "*" + prj.Name + "*\n" + usr.Name + "(" + strconv.Itoa(int(usr.Poin)) + ") - " + usr.PhoneNumber + "\nNama: " + dokcommit.User.Name + "\nUserGitHub: " + pyl.Sender.Login + "\nRepo: " + pyl.Repository.Name + "\nBranch: " + pyl.Ref + "\n" + pyl.Compare + "\n" + komsg
 		dt := &whatsauth.TextMessage{
 			To:       prj.Owner.PhoneNumber,
 			IsGroup:  false,
@@ -164,6 +165,7 @@ func PostWebHookGitlab(respw http.ResponseWriter, req *http.Request) {
 	case github.PushPayload:
 		var komsg, msg string
 		var dokcommit model.PushReport
+		var usr model.Userdomyikado
 		for i, komit := range pyl.Commits {
 			//membuat list file yang diubah
 			//ambil dari api jumlah baris yang dirubah
@@ -207,9 +209,9 @@ func PostWebHookGitlab(respw http.ResponseWriter, req *http.Request) {
 				}
 				dokcommit.User = *member
 			}
-			_, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit, 1)
+			usr, err = report.TambahPoinPushRepobyGithubUsername(config.Mongoconn, prj, dokcommit, 1)
 			if err != nil {
-				_, err := report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit, 1)
+				usr, err = report.TambahPoinPushRepobyGithubEmail(config.Mongoconn, prj, dokcommit, 1)
 				if err != nil {
 					resp.Info = "User Github: " + dokcommit.Username + " dan email github: " + dokcommit.Email + " tidak terhubung di user manapun di sistem Domyikado."
 					resp.Response = err.Error()
@@ -226,7 +228,7 @@ func PostWebHookGitlab(respw http.ResponseWriter, req *http.Request) {
 			}
 			komsg += appd
 		}
-		msg = "*" + prj.Name + "*\n" + "Nama: " + dokcommit.User.Name + "\nUserGitHub: " + pyl.Sender.Login + "\nRepo: " + pyl.Repository.Name + "\nBranch: " + pyl.Ref + "\n" + pyl.Compare + "\n" + komsg
+		msg = "*" + prj.Name + "*\n" + usr.Name + "(" + strconv.Itoa(int(usr.Poin)) + ") - " + usr.PhoneNumber + "\nNama: " + dokcommit.User.Name + "\nUserGitHub: " + pyl.Sender.Login + "\nRepo: " + pyl.Repository.Name + "\nBranch: " + pyl.Ref + "\n" + pyl.Compare + "\n" + komsg
 		dt := &whatsauth.TextMessage{
 			To:       prj.Owner.PhoneNumber,
 			IsGroup:  false,
