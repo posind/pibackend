@@ -33,6 +33,10 @@ type LogPoin struct {
 	Lokasi           string             `json:"lokasi,omitempty" bson:"lokasi,omitempty"`
 	Poin             float64            `json:"poin,omitempty" bson:"poin,omitempty"`
 	Activity         string             `json:"activity,omitempty" bson:"activity,omitempty"`
+	Detail           string             `json:"detail,omitempty" bson:"detail,omitempty"`
+	Info             string             `json:"info,omitempty" bson:"info,omitempty"`
+	Location         string             `json:"location,omitempty" bson:"location,omitempty"`
+	URL              string             `json:"url,omitempty" bson:"url,omitempty"`
 }
 
 type TaskList struct {
