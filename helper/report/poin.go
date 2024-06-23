@@ -1,7 +1,11 @@
 package report
 
 import (
+	"strconv"
+
+	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -51,7 +55,7 @@ func TambahPoinTasklistbyPhoneNumber(db *mongo.Database, phonenumber string, pro
 }
 
 // menambah poin untuk presensi
-func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lokasi string, poin float64, activity string) (res *mongo.UpdateResult, err error) {
+func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lokasi string, poin float64, token, api, activity string) (res *mongo.UpdateResult, err error) {
 	usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"phonenumber": phonenumber})
 	if err != nil {
 		return
@@ -83,6 +87,18 @@ func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lok
 			logpoin.ProjectID = taskdoing.ProjectID
 			logpoin.ProjectName = taskdoing.ProjectName
 			logpoin.ProjectWAGroupID = taskdoing.ProjectWAGroupID
+		}
+		if taskdoing.ProjectWAGroupID != "" {
+			msg := "*Presensi*\n" + usr.Name + "(" + strconv.Itoa(int(usr.Poin)) + ") - " + usr.PhoneNumber + "\nLokasi: " + lokasi + "\nPoin: " + strconv.Itoa(int(poin))
+			dt := &whatsauth.TextMessage{
+				To:       taskdoing.ProjectWAGroupID,
+				IsGroup:  true,
+				Messages: msg,
+			}
+			_, err = atapi.PostStructWithToken[model.Response]("Token", token, dt, api)
+			if err != nil {
+				return
+			}
 		}
 	}
 	_, err = atdb.InsertOneDoc(db, "logpoin", logpoin)

@@ -114,7 +114,7 @@ func PostPresensi(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusForbidden, resp)
 		return
 	}
-	res, err := report.TambahPoinPresensibyPhoneNumber(config.Mongoconn, presensi.PhoneNumber, presensi.Lokasi, presensi.Skor, "presensi")
+	res, err := report.TambahPoinPresensibyPhoneNumber(config.Mongoconn, presensi.PhoneNumber, presensi.Lokasi, presensi.Skor, config.WAAPIToken, config.WAAPIMessage, "presensi")
 	if err != nil {
 		resp.Info = "Tambah Poin Presensi gagal"
 		resp.Response = err.Error()
