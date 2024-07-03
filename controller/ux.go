@@ -3,7 +3,6 @@ package controller
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -172,14 +171,14 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		encodedString := base64.StdEncoding.EncodeToString([]byte(rating.Komentar))
 
 		// Format markdown dengan base64 string
-		markdownContent := fmt.Sprintf("```base64\n%s\n```", encodedString)
+		//markdownContent := fmt.Sprintf("```base64\n%s\n```", encodedString)
 		dt := model.LogInfo{
 			PhoneNumber: hasil.NoPetugas,
 			Alias:       hasil.Petugas,
 			FileName:    "README.md",
 			RepoOrg:     hasil.Project.RepoOrg,
 			RepoName:    hasil.Project.Name,
-			Base64Str:   markdownContent,
+			Base64Str:   encodedString,
 		}
 		conf, err := atdb.GetOneDoc[model.Config](config.Mongoconn, "config", bson.M{"phonenumber": "62895601060000"})
 		if err != nil {
