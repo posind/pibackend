@@ -177,6 +177,8 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 			PhoneNumber: hasil.NoPetugas,
 			Alias:       hasil.Petugas,
 			FileName:    "README.md",
+			RepoOrg:     hasil.Project.RepoOrg,
+			RepoName:    hasil.Project.Name,
 			Base64Str:   markdownContent,
 		}
 		conf, err := atdb.GetOneDoc[model.Config](config.Mongoconn, "config", bson.M{"phonenumber": "62895601060000"})
