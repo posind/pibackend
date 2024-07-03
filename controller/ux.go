@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -164,6 +166,38 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
+	//upload file markdown ke log repo
+	if hasil.Project.RepoLogName != "" {
+		// Encode string ke base64
+		encodedString := base64.StdEncoding.EncodeToString([]byte(rating.Komentar))
+
+		// Format markdown dengan base64 string
+		markdownContent := fmt.Sprintf("```base64\n%s\n```", encodedString)
+		dt := model.LogInfo{
+			PhoneNumber: hasil.NoPetugas,
+			Alias:       hasil.Petugas,
+			FileName:    "README.md",
+			Base64Str:   markdownContent,
+		}
+		conf, err := atdb.GetOneDoc[model.Config](config.Mongoconn, "config", bson.M{"phonenumber": "62895601060000"})
+		if err != nil {
+			respn.Response = err.Error()
+			at.WriteJSON(respw, http.StatusNoContent, respn)
+			return
+		}
+		statuscode, loginf, err := atapi.PostStructWithToken[model.LogInfo]("secret", conf.LeaflySecret, dt, conf.LeaflyURL)
+		if err != nil {
+			respn.Response = err.Error()
+			at.WriteJSON(respw, http.StatusBadRequest, respn)
+			return
+		}
+		if statuscode != http.StatusOK {
+			respn.Response = loginf.Error
+			at.WriteJSON(respw, http.StatusBadRequest, respn)
+			return
+
+		}
+	}
 	poin := float64(rating.Rating) / 5.0
 	_, err = report.TambahPoinLaporanbyPhoneNumber(config.Mongoconn, hasil.Project, hasil.NoPetugas, poin, "rating")
 	if err != nil {
@@ -178,7 +212,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		IsGroup:  false,
 		Messages: message,
 	}
-	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()
@@ -309,7 +343,7 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 		IsGroup:  false,
 		Messages: message,
 	}
-	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()
@@ -405,7 +439,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		IsGroup:  false,
 		Messages: message,
 	}
-	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()
@@ -501,7 +535,7 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		IsGroup:  false,
 		Messages: message,
 	}
-	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()

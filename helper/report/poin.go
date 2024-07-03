@@ -95,7 +95,7 @@ func TambahPoinPresensibyPhoneNumber(db *mongo.Database, phonenumber string, lok
 				IsGroup:  true,
 				Messages: msg,
 			}
-			_, err = atapi.PostStructWithToken[model.Response]("Token", token, dt, api)
+			_, _, err = atapi.PostStructWithToken[model.Response]("Token", token, dt, api)
 			if err != nil {
 				return
 			}

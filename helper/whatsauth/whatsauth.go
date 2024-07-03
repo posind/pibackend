@@ -26,7 +26,7 @@ func RefreshToken(dt *WebHookInfo, WAPhoneNumber, WAAPIGetToken string, db *mong
 	}
 	var resp User
 	if profile.Token != "" {
-		resp, err = atapi.PostStructWithToken[User]("Token", profile.Token, dt, WAAPIGetToken)
+		_, resp, err = atapi.PostStructWithToken[User]("Token", profile.Token, dt, WAAPIGetToken)
 		if err != nil {
 			return
 		}
@@ -58,7 +58,7 @@ func HandlerQRLogin(msg IteungMessage, WAKeyword string, WAPhoneNumber string, d
 	if err != nil {
 		return
 	}
-	resp, err = atapi.PostStructWithToken[Response]("Token", structtoken.Token, dt, WAAPIQRLogin)
+	_, resp, err = atapi.PostStructWithToken[Response]("Token", structtoken.Token, dt, WAAPIQRLogin)
 	return
 }
 
@@ -77,7 +77,7 @@ func HandlerIncomingMessage(msg IteungMessage, WAPhoneNumber string, db *mongo.D
 		if err != nil {
 			return
 		}
-		resp, err = atapi.PostStructWithToken[Response]("Token", profile.Token, dt, WAAPIMessage)
+		_, resp, err = atapi.PostStructWithToken[Response]("Token", profile.Token, dt, WAAPIMessage)
 		if err != nil {
 			return
 		}

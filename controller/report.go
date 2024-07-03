@@ -38,7 +38,7 @@ func GetYesterdayDistincWAGroup(respw http.ResponseWriter, req *http.Request) {
 			IsGroup:  true,
 			Messages: report.GetDataRepoMasukHariIni(config.Mongoconn, groupID) + "\n" + report.GetDataLaporanMasukHariini(config.Mongoconn, groupID),
 		}
-		resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {
 			resp.Info = "Tidak berhak"
 			resp.Response = err.Error()
@@ -57,7 +57,7 @@ func GetReportHariIni(respw http.ResponseWriter, req *http.Request) {
 		IsGroup:  true,
 		Messages: report.GetDataRepoMasukHarian(config.Mongoconn) + "\n" + report.GetDataLaporanMasukHarian(config.Mongoconn),
 	}
-	resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 	if err != nil {
 		resp.Info = "Tidak berhak"
 		resp.Response = err.Error()

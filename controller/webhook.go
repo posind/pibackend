@@ -127,7 +127,7 @@ func PostWebHookGithub(respw http.ResponseWriter, req *http.Request) {
 			dt.To = prj.WAGroupID
 			dt.IsGroup = true
 		}
-		resp, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		_, resp, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {
 			resp.Info = "Tidak berhak"
 			resp.Response = err.Error()
@@ -238,7 +238,7 @@ func PostWebHookGitlab(respw http.ResponseWriter, req *http.Request) {
 			dt.To = prj.WAGroupID
 			dt.IsGroup = true
 		}
-		resp, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		_, resp, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {
 			resp.Info = "Tidak berhak"
 			resp.Response = err.Error()

@@ -43,7 +43,7 @@ func RekapPagiHari(respw http.ResponseWriter, req *http.Request) {
 			IsGroup:  true,
 			Messages: msg,
 		}
-		resp, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		_, resp, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {
 			resp.Info = "Tidak berhak"
 			resp.Response = err.Error()
