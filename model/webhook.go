@@ -22,6 +22,8 @@ type Project struct {
 	Description string             `bson:"description" json:"description"`
 	Owner       Userdomyikado      `bson:"owner" json:"owner"`
 	WAGroupID   string             `bson:"wagroupid,omitempty" json:"wagroupid,omitempty"`
+	RepoOrg     string             `bson:"repoorg,omitempty" json:"repoorg,omitempty"`
+	RepoLogName string             `bson:"repologname,omitempty" json:"repologname,omitempty"`
 	Members     []Userdomyikado    `bson:"members,omitempty" json:"members,omitempty"`
 	Closed      bool               `bson:"closed,omitempty" json:"closed,omitempty"`
 }
