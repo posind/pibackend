@@ -40,6 +40,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostDataProject(w, r)
 	case method == "GET" && path == "/data/proyek":
 		controller.GetDataProject(w, r)
+	case method == "PUT" && path == "/data/proyek":
+		controller.PutDataProject(w, r)
 	case method == "DELETE" && path == "/data/proyek":
 		controller.DeleteDataProject(w, r)
 	case method == "GET" && path == "/data/proyek/anggota":
