@@ -148,16 +148,6 @@ func PutDataProject(respw http.ResponseWriter, req *http.Request) {
         return
     }
 
-    // Ensure the unmodifiable fields are not changed
-    if prj.Name != existingprj.Name || prj.Secret != existingprj.Secret || prj.Owner != existingprj.Owner ||
-       prj.WAGroupID != existingprj.WAGroupID  {
-        var respn model.Response
-        respn.Status = "Error: Beberapa field tidak dapat diubah"
-        respn.Response = "Field yang tidak boleh diubah: Name, Secret, Owner, WAGroupID,"
-        at.WriteJSON(respw, http.StatusBadRequest, respn)
-        return
-    }
-
     // Preserve unmodifiable fields
     prj.Name = existingprj.Name
     prj.Secret = existingprj.Secret
