@@ -105,71 +105,70 @@ func GetDataProject(respw http.ResponseWriter, req *http.Request) {
 }
 
 func PutDataProject(respw http.ResponseWriter, req *http.Request) {
-    // Decode token from header
-    payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
-    if err != nil {
-        var respn model.Response
-        respn.Status = "Error: Token Tidak Valid"
-        respn.Info = at.GetSecretFromHeader(req)
-        respn.Location = "Decode Token Error"
-        respn.Response = err.Error()
-        at.WriteJSON(respw, http.StatusForbidden, respn)
-        return
-    }
+	// Decode token from header
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error: Token Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(req)
+		respn.Location = "Decode Token Error"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusForbidden, respn)
+		return
+	}
 
-    // Decode the project data from the request body
-    var prj model.Project
-    err = json.NewDecoder(req.Body).Decode(&prj)
-    if err != nil {
-        var respn model.Response
-        respn.Status = "Error: Body tidak valid"
-        respn.Response = err.Error()
-        at.WriteJSON(respw, http.StatusBadRequest, respn)
-        return
-    }
+	// Decode the project data from the request body
+	var prj model.Project
+	err = json.NewDecoder(req.Body).Decode(&prj)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error: Body tidak valid"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
+		return
+	}
 
-    // Get user data from the database
-    docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
-    if err != nil {
-        var respn model.Response
-        respn.Status = "Error: Data user tidak ditemukan"
-        respn.Response = err.Error()
-        at.WriteJSON(respw, http.StatusNotImplemented, respn)
-        return
-    }
+	// Get user data from the database
+	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error: Data user tidak ditemukan"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
 
-    // Check if the project exists and belongs to the user
-    existingprj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": prj.ID, "owner._id": docuser.ID})
-    if err != nil {
-        var respn model.Response
-        respn.Status = "Error: Project tidak ditemukan"
-        respn.Response = err.Error()
-        at.WriteJSON(respw, http.StatusNotFound, respn)
-        return
-    }
+	// Check if the project exists and belongs to the user
+	existingprj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"_id": prj.ID, "owner._id": docuser.ID})
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error: Project tidak ditemukan"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusNotFound, respn)
+		return
+	}
 
-    // Preserve unmodifiable fields
-    prj.Name = existingprj.Name
-    prj.Secret = existingprj.Secret
-    prj.Owner = existingprj.Owner
+	// Preserve unmodifiable fields
+	prj.ID = existingprj.ID
+	prj.Name = existingprj.Name
+	prj.Secret = existingprj.Secret
+	prj.Owner = existingprj.Owner
 	prj.Members = existingprj.Members
-    prj.WAGroupID = existingprj.WAGroupID
+	prj.WAGroupID = existingprj.WAGroupID
 
-    // Save the updated project back to the database using ReplaceOneDoc
-    _, err = atdb.ReplaceOneDoc(config.Mongoconn, "project", primitive.M{"_id": existingprj.ID}, prj)
-    if err != nil {
-        var respn model.Response
-        respn.Status = "Error: Gagal memperbarui database"
-        respn.Response = err.Error()
-        at.WriteJSON(respw, http.StatusInternalServerError, respn)
-        return
-    }
+	// Save the updated project back to the database using ReplaceOneDoc
+	_, err = atdb.ReplaceOneDoc(config.Mongoconn, "project", primitive.M{"_id": existingprj.ID}, prj)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error: Gagal memperbarui database"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusInternalServerError, respn)
+		return
+	}
 
-    // Return the updated project
-    at.WriteJSON(respw, http.StatusOK, prj)
+	// Return the updated project
+	at.WriteJSON(respw, http.StatusOK, prj)
 }
-
-
 
 func DeleteDataProject(respw http.ResponseWriter, req *http.Request) {
 	// Dekode token dari header permintaan
