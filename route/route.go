@@ -36,7 +36,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostTaskUser(w, r)
 	case method == "POST" && path == "/data/user":
 		controller.PostDataUser(w, r)
-	case method == "POST" && path == "/data/user/wa":
+	case method == "POST" && at.URLParam(path, "/data/user/wa/:nomorwa"):
 		controller.PostDataUserFromWA(w, r)
 	case method == "POST" && path == "/data/proyek":
 		controller.PostDataProject(w, r)
