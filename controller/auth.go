@@ -65,7 +65,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		w.Write(response)
 		return
 	}else if existingUser.PhoneNumber != "" {
-		token, err := watoken.EncodeforHours(existingUser.PhoneNumber, config.PrivateKey, 18) // Generating a token for 18 hours
+		token, err := watoken.EncodeforHours(existingUser.PhoneNumber, existingUser.Name, config.PrivateKey, 18) // Generating a token for 18 hours
 		if err != nil {
 			http.Error(w, "Token generation failed", http.StatusInternalServerError)
 			return

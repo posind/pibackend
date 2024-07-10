@@ -73,12 +73,13 @@ func EncodeWithStructDuration[T any](id string, data *T, privateKey string, dur 
 
 }
 
-func EncodeforHours(id string, privateKey string, hours int32) (string, error) {
+func EncodeforHours(id, alias, privateKey string, hours int32) (string, error) {
 	token := paseto.NewToken()
 	token.SetIssuedAt(time.Now())
 	token.SetNotBefore(time.Now())
 	token.SetExpiration(time.Now().Add(time.Duration(hours) * time.Hour))
 	token.SetString("id", id)
+	token.SetString("alias", alias)
 	secretKey, err := paseto.NewV4AsymmetricSecretKeyFromHex(privateKey)
 	return token.V4Sign(secretKey, nil), err
 
