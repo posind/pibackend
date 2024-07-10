@@ -2,12 +2,15 @@ package config
 
 import (
 	"log"
+	"os"
 
 	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+var PrivateKey string = os.Getenv("PRKEY")
 
 var IPPort, Net = at.GetAddress()
 
