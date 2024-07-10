@@ -9,6 +9,7 @@ import (
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/auth"
+	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -59,6 +60,22 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		response, _ := json.Marshal(map[string]interface{}{
 			"message": "Please scan the QR code to provide your phone number",
 			"user":    userInfo,
+			"token" : "",
+		})
+		w.Write(response)
+		return
+	}else if existingUser.PhoneNumber != "" {
+		token, err := watoken.EncodeforHours(existingUser.Email, config.PrivateKey, 18) // Generating a token for 18 hours
+		if err != nil {
+			http.Error(w, "Token generation failed", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		response, _ := json.Marshal(map[string]interface{}{
+			"message": "Authenticated successfully",
+			"user":    userInfo,
+			"token":   token,
 		})
 		w.Write(response)
 		return
