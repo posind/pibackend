@@ -118,7 +118,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
-    collection := config.Mongoconn.Collection("user")
+    collection := config.Mongoconn.Collection("stp")
     filter := bson.M{"phonenumber": request.PhoneNumber}
 
     var user model.Stp
