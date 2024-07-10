@@ -102,7 +102,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-    var request model.Stp
+    var request model.LoginRequest
     if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
         http.Error(w, "Invalid request", http.StatusBadRequest)
         return
@@ -112,7 +112,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
     salt := "randomSalt123"
     iterations := 100000
 
-    hashedPassword := auth.HashPassword(request.PasswordHash, salt, iterations)
+    hashedPassword := auth.HashPassword(request.Password, salt, iterations)
 
     // Find user in the database
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -121,7 +121,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
     collection := config.Mongoconn.Collection("user")
     filter := bson.M{"phonenumber": request.PhoneNumber}
 
-    var user model.Userdomyikado
+    var user model.Stp
     err := collection.FindOne(ctx, filter).Decode(&user)
     if err != nil {
         http.Error(w, "Invalid phone number or password", http.StatusUnauthorized)
@@ -135,7 +135,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // Generate token
-    token, err := watoken.EncodeforHours(user.PhoneNumber, user.Name, config.PrivateKey, 18)
+    token, err := watoken.EncodeforHours(user.PhoneNumber, user.PasswordHash, config.PrivateKey, 18)
     if err != nil {
         http.Error(w, "Token generation failed", http.StatusInternalServerError)
         return
@@ -154,4 +154,5 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     w.Write(response)
 }
+
 
