@@ -47,3 +47,13 @@ type Task struct {
 	PIC       Userdomyikado      `bson:"pic" json:"pic"`
 	Done      bool               `bson:"done,omitempty" json:"done,omitempty"`
 }
+
+type LoginRequest struct {
+	PhoneNumber string `json:"phonenumber"`
+	Password    string `json:"password"`
+}
+
+type Stp struct {
+	PhoneNumber		string `bson:"phonenumber,omitempty" json:"phonenumber,omitempty"`
+	PasswordHash	string `bson:"password,omitempty" json:"password,omitempty"`
+}
