@@ -102,57 +102,57 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-    var request model.LoginRequest
-    if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-        http.Error(w, "Invalid request", http.StatusBadRequest)
-        return
-    }
+	var request model.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
 
-    // Salt and iterations - in a real application, store and retrieve these for each user
-    salt := "randomSalt123"
-    iterations := 100000
+	// Salt and iterations - in a real application, store and retrieve these for each user
+	salt := "randomSalt123"
+	iterations := 100000
 
-    hashedPassword := auth.HashPassword(request.Password, salt, iterations)
+	hashedPassword := auth.HashPassword(request.Password, salt, iterations)
 
-    // Find user in the database
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+	// Find user in the database
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-    collection := config.Mongoconn.Collection("stp")
-    filter := bson.M{"phonenumber": request.PhoneNumber}
+	collection := config.Mongoconn.Collection("stp")
+	filter := bson.M{"phonenumber": request.PhoneNumber}
 
-    var user model.Stp
-    err := collection.FindOne(ctx, filter).Decode(&user)
-    if err != nil {
-        http.Error(w, "Invalid phone number or password", http.StatusUnauthorized)
-        return
-    }
+	var user model.Stp
+	err := collection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		http.Error(w, "Invalid phone number or password", http.StatusUnauthorized)
+		return
+	}
 
-    // Verify password
-    if user.PasswordHash != hashedPassword {
-        http.Error(w, "Invalid phone number or password", http.StatusUnauthorized)
-        return
-    }
+	// Verify password
+	if user.PasswordHash != hashedPassword {
+		http.Error(w, "Passwords are not the same, failed to be verified.", http.StatusUnauthorized)
+		return
+	}
 
-    // Generate token
-    token, err := watoken.EncodeforHours(user.PhoneNumber, user.PasswordHash, config.PrivateKey, 18)
-    if err != nil {
-        http.Error(w, "Token generation failed", http.StatusInternalServerError)
-        return
-    }
+	// Generate token
+	token, err := watoken.EncodeforHours(user.PhoneNumber, user.PasswordHash, config.PrivateKey, 18)
+	if err != nil {
+		http.Error(w, "Token generation failed", http.StatusInternalServerError)
+		return
+	}
 
-    response, err := json.Marshal(map[string]interface{}{
-        "message": "Authenticated successfully",
-        "user":    user,
-        "token":   token,
-    })
-    if err != nil {
-        http.Error(w, "Internal server error: JSON marshaling failed", http.StatusInternalServerError)
-        return
-    }
+	response, err := json.Marshal(map[string]interface{}{
+		"message": "Authenticated successfully",
+		"user":    user,
+		"token":   token,
+	})
+	if err != nil {
+		http.Error(w, "Internal server error: JSON marshaling failed", http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    w.Write(response)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
 
