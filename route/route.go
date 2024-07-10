@@ -75,6 +75,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	// Google Auth
 	case method == "POST" && path == "/auth/users":
 		controller.Auth(w, r)
+	case method == "POST" && path == "/auth/login":
+		controller.LoginHandler(w, r)
 	// Google Auth
 	default:
 		controller.NotFound(w, r)
