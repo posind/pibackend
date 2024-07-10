@@ -35,7 +35,7 @@ jobs:
             --trigger-http \
             --timeout=540s \
             --set-env-vars=MONGOSTRING='${{ secrets.MONGOSTRING }}',PRKEY='${{ secrets.PRKEY }}' \
-            --set-secrets=PRIVATEKEY='${{ secrets.PRKEY }}'
+            --set-secrets PRIVATEKEY='${{ secrets.PRKEY }}'
       - name: 'Cek eksistensi fungsi'
         run: 'gcloud functions describe domyid --region=asia-southeast2'
       - name: 'Cek log debugging'
