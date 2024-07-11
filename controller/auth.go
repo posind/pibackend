@@ -104,7 +104,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var request model.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		respondWithJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid request"})
 		return
 	}
 
@@ -113,6 +113,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	iterations := 100000
 
 	hashedPassword := auth.HashPassword(request.Password, salt, iterations)
+
 
 	// Find user in the database
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -124,34 +125,40 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var user model.Stp
 	err := collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		http.Error(w, "Invalid phone number or password", http.StatusUnauthorized)
+		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Invalid phone number or password"})
 		return
 	}
 
 	// Verify password
 	if user.PasswordHash != hashedPassword {
-		http.Error(w, "Passwords are not the same, failed to be verified.", http.StatusUnauthorized)
+		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Invalid phone number or password"})
 		return
 	}
 
 	// Generate token
 	token, err := watoken.EncodeforHours(user.PhoneNumber, user.PasswordHash, config.PrivateKey, 18)
 	if err != nil {
-		http.Error(w, "Token generation failed", http.StatusInternalServerError)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Token generation failed"})
 		return
 	}
 
-	response, err := json.Marshal(map[string]interface{}{
+	response := map[string]interface{}{
 		"message": "Authenticated successfully",
 		"user":    user,
 		"token":   token,
-	})
+	}
+	respondWithJSON(w, http.StatusOK, response)
+}
+
+func respondWithJSON(w http.ResponseWriter, status int, payload interface{}) {
+	response, err := json.Marshal(payload)
 	if err != nil {
-		http.Error(w, "Internal server error: JSON marshaling failed", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("HTTP 500: Internal Server Error"))
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
 	w.Write(response)
 }
 
