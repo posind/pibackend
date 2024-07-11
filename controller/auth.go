@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -15,6 +15,7 @@ import (
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Auth(w http.ResponseWriter, r *http.Request) {
@@ -110,13 +111,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Salt and iterations
-	salt := "randomSalt123"
-	iterations := 100000
-
-	hashedPassword := auth.HashPassword(request.Password, salt, iterations)
-
-
 	// Find user in the database
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -131,16 +125,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Debug: log the stored password hash
-	log.Printf("Stored Hashed Password: %s", user.PasswordHash)
-
-	// Verify password
-	if user.PasswordHash != hashedPassword {
+	// Verify password using bcrypt
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
+	if err != nil {
 		var respn model.Response
 		respn.Status = "Error: Passwords are not the same"
 		respn.Info = at.GetSecretFromHeader(r)
 		respn.Location = "Password Verification Error"
-		respn.Response = "Hashed password from frontend: " + hashedPassword + " does not match stored password hash: " + user.PasswordHash
+		respn.Response = fmt.Sprintf("Password verification failed for phone number: %s", request.PhoneNumber)
 		at.WriteJSON(w, http.StatusUnauthorized, respn)
 		return
 	}
@@ -159,6 +151,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	respondWithJSON(w, http.StatusOK, response)
 }
+
 
 
 func respondWithJSON(w http.ResponseWriter, status int, payload interface{}) {
