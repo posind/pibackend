@@ -124,9 +124,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Invalid phone number or password"})
 		return
 	}
+	// Tambahkan salt yang ditentukan sebelumnya untuk hashing ulang password di backend
+	salt := "DoMyIKaDoSalT"
 
 	// Verify password using bcrypt
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password+salt))
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error: Passwords are not the same"
