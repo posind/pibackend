@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gocroot/config"
+	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/auth"
 	"github.com/gocroot/helper/watoken"
@@ -115,8 +116,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword := auth.HashPassword(request.Password, salt, iterations)
 
-	// Debug: log the hashed password
-	log.Printf("PhoneNumber: %s, Hashed Password: %s", request.PhoneNumber, hashedPassword)
 
 	// Find user in the database
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -128,7 +127,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var user model.Stp
 	err := collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		log.Printf("Error finding user: %v", err)
 		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Invalid phone number or password"})
 		return
 	}
@@ -138,8 +136,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Verify password
 	if user.PasswordHash != hashedPassword {
-		log.Printf("Passwords do not match: %s != %s", user.PasswordHash, hashedPassword)
-		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Passwords are not the same"})
+		var respn model.Response
+		respn.Status = "Error: Passwords are not the same"
+		respn.Info = at.GetSecretFromHeader(r)
+		respn.Location = "Password Verification Error"
+		respn.Response = "Hashed password from frontend: " + hashedPassword + " does not match stored password hash: " + user.PasswordHash
+		at.WriteJSON(w, http.StatusUnauthorized, respn)
 		return
 	}
 
