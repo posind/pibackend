@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gocroot/config"
-	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/auth"
 	"github.com/gocroot/helper/watoken"
@@ -125,15 +124,28 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Rehash the hashed password from the frontend
+	firstHash := request.Password
+	secondHash, err := auth.HashPassword(firstHash)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error: Internal Server Error"
+		respn.Info = "Hashing error"
+		respn.Location = "Password Hashing Error"
+		respn.Response = fmt.Sprintf("Failed to hash password for phone number: %s", request.PhoneNumber)
+		respondWithJSON(w, http.StatusInternalServerError, respn)
+		return
+	}
+
 	// Verify password using bcrypt
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(secondHash))
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error: Passwords are not the same"
-		respn.Info = at.GetSecretFromHeader(r)
+		respn.Info = "Additional info"
 		respn.Location = "Password Verification Error"
 		respn.Response = fmt.Sprintf("Password verification failed for phone number: %s", request.PhoneNumber)
-		at.WriteJSON(w, http.StatusUnauthorized, respn)
+		respondWithJSON(w, http.StatusUnauthorized, respn)
 		return
 	}
 
