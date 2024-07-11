@@ -19,6 +19,8 @@ func VerifyIDToken(idToken string, audience string) (*idtoken.Payload, error) {
 }
 
 func HashPassword(password, salt string, iterations int) string {
-    hash := pbkdf2.Key([]byte(password), []byte(salt), iterations, 32, sha256.New)
-    return hex.EncodeToString(hash)
+	passwordBytes := []byte(password)
+	saltBytes := []byte(salt)
+	hash := pbkdf2.Key(passwordBytes, saltBytes, iterations, 32, sha256.New)
+	return hex.EncodeToString(hash)
 }
