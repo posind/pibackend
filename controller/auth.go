@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -108,12 +109,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Salt and iterations - in a real application, store and retrieve these for each user
+	// Salt and iterations
 	salt := "randomSalt123"
 	iterations := 100000
 
 	hashedPassword := auth.HashPassword(request.Password, salt, iterations)
 
+	// Debug: log the hashed password
+	log.Printf("PhoneNumber: %s, Hashed Password: %s", request.PhoneNumber, hashedPassword)
 
 	// Find user in the database
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -125,12 +128,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var user model.Stp
 	err := collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
+		log.Printf("Error finding user: %v", err)
 		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Invalid phone number or password"})
 		return
 	}
 
+	// Debug: log the stored password hash
+	log.Printf("Stored Hashed Password: %s", user.PasswordHash)
+
 	// Verify password
 	if user.PasswordHash != hashedPassword {
+		log.Printf("Passwords do not match: %s != %s", user.PasswordHash, hashedPassword)
 		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Passwords are not the same"})
 		return
 	}
@@ -149,6 +157,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	respondWithJSON(w, http.StatusOK, response)
 }
+
 
 func respondWithJSON(w http.ResponseWriter, status int, payload interface{}) {
 	response, err := json.Marshal(payload)
