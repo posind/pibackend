@@ -131,7 +131,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Verify password
 	if user.PasswordHash != hashedPassword {
-		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Invalid phone number or password"})
+		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Passwords are not the same"})
 		return
 	}
 
