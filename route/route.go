@@ -50,6 +50,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.GetDataMemberProject(w, r)
 	case method == "POST" && path == "/data/proyek/anggota":
 		controller.PostDataMemberProject(w, r)
+	case method == "POST" && path == "/approvebimbingan":
+		controller.ApproveBimbingan(w, r)
 	case method == "DELETE" && path == "/data/proyek/anggota":
 		controller.DeleteDataMemberProject(w, r)
 	case method == "POST" && at.URLParam(path, "/webhook/github/:proyek"):
