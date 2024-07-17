@@ -233,11 +233,6 @@ func ApproveBimbinganbyPoin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if conf.ApproveBimbinganURL == "" {
-		http.Error(w, "Approve Bimbingan URL tidak ditemukan dalam konfigurasi", http.StatusInternalServerError)
-		return
-	}
-
 	// Prepare the request body
 	requestBody, err := json.Marshal(map[string]string{
 		"nim":   requestData.NIM,
@@ -284,6 +279,18 @@ func ApproveBimbinganbyPoin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Gagal mengurangi poin: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Get updated user data to return the current points
+	usr, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", bson.M{"phonenumber": phonenumber})
+	if err != nil {
+		http.Error(w, "Gagal mengambil data pengguna: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Add the current points to the response
+	responseMap["message"] = "Bimbingan berhasil di approve!"
+	responseMap["status"] = "success"
+	responseMap["poin_mahasiswa"] = fmt.Sprintf("Poin mahasiswa telah berkurang menjadi: %f", usr.Poin)
 
 	at.WriteJSON(w, http.StatusOK, responseMap)
 }
