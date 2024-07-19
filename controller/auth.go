@@ -20,6 +20,18 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func respondWithJSON(w http.ResponseWriter, status int, payload interface{}) {
+	response, err := json.Marshal(payload)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("HTTP 500: Internal Server Error"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(response)
+}
+
 func Auth(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Token string `json:"token"`
@@ -102,8 +114,7 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(response)
+	respondWithJSON(w, http.StatusOK, response)
 }
 
 func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
@@ -178,9 +189,7 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		"hashedPassword": hashedPassword,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	respondWithJSON(w, http.StatusOK, response)
 }
 
 func VerifyPasswordHandler(w http.ResponseWriter, r *http.Request) {
@@ -221,9 +230,7 @@ func VerifyPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
 		"message": "Password verified successfully",
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	respondWithJSON(w, http.StatusOK, response)
 }
 
 
