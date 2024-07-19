@@ -194,9 +194,9 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
         "hashedPassword": hashedPassword,
     }
     dt := &whatsauth.TextMessage{
-        To:       request.PhoneNumber + "@s.whatsapp.net", // Update to send to the phone number
+        To:       request.PhoneNumber, // Update to send to the phone number
         IsGroup:  false,
-        Messages: randomPassword,
+        Messages: hashedPassword,
     }
     _, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
     if err != nil {
