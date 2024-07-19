@@ -258,11 +258,21 @@ func VerifyPasswordHandler(w http.ResponseWriter, r *http.Request) {
         json.NewEncoder(w).Encode(map[string]string{"message": "Invalid phone number or password"})
         return
     }
-
+	token, err := watoken.EncodeforHours(user.PhoneNumber, user.PhoneNumber, config.PrivateKey, 18)
+	if err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Token generation failed"})
+        return
+    }
+	response := map[string]interface{}{
+        "message": "Authenticated successfully",
+        "token":   token,
+    }
     // Respond with success
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(map[string]string{"message": "Password verified successfully"})
+    json.NewEncoder(w).Encode(response)
 }
 
 
