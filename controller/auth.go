@@ -3,14 +3,17 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/gocroot/config"
+	"github.com/gocroot/helper/at"
+	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/auth"
 	"github.com/gocroot/helper/watoken"
+	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -103,10 +106,87 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var request model.LoginRequest
+func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		PhoneNumber string `json:"phonenumber"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		respondWithJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid request"})
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Validate phone number
+	re := regexp.MustCompile(`^\+62\d{9,15}$`)
+	if !re.MatchString(request.PhoneNumber) {
+		http.Error(w, "Invalid phone number format", http.StatusBadRequest)
+		return
+	}
+
+	// Generate random password
+	randomPassword, err := auth.GenerateRandomPassword(12)
+	if err != nil {
+		http.Error(w, "Failed to generate password", http.StatusInternalServerError)
+		return
+	}
+
+	// Hash the password
+	hashedPassword, err := auth.HashPassword(randomPassword)
+	if err != nil {
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		return
+	}
+
+	// Update or insert the user in the database
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := config.Mongoconn.Collection("stp")
+	filter := bson.M{"phonenumber": request.PhoneNumber}
+
+	update := bson.M{
+		"$set": model.Stp{
+			PhoneNumber:  request.PhoneNumber,
+			PasswordHash: hashedPassword,
+			CreatedAt:    time.Now(),
+		},
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err = collection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		http.Error(w, "Failed to save user info", http.StatusInternalServerError)
+		return
+	}
+
+	// Send the random password via WhatsApp
+	dt := &whatsauth.TextMessage{
+		To:       request.PhoneNumber + "@s.whatsapp.net", // Format the phone number for WhatsApp
+		IsGroup:  false,
+		Messages: "Your login password is: " + randomPassword + ". This password will expire in 4 minutes.",
+	}
+	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+	if err != nil {
+		resp.Info = "Tidak berhak"
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusUnauthorized, resp)
+		return
+	}
+
+	// Respond with success and the generated password
+	response := map[string]interface{}{
+		"message":       "Password generated and saved successfully",
+		"password":      randomPassword,
+		"hashedPassword": hashedPassword,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func VerifyPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var request model.VerifyRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
@@ -120,52 +200,33 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var user model.Stp
 	err := collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
-		fmt.Printf("Error finding user: %v\n", err)
-		respondWithJSON(w, http.StatusUnauthorized, map[string]string{"message": "Invalid phone number or password"})
+		http.Error(w, "Invalid phone number or password", http.StatusUnauthorized)
 		return
 	}
-	// Tambahkan salt yang ditentukan sebelumnya untuk hashing ulang password di backend
-	salt := "DoMyIKaDoSalT"
 
-	// Verify password using bcrypt
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password+salt))
+	// Check if the password is expired
+	if time.Since(user.CreatedAt) > 4*time.Minute {
+		http.Error(w, "Password has expired", http.StatusUnauthorized)
+		return
+	}
+
+	// Verify the password
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
 	if err != nil {
-		var respn model.Response
-		respn.Status = "Error: Passwords are not the same"
-		respn.Info = "Additional info"
-		respn.Location = "Password Verification Error"
-		respn.Response = fmt.Sprintf("Password verification failed for phone number: %s", request.PhoneNumber)
-		respondWithJSON(w, http.StatusUnauthorized, respn)
+		http.Error(w, "Invalid phone number or password", http.StatusUnauthorized)
 		return
 	}
 
-	// Generate token
-	token, err := watoken.EncodeforHours(user.PhoneNumber, user.PasswordHash, config.PrivateKey, 18)
-	if err != nil {
-		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Token generation failed"})
-		return
-	}
-
+	// Respond with success
 	response := map[string]interface{}{
-		"message": "Authenticated successfully",
-		"user":    user,
-		"token":   token,
-	}
-	respondWithJSON(w, http.StatusOK, response)
-}
-
-
-
-func respondWithJSON(w http.ResponseWriter, status int, payload interface{}) {
-	response, err := json.Marshal(payload)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("HTTP 500: Internal Server Error"))
-		return
+		"message": "Password verified successfully",
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	w.Write(response)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
+
+
+
 
 
