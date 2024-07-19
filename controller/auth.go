@@ -271,24 +271,20 @@ func VerifyPasswordHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Find user name from the user collection
+    // Find user in the 'user' collection
     userCollection := config.Mongoconn.Collection("user")
     userFilter := bson.M{"phonenumber": request.PhoneNumber}
 
-    var userInfo struct {
-        Name string `bson:"name"`
-    }
-
-    err = userCollection.FindOne(ctx, userFilter).Decode(&userInfo)
+    var existingUser model.Userdomyikado
+    err = userCollection.FindOne(ctx, userFilter).Decode(&existingUser)
     if err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusUnauthorized)
-        json.NewEncoder(w).Encode(map[string]string{"message": "Failed to retrieve user info"})
+        json.NewEncoder(w).Encode(map[string]string{"message": "User not found"})
         return
     }
 
-    // Generate token with user name
-    token, err := watoken.EncodeforHours(user.PhoneNumber, userInfo.Name, config.PrivateKey, 18)
+    token, err := watoken.EncodeforHours(existingUser.PhoneNumber, existingUser.Name, config.PrivateKey, 18)
     if err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusInternalServerError)
