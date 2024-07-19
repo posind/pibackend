@@ -19,18 +19,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func respondWithJSON(w http.ResponseWriter, status int, payload interface{}) {
-	response, err := json.Marshal(payload)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("HTTP 500: Internal Server Error"))
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	w.Write(response)
-}
-
 func Auth(w http.ResponseWriter, r *http.Request) {
     var request struct {
         Token string `json:"token"`
@@ -181,14 +169,14 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Update or insert the user in the database
 	collection := config.Mongoconn.Collection("stp")
-	filter := bson.M{"phonenumber": request.PhoneNumber}
-	update := bson.M{
-		"$set": model.Stp{
-			PhoneNumber:  request.PhoneNumber,
-			PasswordHash: hashedPassword,
-			CreatedAt:    time.Now(),
-		},
-	}
+    filter := bson.M{"phonenumber": request.PhoneNumber}
+    update := bson.M{
+        "$set": bson.M{
+            "phonenumber":  request.PhoneNumber,
+            "password": hashedPassword,
+            "createdAt":    time.Now(),
+        },
+    }
 	opts := options.Update().SetUpsert(true)
 	_, err = collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
@@ -202,7 +190,7 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	dt := &whatsauth.TextMessage{
 		To:      request.PhoneNumber,
 		IsGroup: false,
-		Messages: "Hi! Your login password is: " + randomPassword +
+		Messages: "Hi! Your login password is: " + hashedPassword +
 			". Enter this password on the STP page within 4 minutes. The password will expire after that.",
 	}
 	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
