@@ -149,18 +149,17 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Check if the phone number is registered
-	var user struct {
-		Name string `bson:"name"`
-	}
 	userCollection := config.Mongoconn.Collection("user")
-	err := userCollection.FindOne(ctx, bson.M{"phonenumber": request.PhoneNumber}).Decode(&user)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"message": "Phone number not registered"})
-		return
-	}
+    userFilter := bson.M{"phonenumber": request.PhoneNumber}
+
+    var user model.Userdomyikado
+    err := userCollection.FindOne(ctx, userFilter).Decode(&user)
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusUnauthorized)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Phone number not registered"})
+        return
+    }
 
 	// Generate random password
 	randomPassword, err := auth.GenerateRandomPassword(12)
