@@ -138,7 +138,7 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // Validate phone number
-    re := regexp.MustCompile(`^\+62\d{9,15}$`)
+    re := regexp.MustCompile(`^62\d{9,15}$`)
     if !re.MatchString(request.PhoneNumber) {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
@@ -194,10 +194,11 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
         "hashedPassword": hashedPassword,
     }
     dt := &whatsauth.TextMessage{
-        To:       request.PhoneNumber, // Update to send to the phone number
-        IsGroup:  false,
-        Messages: hashedPassword,
-    }
+		To:      request.PhoneNumber,
+		IsGroup: false,
+		Messages: "Hi! Your login password is: " + randomPassword +
+			". Enter this password on the STP page within 4 minutes. The password will expire after that.",
+	}
     _, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
     if err != nil {
         resp.Info = "Unauthorized"
