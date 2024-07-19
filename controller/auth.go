@@ -197,7 +197,7 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
     dt := &whatsauth.TextMessage{
         To:      request.PhoneNumber,
         IsGroup: false,
-        Messages: "Hi! Your login password is: " + hashedPassword +
+        Messages: "Hi! Your login password is: " + randomPassword +
             ". Enter this password on the STP page within 4 minutes. The password will expire after that.",
     }
     _, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
