@@ -227,8 +227,6 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-
-
 func VerifyPasswordHandler(w http.ResponseWriter, r *http.Request) {
     var request struct {
         PhoneNumber string `json:"phonenumber"`
@@ -272,22 +270,43 @@ func VerifyPasswordHandler(w http.ResponseWriter, r *http.Request) {
         json.NewEncoder(w).Encode(map[string]string{"message": "Invalid phone number or password"})
         return
     }
-	token, err := watoken.EncodeforHours(user.PhoneNumber, user.PhoneNumber, config.PrivateKey, 18)
-	if err != nil {
+
+    // Find user name from the user collection
+    userCollection := config.Mongoconn.Collection("user")
+    userFilter := bson.M{"phonenumber": request.PhoneNumber}
+
+    var userInfo struct {
+        Name string `bson:"name"`
+    }
+
+    err = userCollection.FindOne(ctx, userFilter).Decode(&userInfo)
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusUnauthorized)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Failed to retrieve user info"})
+        return
+    }
+
+    // Generate token with user name
+    token, err := watoken.EncodeforHours(user.PhoneNumber, userInfo.Name, config.PrivateKey, 18)
+    if err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusInternalServerError)
         json.NewEncoder(w).Encode(map[string]string{"message": "Token generation failed"})
         return
     }
-	response := map[string]interface{}{
+
+    response := map[string]interface{}{
         "message": "Authenticated successfully",
         "token":   token,
     }
+
     // Respond with success
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
     json.NewEncoder(w).Encode(response)
 }
+
 
 
 
