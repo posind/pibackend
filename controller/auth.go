@@ -134,21 +134,6 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	userCollection := config.Mongoconn.Collection("user")
-    userFilter := bson.M{"phonenumber": request.PhoneNumber}
-
-    var user model.Userdomyikado
-    err := userCollection.FindOne(ctx, userFilter).Decode(&user)
-    if err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusUnauthorized)
-        json.NewEncoder(w).Encode(map[string]string{"message": "Phone number not registered"})
-        return
-    }
-
 	// Generate random password
 	randomPassword, err := auth.GenerateRandomPassword(12)
 	if err != nil {
@@ -168,15 +153,18 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update or insert the user in the database
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	collection := config.Mongoconn.Collection("stp")
-    filter := bson.M{"phonenumber": request.PhoneNumber}
-    update := bson.M{
-        "$set": bson.M{
-            "phonenumber":  request.PhoneNumber,
-            "password": hashedPassword,
-            "createdAt":    time.Now(),
-        },
-    }
+	filter := bson.M{"phonenumber": request.PhoneNumber}
+	update := bson.M{
+		"$set": bson.M{
+			"phonenumber":  request.PhoneNumber,
+			"password":     hashedPassword,
+			"createdAt":    time.Now(),
+		},
+	}
 	opts := options.Update().SetUpsert(true)
 	_, err = collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
@@ -186,7 +174,12 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send password via WhatsApp
+	// Respond with success and the generated password
+	response := map[string]interface{}{
+		"message":        "Password generated and saved successfully",
+		"password":       randomPassword,
+		"hashedPassword": hashedPassword,
+	}
 	dt := &whatsauth.TextMessage{
 		To:      request.PhoneNumber,
 		IsGroup: false,
@@ -203,12 +196,6 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond with success and the generated password
-	response := map[string]interface{}{
-		"message":        "Password generated and saved successfully",
-		"password":       randomPassword,
-		"hashedPassword": hashedPassword,
-	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
