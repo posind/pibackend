@@ -115,91 +115,106 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 
 
 func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		PhoneNumber string `json:"phonenumber"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"message": "Invalid request"})
-		return
-	}
+    var request struct {
+        PhoneNumber string `json:"phonenumber"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Invalid request"})
+        return
+    }
 
-	// Validate phone number
-	re := regexp.MustCompile(`^62\d{9,15}$`)
-	if !re.MatchString(request.PhoneNumber) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"message": "Invalid phone number format"})
-		return
-	}
+    // Validate phone number
+    re := regexp.MustCompile(`^62\d{9,15}$`)
+    if !re.MatchString(request.PhoneNumber) {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Invalid phone number format"})
+        return
+    }
 
-	// Generate random password
-	randomPassword, err := auth.GenerateRandomPassword(12)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"message": "Failed to generate password"})
-		return
-	}
+    // Check if phone number exists in the 'user' collection
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
 
-	// Hash the password
-	hashedPassword, err := auth.HashPassword(randomPassword)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"message": "Failed to hash password"})
-		return
-	}
+    userCollection := config.Mongoconn.Collection("user")
+    userFilter := bson.M{"phonenumber": request.PhoneNumber}
 
-	// Update or insert the user in the database
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+    var user model.Userdomyikado
+    err := userCollection.FindOne(ctx, userFilter).Decode(&user)
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusUnauthorized)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Phone number not registered"})
+        return
+    }
 
-	collection := config.Mongoconn.Collection("stp")
-	filter := bson.M{"phonenumber": request.PhoneNumber}
-	update := bson.M{
+    // Generate random password
+    randomPassword, err := auth.GenerateRandomPassword(12)
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Failed to generate password"})
+        return
+    }
+
+    // Hash the password
+    hashedPassword, err := auth.HashPassword(randomPassword)
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Failed to hash password"})
+        return
+    }
+
+    // Update or insert the user in the database
+    stpCollection := config.Mongoconn.Collection("stp")
+    stpFilter := bson.M{"phonenumber": request.PhoneNumber}
+
+    update := bson.M{
 		"$set": bson.M{
 			"phonenumber":  request.PhoneNumber,
 			"password":     hashedPassword,
 			"createdAt":    time.Now(),
 		},
 	}
-	opts := options.Update().SetUpsert(true)
-	_, err = collection.UpdateOne(ctx, filter, update, opts)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"message": "Failed to save user info"})
-		return
-	}
+    opts := options.Update().SetUpsert(true)
+    _, err = stpCollection.UpdateOne(ctx, stpFilter, update, opts)
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Failed to save user info"})
+        return
+    }
 
-	// Respond with success and the generated password
-	response := map[string]interface{}{
-		"message":        "Password generated and saved successfully",
-		"password":       randomPassword,
-		"hashedPassword": hashedPassword,
-	}
-	dt := &whatsauth.TextMessage{
-		To:      request.PhoneNumber,
-		IsGroup: false,
-		Messages: "Hi! Your login password is: " + hashedPassword +
-			". Enter this password on the STP page within 4 minutes. The password will expire after that.",
-	}
-	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
-	if err != nil {
-		resp.Info = "Unauthorized"
-		resp.Response = err.Error()
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(resp)
-		return
-	}
+    // Respond with success and the generated password
+    response := map[string]interface{}{
+        "message":        "Password generated and saved successfully",
+        "password":       randomPassword,
+        "hashedPassword": hashedPassword,
+    }
+    dt := &whatsauth.TextMessage{
+        To:      request.PhoneNumber,
+        IsGroup: false,
+        Messages: "Hi! Your login password is: " + hashedPassword +
+            ". Enter this password on the STP page within 4 minutes. The password will expire after that.",
+    }
+    _, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+    if err != nil {
+        resp.Info = "Unauthorized"
+        resp.Response = err.Error()
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusUnauthorized)
+        json.NewEncoder(w).Encode(resp)
+        return
+    }
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(response)
 }
+
 
 func VerifyPasswordHandler(w http.ResponseWriter, r *http.Request) {
     var request struct {
