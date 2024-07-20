@@ -42,8 +42,9 @@ func SendWhatsAppPassword(w http.ResponseWriter, phoneNumber string, password st
     dt := &whatsauth.TextMessage{
         To:      phoneNumber,
         IsGroup: false,
-        Messages: "Hi! Your login password is: " + password +
-            ". Enter this password on the STP page within 4 minutes. The password will expire after that.",
+        Messages: "Hi! Your login password is: *" + password + "*.\n\n" +
+        "Enter this password on the STP page within 4 minutes. The password will expire after that. " +
+        "To copy the password, press and hold the password.",
     }
 
     // Send WhatsApp message
