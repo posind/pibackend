@@ -190,18 +190,24 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 
     // Respond with success and the generated password
     response := map[string]interface{}{
-        "message":        "Password generated and saved successfully",
-        "password":       randomPassword,
-        "hashedPassword": hashedPassword,
-    }
-    dt := &whatsauth.TextMessage{
-        To:      request.PhoneNumber,
-        IsGroup: false,
-        Messages: "Hi! Your login password is: " + randomPassword +
-            ". Enter this password on the STP page within 4 minutes. The password will expire after that.",
-    }
-    _, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
-    if err != nil {
+		"message":        "Password generated and saved successfully",
+		"phonenumber":    request.PhoneNumber,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+
+	// Send the password via WhatsApp in a goroutine
+	go func() {
+		dt := &whatsauth.TextMessage{
+			To:      request.PhoneNumber,
+			IsGroup: false,
+			Messages: "Hi! Your login password is: *" + randomPassword + "*.\n\n" +
+        "Enter this password on the STP page within 4 minutes. The password will expire after that. " +
+        "To copy the password, press and hold the password.",
+		}
+		_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
+		 if err != nil {
         resp.Info = "Unauthorized"
         resp.Response = err.Error()
         w.Header().Set("Content-Type", "application/json")
@@ -209,10 +215,7 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
         json.NewEncoder(w).Encode(resp)
         return
     }
-
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(response)
+	}()
 }
 
 
