@@ -8,11 +8,9 @@ import (
 	"time"
 
 	"github.com/gocroot/config"
-	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/auth"
 	"github.com/gocroot/helper/watoken"
-	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -197,25 +195,8 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 
-	// Send the password via WhatsApp in a goroutine
-	go func() {
-		dt := &whatsauth.TextMessage{
-			To:      request.PhoneNumber,
-			IsGroup: false,
-			Messages: "Hi! Your login password is: *" + randomPassword + "*.\n\n" +
-        "Enter this password on the STP page within 4 minutes. The password will expire after that. " +
-        "To copy the password, press and hold the password.",
-		}
-		_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
-		 if err != nil {
-        resp.Info = "Unauthorized"
-        resp.Response = err.Error()
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusUnauthorized)
-        json.NewEncoder(w).Encode(resp)
-        return
-    }
-	}()
+	// Send the random password via WhatsApp
+    auth.SendWhatsAppPassword(w, request.PhoneNumber, randomPassword)
 }
 
 
