@@ -284,9 +284,10 @@ func VerifyPasswordHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    response := map[string]interface{}{
+     response := map[string]interface{}{
         "message": "Authenticated successfully",
         "token":   token,
+        "name":    existingUser.Name,
     }
 
     // Respond with success
