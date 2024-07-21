@@ -170,25 +170,47 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
     stpCollection := config.Mongoconn.Collection("stp")
     stpFilter := bson.M{"phonenumber": request.PhoneNumber}
 
-    update := bson.M{
-		"$set": bson.M{
-			"phonenumber":  request.PhoneNumber,
-			"password":     hashedPassword,
-			"createdAt":    time.Now(),
-		},
-	}
-    opts := options.Update().SetUpsert(true)
-    _, err = stpCollection.UpdateOne(ctx, stpFilter, update, opts)
+    var existingUser model.Stp
+    err = stpCollection.FindOne(ctx, stpFilter).Decode(&existingUser)
+    var responseMessage string
+
     if err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusInternalServerError)
-        json.NewEncoder(w).Encode(map[string]string{"message": "Failed to save user info"})
-        return
+        // Document not found, insert new one
+        newUser := model.Stp{
+            PhoneNumber:  request.PhoneNumber,
+            PasswordHash: hashedPassword,
+            CreatedAt:    time.Now(),
+        }
+        _, err = stpCollection.InsertOne(ctx, newUser)
+        if err != nil {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusInternalServerError)
+            json.NewEncoder(w).Encode(map[string]string{"message": "Failed to save user info"})
+            return
+        }
+        responseMessage = "New user created and password generated successfully"
+    } else {
+        // Document found, update the existing one
+        update := bson.M{
+            "$set": bson.M{
+                "phonenumber": request.PhoneNumber,
+                "password":    hashedPassword,
+                "createdAt":   time.Now(),
+            },
+        }
+        _, err = stpCollection.UpdateOne(ctx, stpFilter, update)
+        if err != nil {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusInternalServerError)
+            json.NewEncoder(w).Encode(map[string]string{"message": "Failed to update user info"})
+            return
+        }
+        responseMessage = "User info updated and password generated successfully"
     }
 
     // Respond with success and the generated password
     response := map[string]interface{}{
-		"message":        "Password generated and saved successfully",
+		"message":        responseMessage,
 		"phonenumber":    request.PhoneNumber,
 	}
 	w.Header().Set("Content-Type", "application/json")
