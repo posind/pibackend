@@ -21,3 +21,15 @@ func GetLMSUser(respw http.ResponseWriter, req *http.Request) {
 	resp.Info = strconv.Itoa(total)
 	at.WriteJSON(respw, http.StatusOK, resp)
 }
+
+func RefreshLMSCookie(respw http.ResponseWriter, req *http.Request) {
+	var resp model.Response
+	err := lms.RefreshCookie(config.Mongoconn)
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, resp)
+		return
+	}
+	resp.Info = "ok"
+	at.WriteJSON(respw, http.StatusOK, resp)
+}

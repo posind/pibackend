@@ -77,6 +77,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	// LMS
 	case method == "GET" && path == "/lms/data/user":
 		controller.GetLMSUser(w, r)
+	case method == "GET" && path == "/lms/refresh/cookie":
+		controller.RefreshLMSCookie(w, r)
 	// Google Auth
 	case method == "POST" && path == "/auth/users":
 		controller.Auth(w, r)
