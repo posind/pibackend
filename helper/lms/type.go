@@ -5,6 +5,27 @@ import (
 	"time"
 )
 
+type CustomTime time.Time
+
+const customTimeFormat = `"2006-01-02T15:04:05Z07:00"`
+
+func (ct *CustomTime) UnmarshalJSON(b []byte) error {
+	str := string(b)
+	if str == "null" {
+		return nil
+	}
+	t, err := time.Parse(customTimeFormat, str)
+	if err != nil {
+		return err
+	}
+	*ct = CustomTime(t)
+	return nil
+}
+
+func (ct CustomTime) MarshalJSON() ([]byte, error) {
+	return []byte(time.Time(ct).Format(customTimeFormat)), nil
+}
+
 type UnixTime struct {
 	time.Time
 }
@@ -26,49 +47,49 @@ type LoginProfile struct {
 }
 
 type Position struct {
-	ID        string     `json:"id,omitempty"`
-	Name      string     `json:"name,omitempty"`
-	ParentID  string     `json:"parent_id,omitempty"`
-	Order     *int       `json:"order,omitempty"`
-	IsDelete  bool       `json:"is_delete,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	ID        string      `json:"id,omitempty"`
+	Name      string      `json:"name,omitempty"`
+	ParentID  string      `json:"parent_id,omitempty"`
+	Order     *int        `json:"order,omitempty"`
+	IsDelete  bool        `json:"is_delete,omitempty"`
+	CreatedAt *CustomTime `json:"created_at,omitempty"`
+	UpdatedAt *CustomTime `json:"updated_at,omitempty"`
 }
 
 type Province struct {
-	Kode      string     `json:"kode,omitempty"`
-	Nama      string     `json:"nama,omitempty"`
-	IsDelete  bool       `json:"is_delete,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-	IDs       string     `json:"ids,omitempty"`
+	Kode      string      `json:"kode,omitempty"`
+	Nama      string      `json:"nama,omitempty"`
+	IsDelete  bool        `json:"is_delete,omitempty"`
+	CreatedAt *CustomTime `json:"created_at,omitempty"`
+	UpdatedAt *CustomTime `json:"updated_at,omitempty"`
+	IDs       string      `json:"ids,omitempty"`
 }
 
 type Regency struct {
-	Kode      string     `json:"kode,omitempty"`
-	Nama      string     `json:"nama,omitempty"`
-	IsDelete  bool       `json:"is_delete,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-	IDs       *string    `json:"ids,omitempty"`
+	Kode      string      `json:"kode,omitempty"`
+	Nama      string      `json:"nama,omitempty"`
+	IsDelete  bool        `json:"is_delete,omitempty"`
+	CreatedAt *CustomTime `json:"created_at,omitempty"`
+	UpdatedAt *CustomTime `json:"updated_at,omitempty"`
+	IDs       *string     `json:"ids,omitempty"`
 }
 
 type District struct {
-	Kode      string     `json:"kode,omitempty"`
-	Nama      string     `json:"nama,omitempty"`
-	IsDelete  bool       `json:"is_delete,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-	IDs       *string    `json:"ids,omitempty"`
+	Kode      string      `json:"kode,omitempty"`
+	Nama      string      `json:"nama,omitempty"`
+	IsDelete  bool        `json:"is_delete,omitempty"`
+	CreatedAt *CustomTime `json:"created_at,omitempty"`
+	UpdatedAt *CustomTime `json:"updated_at,omitempty"`
+	IDs       *string     `json:"ids,omitempty"`
 }
 
 type Village struct {
-	Kode      string     `json:"kode,omitempty"`
-	Nama      string     `json:"nama,omitempty"`
-	IsDelete  bool       `json:"is_delete,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-	IDs       *string    `json:"ids,omitempty"`
+	Kode      string      `json:"kode,omitempty"`
+	Nama      string      `json:"nama,omitempty"`
+	IsDelete  bool        `json:"is_delete,omitempty"`
+	CreatedAt *CustomTime `json:"created_at,omitempty"`
+	UpdatedAt *CustomTime `json:"updated_at,omitempty"`
+	IDs       *string     `json:"ids,omitempty"`
 }
 
 type UserProfile struct {
@@ -92,12 +113,12 @@ type User struct {
 	ProfileApproved int          `json:"profile_approved,omitempty"`
 	LastLoginAt     *UnixTime    `json:"last_login_at,omitempty"`
 	UserProfile     *UserProfile `json:"user_profile,omitempty"`
-	CreatedAt       *time.Time   `json:"created_at,omitempty"`
+	CreatedAt       *CustomTime  `json:"created_at,omitempty"`
 	Roles           []string     `json:"roles,omitempty"`
 	ApprovedBy      *string      `json:"approved_by,omitempty"`
-	ApprovedAt      *time.Time   `json:"approved_at,omitempty"`
+	ApprovedAt      *CustomTime  `json:"approved_at,omitempty"`
 	RejectedBy      *string      `json:"rejected_by,omitempty"`
-	RejectedAt      *time.Time   `json:"rejected_at,omitempty"`
+	RejectedAt      *CustomTime  `json:"rejected_at,omitempty"`
 }
 
 type Meta struct {
