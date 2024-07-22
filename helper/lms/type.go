@@ -1,6 +1,22 @@
 package lms
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
+
+type UnixTime struct {
+	time.Time
+}
+
+func (ut *UnixTime) UnmarshalJSON(b []byte) error {
+	var ts int64
+	if err := json.Unmarshal(b, &ts); err != nil {
+		return err
+	}
+	ut.Time = time.Unix(ts, 0).UTC()
+	return nil
+}
 
 type LoginProfile struct {
 	Username string `bson:"user,omitempty"`
@@ -71,10 +87,10 @@ type User struct {
 	Fullname        string       `json:"fullname"`
 	Username        string       `json:"username"`
 	Email           string       `json:"email"`
-	EmailVerified   int64        `json:"email_verified"`
+	EmailVerified   UnixTime     `json:"email_verified"`
 	ProfileVerified bool         `json:"profile_verified"`
 	ProfileApproved int          `json:"profile_approved"`
-	LastLoginAt     int64        `json:"last_login_at"`
+	LastLoginAt     UnixTime     `json:"last_login_at"`
 	UserProfile     *UserProfile `json:"user_profile"`
 	CreatedAt       time.Time    `json:"created_at"`
 	Roles           []string     `json:"roles"`
