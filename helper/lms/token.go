@@ -3,9 +3,10 @@ package lms
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
-	"strings"
+	"regexp"
 )
 
 // GetNewCookie mengirim request dan mengembalikan XSRF-TOKEN dan laravel_session yang baru
@@ -58,10 +59,11 @@ func GetNewCookie(xsrfToken string, laravelSession string) (string, string, stri
 	if err != nil {
 		return "", "", "", fmt.Errorf("error reading response body: %w", err)
 	}
-	rawstring := string(respBody)
-	str1 := strings.Split(rawstring, "const base_headers = Object.freeze({\"Authorization\":\"Bearer ")
-	str2 := strings.Split(str1[1], "\",\"Accept\":\"application\\/jso\"});")
-	bearer := str2[0]
+	content := string(respBody)
+	// Regex untuk mencari token
+	re := regexp.MustCompile(`eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+`)
+	bearer := re.FindString(content)
+	log.Println(bearer)
 
 	// Menangkap set cookies dari response header
 	var newXSRFToken, newLaravelSession string
