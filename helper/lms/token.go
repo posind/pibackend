@@ -3,7 +3,6 @@ package lms
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"regexp"
@@ -63,7 +62,6 @@ func GetNewCookie(xsrfToken string, laravelSession string) (string, string, stri
 	// Regex untuk mencari token
 	re := regexp.MustCompile(`eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+`)
 	bearer := re.FindString(content)
-	log.Println(bearer)
 
 	// Menangkap set cookies dari response header
 	var newXSRFToken, newLaravelSession string
