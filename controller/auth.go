@@ -134,7 +134,7 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
     })
     if err != nil {
         var respn model.Response
-		respn.Status = "message: Failed to verify captcha"
+		respn.Status = "Failed to verify captcha"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusInternalServerError, respn)
 		return
@@ -146,7 +146,7 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
     }
     if err := json.NewDecoder(captchaResponse.Body).Decode(&captchaResult); err != nil {
         var respn model.Response
-		respn.Status = "message: Failed to decode captcha response"
+		respn.Status = "Failed to decode captcha response"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusInternalServerError, respn)
 		return
@@ -180,7 +180,7 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
     err = userCollection.FindOne(ctx, userFilter).Decode(&user)
     if err != nil {
         var respn model.Response
-		respn.Status = "message: Phone number not registered"
+		respn.Status = "Phone number not registered"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusUnauthorized, respn)
 		return
@@ -190,7 +190,7 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
     randomPassword, err := auth.GenerateRandomPassword(12)
     if err != nil {
         var respn model.Response
-		respn.Status = "message: Failed to generate password"
+		respn.Status = "Failed to generate password"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusInternalServerError, respn)
 		return
@@ -200,7 +200,7 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
     hashedPassword, err := auth.HashPassword(randomPassword)
     if err != nil {
         var respn model.Response
-		respn.Status = "message: Failed to hash password"
+		respn.Status = "Failed to hash password"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusInternalServerError, respn)
 		return
@@ -242,7 +242,7 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
         _, err = stpCollection.UpdateOne(ctx, stpFilter, update)
         if err != nil {
             var respn model.Response
-            respn.Status = "message: Failed to update user"
+            respn.Status = "Failed to update user"
             respn.Response = err.Error()
             at.WriteJSON(respw, http.StatusInternalServerError, respn)
             return
@@ -269,7 +269,7 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
     }
     if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
         var respn model.Response
-		respn.Status = "message: Invalid Request"
+		respn.Status = "Invalid Request"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
@@ -286,7 +286,7 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
     err := collection.FindOne(ctx, filter).Decode(&user)
     if err != nil {
         var respn model.Response
-		respn.Status = "message: Invalid phone number or password"
+		respn.Status = "Invalid phone number or password"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusUnauthorized, respn)
 		return
@@ -304,7 +304,7 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
     err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
     if err != nil {
         var respn model.Response
-		respn.Status = "message: Failed to verify password"
+		respn.Status = "Failed to verify password"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusUnauthorized, respn)
 		return
@@ -318,7 +318,7 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
     err = userCollection.FindOne(ctx, userFilter).Decode(&existingUser)
     if err != nil {
         var respn model.Response
-		respn.Status = "message: User not found"
+		respn.Status = "User not found"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusUnauthorized, respn)
 		return
@@ -327,7 +327,7 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
     token, err := watoken.EncodeforHours(existingUser.PhoneNumber, existingUser.Name, config.PrivateKey, 18)
     if err != nil {
         var respn model.Response
-		respn.Status = "message: Failed to give the token"
+		respn.Status = "Failed to give the token"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusInternalServerError, respn)
 		return
