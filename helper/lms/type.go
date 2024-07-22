@@ -26,93 +26,93 @@ type LoginProfile struct {
 }
 
 type Position struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	ParentID  string    `json:"parent_id"`
-	Order     *int      `json:"order"`
-	IsDelete  bool      `json:"is_delete"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string    `json:"id,omitempty"`
+	Name      string    `json:"name,omitempty"`
+	ParentID  string    `json:"parent_id,omitempty"`
+	Order     *int      `json:"order,omitempty"`
+	IsDelete  bool      `json:"is_delete,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
 type Province struct {
-	Kode      string    `json:"kode"`
-	Nama      string    `json:"nama"`
-	IsDelete  bool      `json:"is_delete"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IDs       string    `json:"ids"`
+	Kode      string    `json:"kode,omitempty"`
+	Nama      string    `json:"nama,omitempty"`
+	IsDelete  bool      `json:"is_delete,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	IDs       string    `json:"ids,omitempty"`
 }
 
 type Regency struct {
-	Kode      string    `json:"kode"`
-	Nama      string    `json:"nama"`
-	IsDelete  bool      `json:"is_delete"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IDs       *string   `json:"ids"`
+	Kode      string    `json:"kode,omitempty"`
+	Nama      string    `json:"nama,omitempty"`
+	IsDelete  bool      `json:"is_delete,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	IDs       *string   `json:"ids,omitempty"`
 }
 
 type District struct {
-	Kode      string    `json:"kode"`
-	Nama      string    `json:"nama"`
-	IsDelete  bool      `json:"is_delete"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IDs       *string   `json:"ids"`
+	Kode      string    `json:"kode,omitempty"`
+	Nama      string    `json:"nama,omitempty"`
+	IsDelete  bool      `json:"is_delete,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	IDs       *string   `json:"ids,omitempty"`
 }
 
 type Village struct {
-	Kode      string    `json:"kode"`
-	Nama      string    `json:"nama"`
-	IsDelete  bool      `json:"is_delete"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IDs       *string   `json:"ids"`
+	Kode      string    `json:"kode,omitempty"`
+	Nama      string    `json:"nama,omitempty"`
+	IsDelete  bool      `json:"is_delete,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	IDs       *string   `json:"ids,omitempty"`
 }
 
 type UserProfile struct {
-	TMT         string   `json:"tmt"`
-	Position    Position `json:"position"`
-	Province    Province `json:"province"`
-	Regency     Regency  `json:"regency"`
-	District    District `json:"district"`
-	Village     Village  `json:"village"`
-	Decree      string   `json:"decree"`
-	TrainerCert *string  `json:"trainer_cert"`
+	TMT         string   `json:"tmt,omitempty"`
+	Position    Position `json:"position,omitempty"`
+	Province    Province `json:"province,omitempty"`
+	Regency     Regency  `json:"regency,omitempty"`
+	District    District `json:"district,omitempty"`
+	Village     Village  `json:"village,omitempty"`
+	Decree      string   `json:"decree,omitempty"`
+	TrainerCert *string  `json:"trainer_cert,omitempty"`
 }
 
 type User struct {
-	ID              string       `json:"id"`
-	Fullname        string       `json:"fullname"`
-	Username        string       `json:"username"`
-	Email           string       `json:"email"`
-	EmailVerified   UnixTime     `json:"email_verified"`
-	ProfileVerified bool         `json:"profile_verified"`
-	ProfileApproved int          `json:"profile_approved"`
-	LastLoginAt     UnixTime     `json:"last_login_at"`
-	UserProfile     *UserProfile `json:"user_profile"`
-	CreatedAt       time.Time    `json:"created_at"`
-	Roles           []string     `json:"roles"`
-	ApprovedBy      *string      `json:"approved_by"`
-	ApprovedAt      *time.Time   `json:"approved_at"`
-	RejectedBy      *string      `json:"rejected_by"`
-	RejectedAt      *time.Time   `json:"rejected_at"`
+	ID              string       `json:"id,omitempty"`
+	Fullname        string       `json:"fullname,omitempty"`
+	Username        string       `json:"username,omitempty"`
+	Email           string       `json:"email,omitempty"`
+	EmailVerified   UnixTime     `json:"email_verified,omitempty"`
+	ProfileVerified bool         `json:"profile_verified,omitempty"`
+	ProfileApproved int          `json:"profile_approved,omitempty"`
+	LastLoginAt     UnixTime     `json:"last_login_at,omitempty"`
+	UserProfile     *UserProfile `json:"user_profile,omitempty"`
+	CreatedAt       time.Time    `json:"created_at,omitempty"`
+	Roles           []string     `json:"roles,omitempty"`
+	ApprovedBy      *string      `json:"approved_by,omitempty"`
+	ApprovedAt      *time.Time   `json:"approved_at,omitempty"`
+	RejectedBy      *string      `json:"rejected_by,omitempty"`
+	RejectedAt      *time.Time   `json:"rejected_at,omitempty"`
 }
 
 type Meta struct {
-	CurrentPage int `json:"current_page"`
-	FirstItem   int `json:"first_item"`
-	LastItem    int `json:"last_item"`
-	LastPage    int `json:"last_page"`
-	Total       int `json:"total"`
+	CurrentPage int `json:"current_page,omitempty"`
+	FirstItem   int `json:"first_item,omitempty"`
+	LastItem    int `json:"last_item,omitempty"`
+	LastPage    int `json:"last_page,omitempty"`
+	Total       int `json:"total,omitempty"`
 }
 
 type Data struct {
-	Data []User `json:"data"`
-	Meta Meta   `json:"meta"`
+	Data []User `json:"data,omitempty"`
+	Meta Meta   `json:"meta,omitempty"`
 }
 
 type Root struct {
-	Data Data `json:"data"`
+	Data Data `json:"data,omitempty"`
 }
