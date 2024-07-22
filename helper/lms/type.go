@@ -7,13 +7,15 @@ import (
 
 type CustomTime time.Time
 
-const customTimeFormat = `"2006-01-02T15:04:05Z07:00"`
+const customTimeFormat = "2006-01-02T15:04:05Z07:00"
 
+// UnmarshalJSON parses a time in RFC3339 format
 func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 	str := string(b)
-	if str == "null" {
+	if str == "null" || str == "" {
 		return nil
 	}
+	str = str[1 : len(str)-1] // Remove surrounding quotes
 	t, err := time.Parse(customTimeFormat, str)
 	if err != nil {
 		return err
@@ -22,14 +24,16 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// MarshalJSON formats the time in RFC3339 format
 func (ct CustomTime) MarshalJSON() ([]byte, error) {
-	return []byte(time.Time(ct).Format(customTimeFormat)), nil
+	return json.Marshal(time.Time(ct).Format(customTimeFormat))
 }
 
 type UnixTime struct {
 	time.Time
 }
 
+// UnmarshalJSON parses a Unix timestamp
 func (ut *UnixTime) UnmarshalJSON(b []byte) error {
 	var ts int64
 	if err := json.Unmarshal(b, &ts); err != nil {
@@ -37,6 +41,11 @@ func (ut *UnixTime) UnmarshalJSON(b []byte) error {
 	}
 	ut.Time = time.Unix(ts, 0).UTC()
 	return nil
+}
+
+// MarshalJSON converts the time to Unix timestamp
+func (ut UnixTime) MarshalJSON() ([]byte, error) {
+	return json.Marshal(ut.Unix())
 }
 
 type LoginProfile struct {
