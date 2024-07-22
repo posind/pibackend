@@ -5,14 +5,15 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+	"strings"
 )
 
 // GetNewCookie mengirim request dan mengembalikan XSRF-TOKEN dan laravel_session yang baru
-func GetNewCookie(xsrfToken string, laravelSession string) (string, string, error) {
+func GetNewCookie(xsrfToken string, laravelSession string) (string, string, string, error) {
 	// Membuat cookie jar untuk menangkap cookies
 	jar, err := cookiejar.New(nil)
 	if err != nil {
-		return "", "", fmt.Errorf("error creating cookie jar: %w", err)
+		return "", "", "", fmt.Errorf("error creating cookie jar: %w", err)
 	}
 
 	client := &http.Client{
@@ -22,7 +23,7 @@ func GetNewCookie(xsrfToken string, laravelSession string) (string, string, erro
 	// Membuat request
 	req, err := http.NewRequest("GET", "https://pamongdesa.id/admin/user", nil)
 	if err != nil {
-		return "", "", fmt.Errorf("error creating request: %w", err)
+		return "", "", "", fmt.Errorf("error creating request: %w", err)
 	}
 
 	// Menambahkan header ke request
@@ -48,15 +49,19 @@ func GetNewCookie(xsrfToken string, laravelSession string) (string, string, erro
 	// Mengirim request
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", "", fmt.Errorf("error making request: %w", err)
+		return "", "", "", fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Membaca response body
-	_, err = io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", "", fmt.Errorf("error reading response body: %w", err)
+		return "", "", "", fmt.Errorf("error reading response body: %w", err)
 	}
+	rawstring := string(respBody)
+	str1 := strings.Split(rawstring, "const base_headers = Object.freeze({\"Authorization\":\"Bearer ")
+	str2 := strings.Split(str1[1], "\",\"Accept\":\"application\\/jso\"});")
+	bearer := str2[0]
 
 	// Menangkap set cookies dari response header
 	var newXSRFToken, newLaravelSession string
@@ -70,8 +75,8 @@ func GetNewCookie(xsrfToken string, laravelSession string) (string, string, erro
 	}
 
 	if newXSRFToken == "" || newLaravelSession == "" {
-		return "", "", fmt.Errorf("could not find new XSRF-TOKEN or laravel_session in response cookies")
+		return "", "", bearer, fmt.Errorf("could not find new XSRF-TOKEN or laravel_session in response cookies")
 	}
 
-	return newXSRFToken, newLaravelSession, nil
+	return newXSRFToken, newLaravelSession, bearer, nil
 }
