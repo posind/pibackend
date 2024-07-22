@@ -2,6 +2,13 @@ package lms
 
 import "time"
 
+type LoginProfile struct {
+	Username string `bson:"user,omitempty"`
+	Bearer   string `bson:"bearer,omitempty"`
+	Xsrf     string `bson:"xsrf,omitempty"`
+	Lsession string `bson:"lsession,omitempty"`
+}
+
 type Position struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`

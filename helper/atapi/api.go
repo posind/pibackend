@@ -29,7 +29,7 @@ func PostStructWithToken[T any](tokenkey string, tokenvalue string, structname i
 	}
 	if err = json.Unmarshal(respBody, &result); err != nil {
 		rawstring := string(respBody)
-		err = errors.New("Not A Valid JSON Response from " + urltarget + ". CONTENT: " + rawstring)
+		err = errors.New("Not A Valid JSON Response from " + urltarget + " . CONTENT: " + rawstring)
 		return
 	}
 	return
@@ -48,7 +48,7 @@ func Get[T any](urltarget string) (statusCode int, result T, err error) {
 	}
 	if er := json.Unmarshal(body, &result); er != nil {
 		rawstring := string(body)
-		err = errors.New("Not A Valid JSON Response from " + urltarget + ". CONTENT: " + rawstring)
+		err = errors.New("Not A Valid JSON Response from " + urltarget + " . CONTENT: " + rawstring)
 		return
 	}
 	return
@@ -74,7 +74,7 @@ func GetWithBearer[T any](tokenbearer string, urltarget string) (statusCode int,
 	}
 	if er := json.Unmarshal(respBody, &result); er != nil {
 		rawstring := string(respBody)
-		err = errors.New("Not A Valid JSON Response from " + urltarget + ". CONTENT: " + rawstring)
+		err = errors.New("Not A Valid JSON Response from " + urltarget + " . CONTENT: " + rawstring)
 		return
 	}
 	return
