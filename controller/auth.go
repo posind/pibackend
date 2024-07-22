@@ -122,7 +122,7 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
     }
     if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
         var respn model.Response
-		respn.Status = "Error : Body tidak valid"
+		respn.Status = "Invalid Request"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
@@ -170,20 +170,14 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
     }
 
     // Check if phone number exists in the 'user' collection
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
-
-    userCollection := config.Mongoconn.Collection("user")
     userFilter := bson.M{"phonenumber": request.PhoneNumber}
-
-    var user model.Userdomyikado
-    err = userCollection.FindOne(ctx, userFilter).Decode(&user)
+    _, err = atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", userFilter)
     if err != nil {
         var respn model.Response
-		respn.Status = "Phone number not registered"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusUnauthorized, respn)
-		return
+        respn.Status = "Unauthorized"
+        respn.Response = "Phone number not registered"
+        at.WriteJSON(respw, http.StatusUnauthorized, respn)
+        return
     }
 
     // Generate random password
@@ -207,11 +201,8 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
     }
 
     // Update or insert the user in the database
-    stpCollection := config.Mongoconn.Collection("stp")
     stpFilter := bson.M{"phonenumber": request.PhoneNumber}
-
-    var existingUser model.Stp
-    err = stpCollection.FindOne(ctx, stpFilter).Decode(&existingUser)
+    _, err = atdb.GetOneDoc[model.Stp](config.Mongoconn, "stp", stpFilter)
     var responseMessage string
 
     if err == mongo.ErrNoDocuments {
@@ -232,14 +223,12 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
         responseMessage = "New user created and password generated successfully"
     } else {
         // Document found, update the existing one
-        update := bson.M{
-            "$set": bson.M{
-                "phonenumber": request.PhoneNumber,
-                "password":    hashedPassword,
-                "createdAt":   time.Now(),
-            },
+        stpUpdate := bson.M{
+            "phonenumber": request.PhoneNumber,
+            "password":    hashedPassword,
+            "createdAt":   time.Now(),
         }
-        _, err = stpCollection.UpdateOne(ctx, stpFilter, update)
+        _, err = atdb.UpdateOneDoc(config.Mongoconn, "stp",stpFilter, stpUpdate)
         if err != nil {
             var respn model.Response
             respn.Status = "Failed to update user"
@@ -276,21 +265,9 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
     }
 
     // Find user in the database
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
 
-    collection := config.Mongoconn.Collection("stp")
-    filter := bson.M{"phonenumber": request.PhoneNumber}
-
-    var user model.Stp
-    err := collection.FindOne(ctx, filter).Decode(&user)
-    if err != nil {
-        var respn model.Response
-		respn.Status = "Invalid phone number or password"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusUnauthorized, respn)
-		return
-    }
+    userFilter := bson.M{"phonenumber": request.PhoneNumber}
+    user, err := atdb.GetOneDoc[model.Stp](config.Mongoconn, "stp", userFilter)
 
     // Verify password and expiry
     if time.Now().After(user.CreatedAt.Add(4 * time.Minute)) {
@@ -311,17 +288,14 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
     }
 
     // Find user in the 'user' collection
-    userCollection := config.Mongoconn.Collection("user")
-    userFilter := bson.M{"phonenumber": request.PhoneNumber}
-
-    var existingUser model.Userdomyikado
-    err = userCollection.FindOne(ctx, userFilter).Decode(&existingUser)
+    myiUserFilter := bson.M{"phonenumber": request.PhoneNumber}
+    existingUser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", myiUserFilter)
     if err != nil {
         var respn model.Response
-		respn.Status = "User not found"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusUnauthorized, respn)
-		return
+        respn.Status = "Unauthorized"
+        respn.Response = "Phone number not registered"
+        at.WriteJSON(respw, http.StatusUnauthorized, respn)
+        return
     }
 
     token, err := watoken.EncodeforHours(existingUser.PhoneNumber, existingUser.Name, config.PrivateKey, 18)
