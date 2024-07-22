@@ -127,6 +127,31 @@ type UserProfile struct {
 	TrainerCert *string  `json:"trainer_cert,omitempty"`
 }
 
+type RejectedBy struct {
+	ID               string      `json:"id,omitempty"`
+	Fullname         string      `json:"fullname,omitempty"`
+	Username         string      `json:"username,omitempty"`
+	Phone            string      `json:"phone,omitempty"`
+	Email            string      `json:"email,omitempty"`
+	EmailVerifiedAt  *UnixTime   `json:"email_verified_at,omitempty"`
+	PhoneVerifiedAt  *UnixTime   `json:"phone_verified_at,omitempty"`
+	VerificationCode *string     `json:"verification_code,omitempty"`
+	ProfileVerified  bool        `json:"profile_verified,omitempty"`
+	ProfileApproved  int         `json:"profile_approved,omitempty"`
+	LastLoginAt      *UnixTime   `json:"last_login_at,omitempty"`
+	IsDelete         bool        `json:"is_delete,omitempty"`
+	CreatedBy        string      `json:"created_by,omitempty"`
+	UpdatedBy        *string     `json:"updated_by,omitempty"`
+	CreatedAt        *CustomTime `json:"created_at,omitempty"`
+	UpdatedAt        *CustomTime `json:"updated_at,omitempty"`
+	FcmToken         *string     `json:"fcm_token,omitempty"`
+	DeletedAt        *CustomTime `json:"deleted_at,omitempty"`
+	ApprovedBy       *string     `json:"approved_by,omitempty"`
+	RejectedBy       *string     `json:"rejected_by,omitempty"`
+	ApprovedAt       *CustomTime `json:"approved_at,omitempty"`
+	RejectedAt       *CustomTime `json:"rejected_at,omitempty"`
+}
+
 type User struct {
 	ID              string       `json:"id,omitempty"`
 	Fullname        string       `json:"fullname,omitempty"`
@@ -141,7 +166,7 @@ type User struct {
 	Roles           []string     `json:"roles,omitempty"`
 	ApprovedBy      *string      `json:"approved_by,omitempty"`
 	ApprovedAt      *CustomTime  `json:"approved_at,omitempty"`
-	RejectedBy      *string      `json:"rejected_by,omitempty"`
+	RejectedBy      *RejectedBy  `json:"rejected_by,omitempty"`
 	RejectedAt      *CustomTime  `json:"rejected_at,omitempty"`
 }
 
