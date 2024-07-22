@@ -4,11 +4,11 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gocroot/config"
+	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
@@ -37,7 +37,7 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func SendWhatsAppPassword(w http.ResponseWriter, phoneNumber string, password string) {
+func SendWhatsAppPassword(respw http.ResponseWriter, phoneNumber string, password string) {
     // Prepare WhatsApp message
     dt := &whatsauth.TextMessage{
         To:      phoneNumber,
@@ -50,20 +50,12 @@ func SendWhatsAppPassword(w http.ResponseWriter, phoneNumber string, password st
     // Send WhatsApp message
     _, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
     if err != nil {
-        resp.Info = "Unauthorized"
-        resp.Response = err.Error()
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusUnauthorized)
-        json.NewEncoder(w).Encode(resp)
-        return
+		resp.Info = "message: unauthorized"
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusUnauthorized, resp)
+		return
     }
 
-    if resp.Info == "Unauthorized" {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusUnauthorized)
-        json.NewEncoder(w).Encode(map[string]string{"message": "Unauthorized access"})
-        return
-    }
 }
 
 
