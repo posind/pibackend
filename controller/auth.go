@@ -153,21 +153,20 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
     }
     if !captchaResult.Success {
         var respn model.Response
-		respn.Status = "message: Invalid captcha"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusUnauthorized, respn)
-		return
+        respn.Status = "Unauthorized"
+        respn.Response = "Invalid captcha"
+        at.WriteJSON(respw, http.StatusUnauthorized, respn)
+        return
     }
 
     // Validate phone number
     re := regexp.MustCompile(`^62\d{9,15}$`)
     if !re.MatchString(request.PhoneNumber) {
         var respn model.Response
-		respn.Status = "message: Invalid phone number format"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusBadRequest, respn)
-		return
-
+        respn.Status = "Bad Request"
+        respn.Response = "Invalid phone number format"
+        at.WriteJSON(respw, http.StatusBadRequest, respn)
+        return
     }
 
     // Check if phone number exists in the 'user' collection
@@ -342,7 +341,6 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
 
     // Respond with success
 	at.WriteJSON(respw, http.StatusOK, response)
-	return
 }
 
 
