@@ -9,19 +9,34 @@ type CustomTime time.Time
 
 const customTimeFormat = "2006-01-02T15:04:05Z07:00"
 
-// UnmarshalJSON parses a time in RFC3339 format
+// UnmarshalJSON handles both RFC3339 and Unix timestamp formats
 func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 	str := string(b)
+
 	if str == "null" || str == "" {
 		return nil
 	}
-	str = str[1 : len(str)-1] // Remove surrounding quotes
-	t, err := time.Parse(customTimeFormat, str)
-	if err != nil {
-		return err
+
+	// Remove surrounding quotes for string values
+	if str[0] == '"' {
+		str = str[1 : len(str)-1]
 	}
-	*ct = CustomTime(t)
-	return nil
+
+	// Try parsing as RFC3339 format
+	t, err := time.Parse(customTimeFormat, str)
+	if err == nil {
+		*ct = CustomTime(t)
+		return nil
+	}
+
+	// Try parsing as Unix timestamp
+	var ts int64
+	if err := json.Unmarshal([]byte(str), &ts); err == nil {
+		*ct = CustomTime(time.Unix(ts, 0).UTC())
+		return nil
+	}
+
+	return err
 }
 
 // MarshalJSON formats the time in RFC3339 format
