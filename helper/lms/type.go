@@ -26,49 +26,49 @@ type LoginProfile struct {
 }
 
 type Position struct {
-	ID        string    `json:"id,omitempty"`
-	Name      string    `json:"name,omitempty"`
-	ParentID  string    `json:"parent_id,omitempty"`
-	Order     *int      `json:"order,omitempty"`
-	IsDelete  bool      `json:"is_delete,omitempty"`
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	ID        string     `json:"id,omitempty"`
+	Name      string     `json:"name,omitempty"`
+	ParentID  string     `json:"parent_id,omitempty"`
+	Order     *int       `json:"order,omitempty"`
+	IsDelete  bool       `json:"is_delete,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
 type Province struct {
-	Kode      string    `json:"kode,omitempty"`
-	Nama      string    `json:"nama,omitempty"`
-	IsDelete  bool      `json:"is_delete,omitempty"`
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	IDs       string    `json:"ids,omitempty"`
+	Kode      string     `json:"kode,omitempty"`
+	Nama      string     `json:"nama,omitempty"`
+	IsDelete  bool       `json:"is_delete,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	IDs       string     `json:"ids,omitempty"`
 }
 
 type Regency struct {
-	Kode      string    `json:"kode,omitempty"`
-	Nama      string    `json:"nama,omitempty"`
-	IsDelete  bool      `json:"is_delete,omitempty"`
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	IDs       *string   `json:"ids,omitempty"`
+	Kode      string     `json:"kode,omitempty"`
+	Nama      string     `json:"nama,omitempty"`
+	IsDelete  bool       `json:"is_delete,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	IDs       *string    `json:"ids,omitempty"`
 }
 
 type District struct {
-	Kode      string    `json:"kode,omitempty"`
-	Nama      string    `json:"nama,omitempty"`
-	IsDelete  bool      `json:"is_delete,omitempty"`
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	IDs       *string   `json:"ids,omitempty"`
+	Kode      string     `json:"kode,omitempty"`
+	Nama      string     `json:"nama,omitempty"`
+	IsDelete  bool       `json:"is_delete,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	IDs       *string    `json:"ids,omitempty"`
 }
 
 type Village struct {
-	Kode      string    `json:"kode,omitempty"`
-	Nama      string    `json:"nama,omitempty"`
-	IsDelete  bool      `json:"is_delete,omitempty"`
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	IDs       *string   `json:"ids,omitempty"`
+	Kode      string     `json:"kode,omitempty"`
+	Nama      string     `json:"nama,omitempty"`
+	IsDelete  bool       `json:"is_delete,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	IDs       *string    `json:"ids,omitempty"`
 }
 
 type UserProfile struct {
@@ -87,12 +87,12 @@ type User struct {
 	Fullname        string       `json:"fullname,omitempty"`
 	Username        string       `json:"username,omitempty"`
 	Email           string       `json:"email,omitempty"`
-	EmailVerified   UnixTime     `json:"email_verified,omitempty"`
+	EmailVerified   *UnixTime    `json:"email_verified,omitempty"`
 	ProfileVerified bool         `json:"profile_verified,omitempty"`
 	ProfileApproved int          `json:"profile_approved,omitempty"`
-	LastLoginAt     UnixTime     `json:"last_login_at,omitempty"`
+	LastLoginAt     *UnixTime    `json:"last_login_at,omitempty"`
 	UserProfile     *UserProfile `json:"user_profile,omitempty"`
-	CreatedAt       time.Time    `json:"created_at,omitempty"`
+	CreatedAt       *time.Time   `json:"created_at,omitempty"`
 	Roles           []string     `json:"roles,omitempty"`
 	ApprovedBy      *string      `json:"approved_by,omitempty"`
 	ApprovedAt      *time.Time   `json:"approved_at,omitempty"`
