@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 
@@ -116,11 +117,40 @@ func Auth(w http.ResponseWriter, r *http.Request) {
 func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
     var request struct {
         PhoneNumber string `json:"phonenumber"`
+        Captcha     string `json:"captcha"`
     }
     if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(map[string]string{"message": "Invalid request"})
+        return
+    }
+     // Validate CAPTCHA
+    captchaResponse, err := http.PostForm("https://challenges.cloudflare.com/turnstile/v0/siteverify", url.Values{
+        "secret":   {"0x4AAAAAAAfj2NjfaHRBhkd2VjcfmRe5gvI"},
+        "response": {request.Captcha},
+    })
+    if err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Failed to verify captcha"})
+        return
+    }
+    defer captchaResponse.Body.Close()
+
+    var captchaResult struct {
+        Success bool `json:"success"`
+    }
+    if err := json.NewDecoder(captchaResponse.Body).Decode(&captchaResult); err != nil {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Failed to decode captcha response"})
+        return
+    }
+    if !captchaResult.Success {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusUnauthorized)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Invalid captcha"})
         return
     }
 
@@ -141,7 +171,7 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
     userFilter := bson.M{"phonenumber": request.PhoneNumber}
 
     var user model.Userdomyikado
-    err := userCollection.FindOne(ctx, userFilter).Decode(&user)
+    err = userCollection.FindOne(ctx, userFilter).Decode(&user)
     if err != nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusUnauthorized)
