@@ -75,7 +75,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	case method == "POST" && at.URLParam(path, "/webhook/nomor/:nomorwa"):
 		controller.PostInboxNomor(w, r)
 	// LMS
-	case method == "GET" && at.URLParam(path, "/lms/data/user"):
+	case method == "GET" && path == "/lms/data/user":
 		controller.GetLMSUser(w, r)
 	// Google Auth
 	case method == "POST" && path == "/auth/users":
