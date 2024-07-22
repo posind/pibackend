@@ -351,7 +351,7 @@ func ResendPasswordHandler(respw http.ResponseWriter, r *http.Request) {
 
     // Check if phone number exists in the 'stp' collection
     stpFilter := bson.M{"phonenumber": request.PhoneNumber}
-    existingUser, stpErr := atdb.GetOneDoc[model.Stp](config.Mongoconn, "stp", stpFilter)
+    _, stpErr := atdb.GetOneDoc[model.Stp](config.Mongoconn, "stp", stpFilter)
 
     if stpErr == mongo.ErrNoDocuments {
         // Document not found, insert new one
