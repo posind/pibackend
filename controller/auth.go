@@ -317,6 +317,107 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
 	at.WriteJSON(respw, http.StatusOK, response)
 }
 
+func ResendPasswordHandler(respw http.ResponseWriter, r *http.Request) {
+    var request struct {
+        PhoneNumber string `json:"phonenumber"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+        var respn model.Response
+        respn.Status = "Invalid Request"
+        respn.Response = err.Error()
+        at.WriteJSON(respw, http.StatusBadRequest, respn)
+        return
+    }
+
+    // Generate random password
+    randomPassword, err := auth.GenerateRandomPassword(12)
+    if err != nil {
+        var respn model.Response
+        respn.Status = "Failed to generate password"
+        respn.Response = err.Error()
+        at.WriteJSON(respw, http.StatusInternalServerError, respn)
+        return
+    }
+
+    // Hash the password
+    hashedPassword, err := auth.HashPassword(randomPassword)
+    if err != nil {
+        var respn model.Response
+        respn.Status = "Failed to hash password"
+        respn.Response = err.Error()
+        at.WriteJSON(respw, http.StatusInternalServerError, respn)
+        return
+    }
+
+    // Check if phone number exists in the 'stp' collection
+    stpFilter := bson.M{"phonenumber": request.PhoneNumber}
+    existingUser, stpErr := atdb.GetOneDoc[model.Stp](config.Mongoconn, "stp", stpFilter)
+
+    if stpErr == mongo.ErrNoDocuments {
+        // Document not found, insert new one
+        newUser := model.Stp{
+            PhoneNumber:  request.PhoneNumber,
+            PasswordHash: hashedPassword,
+            CreatedAt:    time.Now(),
+        }
+        _, err = atdb.InsertOneDoc(config.Mongoconn, "stp", newUser)
+        if err != nil {
+            var respn model.Response
+            respn.Status = "Failed to insert new user"
+            respn.Response = err.Error()
+            at.WriteJSON(respw, http.StatusInternalServerError, respn)
+            return
+        }
+        responseMessage := "New user created and password generated successfully"
+
+        // Respond with success and the generated password
+        response := map[string]interface{}{
+            "message":     responseMessage,
+            "phonenumber": request.PhoneNumber,
+        }
+        at.WriteJSON(respw, http.StatusOK, response)
+
+        // Send the random password via WhatsApp
+        auth.SendWhatsAppPassword(respw, request.PhoneNumber, randomPassword)
+        return
+    } else if stpErr != nil {
+        var respn model.Response
+        respn.Status = "Failed to fetch user info"
+        respn.Response = stpErr.Error()
+        at.WriteJSON(respw, http.StatusInternalServerError, respn)
+        return
+    }
+
+    // Document found, update the existing one
+    stpUpdate := bson.M{
+        "phonenumber": request.PhoneNumber,
+        "password":    hashedPassword,
+        "createdAt":   time.Now(),
+    }
+    _, err = atdb.UpdateOneDoc(config.Mongoconn, "stp", stpFilter, stpUpdate)
+    if err != nil {
+        var respn model.Response
+        respn.Status = "Failed to update user"
+        respn.Response = err.Error()
+        at.WriteJSON(respw, http.StatusInternalServerError, respn)
+        return
+    }
+    responseMessage := "User info updated and password generated successfully"
+
+    // Respond with success and the generated password
+    response := map[string]interface{}{
+        "message":     responseMessage,
+        "phonenumber": request.PhoneNumber,
+    }
+    at.WriteJSON(respw, http.StatusOK, response)
+
+    // Send the random password via WhatsApp
+    auth.SendWhatsAppPassword(respw, request.PhoneNumber, randomPassword)
+}
+
+
+
+
 
 
 

@@ -81,6 +81,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.GeneratePasswordHandler(w, r)
 	case method == "POST" && path == "/auth/verify":
 		controller.VerifyPasswordHandler(w, r)
+	case method == "POST" && path == "/auth/resend":
+		controller.ResendPasswordHandler(w, r)
 	// Google Auth
 	default:
 		controller.NotFound(w, r)
