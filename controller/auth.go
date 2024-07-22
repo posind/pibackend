@@ -14,7 +14,6 @@ import (
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -205,7 +204,7 @@ func GeneratePasswordHandler(w http.ResponseWriter, r *http.Request) {
     err = stpCollection.FindOne(ctx, stpFilter).Decode(&existingUser)
     var responseMessage string
 
-    if err == mongo.ErrNoDocuments {
+    if err != nil {
         // Document not found, insert new one
         newUser := model.Stp{
             PhoneNumber:  request.PhoneNumber,
