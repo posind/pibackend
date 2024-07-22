@@ -74,7 +74,7 @@ func GetWithBearer[T any](tokenbearer string, urltarget string) (statusCode int,
 	}
 	if er := json.Unmarshal(respBody, &result); er != nil {
 		rawstring := string(respBody)
-		err = errors.New("Not A Valid JSON Response from " + urltarget + " . CONTENT: " + rawstring)
+		err = errors.New(err.Error() + " | Not A Valid JSON Response from " + urltarget + " . CONTENT: " + rawstring)
 		return
 	}
 	return
