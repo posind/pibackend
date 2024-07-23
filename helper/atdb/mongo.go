@@ -136,6 +136,11 @@ func GetOneDoc[T any](db *mongo.Database, collection string, filter bson.M) (doc
 	return
 }
 
+// Fungsi untuk menghapus koleksi lmsusers
+func DropCollection(db *mongo.Database, collection string) error {
+	return db.Collection(collection).Drop(context.TODO())
+}
+
 func DeleteManyDocs(db *mongo.Database, collection string, filter bson.M) (deleteresult *mongo.DeleteResult, err error) {
 	deleteresult, err = db.Collection(collection).DeleteMany(context.Background(), filter)
 	return
