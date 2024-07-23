@@ -37,7 +37,7 @@ func GetTotalUser(db *mongo.Database) (total int, err error) {
 		return
 	}
 	url := profile.URLUsers
-	url = strings.ReplaceAll("1", "##TOTAL##", url)
+	url = strings.ReplaceAll(url, "##TOTAL##", "1")
 
 	_, res, err := atapi.GetWithBearer[Root](profile.Bearer, url)
 	if err != nil {
@@ -59,7 +59,7 @@ func GetAllUser(db *mongo.Database) (users []User, err error) {
 		return
 	}
 	url := profile.URLUsers
-	url = strings.ReplaceAll(strconv.Itoa(total), "##TOTAL##", url)
+	url = strings.ReplaceAll(url, "##TOTAL##", strconv.Itoa(total))
 	_, res, err := atapi.GetWithBearer[Root](profile.Bearer, url)
 	if err != nil {
 		err = errors.New("GetWithBearer:" + err.Error() + profile.Bearer + " " + url)
