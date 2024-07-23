@@ -83,6 +83,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.CopyLMSUser(w, r)
 	case method == "GET" && path == "/lms/count/user":
 		controller.GetCountDocUser(w, r)
+	case method == "DELETE" && path == "/lms/drop/user":
+		controller.DropLMSUser(w, r)
 	// Google Auth
 	case method == "POST" && path == "/auth/users":
 		controller.Auth(w, r)

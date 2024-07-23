@@ -105,6 +105,18 @@ func GetCountDocUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func DropLMSUser(respw http.ResponseWriter, req *http.Request) {
+	var resp model.Response
+	err := atdb.DropCollection(config.Mongoconn, "lmsusers")
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(respw, http.StatusConflict, resp)
+		return
+	}
+	resp.Info = "ok"
+	at.WriteJSON(respw, http.StatusOK, resp)
+}
+
 func RefreshLMSCookie(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response
 	err := lms.RefreshCookie(config.Mongoconn)
