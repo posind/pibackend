@@ -229,7 +229,7 @@ func ApproveBimbinganbyPoin(w http.ResponseWriter, r *http.Request) {
 	var conf model.Config
 	err = config.Mongoconn.Collection("config").FindOne(context.TODO(), bson.M{"phonenumber": "62895601060000"}).Decode(&conf)
 	if err != nil {
-		http.Error(w, "mohon maaf ada kesalahan dalam pengambilan config di database: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Mohon maaf ada kesalahan dalam pengambilan config di database: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -261,7 +261,14 @@ func ApproveBimbinganbyPoin(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		http.Error(w, fmt.Sprintf("Gagal Approve Bimbingan, status code: %d", resp.StatusCode), http.StatusInternalServerError)
+		switch resp.StatusCode {
+		case http.StatusNotFound:
+			http.Error(w, "Token tidak ditemukan! Silahkan Login Kembali", http.StatusNotFound)
+		case http.StatusForbidden:
+			http.Error(w, "Gagal, Bimbingan telah disetujui!", http.StatusForbidden)
+		default:
+			http.Error(w, fmt.Sprintf("Gagal approve bimbingan, status code: %d", resp.StatusCode), http.StatusInternalServerError)
+		}
 		return
 	}
 
