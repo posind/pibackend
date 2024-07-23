@@ -64,10 +64,13 @@ func (ut UnixTime) MarshalJSON() ([]byte, error) {
 }
 
 type LoginProfile struct {
-	Username string `bson:"user,omitempty"`
-	Bearer   string `bson:"bearer,omitempty"`
-	Xsrf     string `bson:"xsrf,omitempty"`
-	Lsession string `bson:"lsession,omitempty"`
+	Username  string `bson:"user,omitempty"`
+	Bearer    string `bson:"bearer,omitempty"`
+	Xsrf      string `bson:"xsrf,omitempty"`
+	Lsession  string `bson:"lsession,omitempty"`
+	URLXlsx   string `bson:"urlxlsx,omitempty"`
+	URLUsers  string `bson:"urlusers,omitempty"`
+	URLCookie string `bson:"urlcookie,omitempty"`
 }
 
 type Position struct {

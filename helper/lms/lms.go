@@ -2,6 +2,7 @@ package lms
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
@@ -14,7 +15,7 @@ func RefreshCookie(db *mongo.Database) (err error) {
 	if err != nil {
 		return
 	}
-	newxs, newls, newbar, err := GetNewCookie(profile.Xsrf, profile.Lsession)
+	newxs, newls, newbar, err := GetNewCookie(profile.Xsrf, profile.Lsession, db)
 	if err != nil {
 		return
 	}
@@ -37,8 +38,9 @@ func GetTotalUser(db *mongo.Database) (total int, err error) {
 	if err != nil {
 		return
 	}
+	url := profile.URLUsers
+	url = strings.ReplaceAll("1", "##TOTAL##", url)
 
-	url := "https://pamongdesa.id/webservice/user?page=1&perpage=1&search=&role%5B%5D=2&role%5B%5D=3&role%5B%5D=4&role%5B%5D=5&role%5B%5D=6&sub_position=&verification=&approval=&province=&regency=&district=&village=&start_date=&end_date=&statuslogin=%0A"
 	_, res, err := atapi.GetWithBearer[Root](profile.Bearer, url)
 	if err != nil {
 		return
@@ -52,11 +54,12 @@ func GetAllUser(db *mongo.Database) (users []User, err error) {
 	if err != nil {
 		return
 	}
-	url := "https://pamongdesa.id/webservice/user?page=1&perpage=" + strconv.Itoa(total) + "&search=&role%5B%5D=2&role%5B%5D=3&role%5B%5D=4&role%5B%5D=5&role%5B%5D=6&sub_position=&verification=&approval=&province=&regency=&district=&village=&start_date=&end_date=&statuslogin=%0A"
 	profile, err := atdb.GetOneDoc[LoginProfile](db, "lmscreds", bson.M{})
 	if err != nil {
 		return
 	}
+	url := profile.URLUsers
+	url = strings.ReplaceAll(strconv.Itoa(total), "##TOTAL##", url)
 	_, res, err := atapi.GetWithBearer[Root](profile.Bearer, url)
 	if err != nil {
 		return

@@ -6,10 +6,14 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"regexp"
+
+	"github.com/gocroot/helper/atdb"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // GetNewCookie mengirim request dan mengembalikan XSRF-TOKEN dan laravel_session yang baru
-func GetNewCookie(xsrfToken string, laravelSession string) (string, string, string, error) {
+func GetNewCookie(xsrfToken string, laravelSession string, db *mongo.Database) (string, string, string, error) {
 	// Membuat cookie jar untuk menangkap cookies
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -19,9 +23,13 @@ func GetNewCookie(xsrfToken string, laravelSession string) (string, string, stri
 	client := &http.Client{
 		Jar: jar,
 	}
+	profile, err := atdb.GetOneDoc[LoginProfile](db, "lmscreds", bson.M{})
+	if err != nil {
+		return "", "", "", fmt.Errorf("error get profile db: %w", err)
+	}
 
 	// Membuat request
-	req, err := http.NewRequest("GET", "https://pamongdesa.id/admin/user", nil)
+	req, err := http.NewRequest("GET", profile.URLCookie, nil)
 	if err != nil {
 		return "", "", "", fmt.Errorf("error creating request: %w", err)
 	}
