@@ -19,13 +19,10 @@ func RefreshCookie(db *mongo.Database) (err error) {
 	if err != nil {
 		return
 	}
-	newdt := &LoginProfile{
-		Username: "madep",
-		Bearer:   newbar,
-		Xsrf:     newxs,
-		Lsession: newls,
-	}
-	_, err = atdb.ReplaceOneDoc(db, "lmscreds", bson.M{"username": "madep"}, newdt)
+	profile.Bearer = newbar
+	profile.Xsrf = newxs
+	profile.Lsession = newls
+	_, err = atdb.ReplaceOneDoc(db, "lmscreds", bson.M{"username": "madep"}, profile)
 	if err != nil {
 		return
 	}
