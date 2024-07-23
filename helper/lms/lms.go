@@ -41,6 +41,7 @@ func GetTotalUser(db *mongo.Database) (total int, err error) {
 
 	_, res, err := atapi.GetWithBearer[Root](profile.Bearer, url)
 	if err != nil {
+		err = errors.New("GetWithBearer:" + err.Error() + " " + url + " " + profile.Bearer)
 		return
 	}
 	total = res.Data.Meta.Total
@@ -50,6 +51,7 @@ func GetTotalUser(db *mongo.Database) (total int, err error) {
 func GetAllUser(db *mongo.Database) (users []User, err error) {
 	total, err := GetTotalUser(db)
 	if err != nil {
+		err = errors.New("GetTotalUser:" + err.Error())
 		return
 	}
 	profile, err := atdb.GetOneDoc[LoginProfile](db, "lmscreds", bson.M{})
