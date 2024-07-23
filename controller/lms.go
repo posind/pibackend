@@ -94,11 +94,14 @@ func GetCountDocUser(w http.ResponseWriter, r *http.Request) {
 	// 2. Menunggu Persetujuan
 	// 3. Disetujui
 	// 4. Ditolak
-	resp.Info = "Belum Lengkap : " + strconv.Itoa(int(count1))
-	resp.Location = "Menunggu Persetujuan : " + strconv.Itoa(int(count2))
-	resp.Response = "Disetujui : " + strconv.Itoa(int(count3))
-	resp.Status = "Ditolak : " + strconv.Itoa(int(count4)) + "Total : " + strconv.Itoa(int(count5))
-	at.WriteJSON(w, http.StatusOK, resp)
+	rkp := lms.RekapitulasiUser{
+		BelumLengkap:        count1,
+		MenungguPersetujuan: count2,
+		Disetujui:           count3,
+		Ditolak:             count4,
+		Total:               count5,
+	}
+	at.WriteJSON(w, http.StatusOK, rkp)
 
 }
 

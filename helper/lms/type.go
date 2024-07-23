@@ -211,3 +211,15 @@ type Data struct {
 type Root struct {
 	Data Data `json:"data,omitempty"`
 }
+
+// 1. Belum Lengkap
+// 2. Menunggu Persetujuan
+// 3. Disetujui
+// 4. Ditolak
+type RekapitulasiUser struct {
+	BelumLengkap        int64 `json:"belumlengkap,omitempty"`
+	MenungguPersetujuan int64 `json:"menunggupersetujuan,omitempty"`
+	Disetujui           int64 `json:"disetujui,omitempty"`
+	Ditolak             int64 `json:"ditolak,omitempty"`
+	Total               int64 `json:"total,omitempty"`
+}
