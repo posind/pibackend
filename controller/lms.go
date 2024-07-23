@@ -9,6 +9,7 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/lms"
 	"github.com/gocroot/model"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func GetLMSUser(respw http.ResponseWriter, req *http.Request) {
@@ -39,6 +40,60 @@ func CopyLMSUser(respw http.ResponseWriter, req *http.Request) {
 	}
 	resp.Info = "ok"
 	at.WriteJSON(respw, http.StatusOK, resp)
+}
+
+func GetCountDocUser(w http.ResponseWriter, r *http.Request) {
+	var resp model.Response
+	filter := bson.M{
+		"profileapproved": 1,
+		"roles":           "User",
+	}
+	count1, err := atdb.GetCountDoc(config.Mongoconn, "lmsusers", filter)
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusConflict, resp)
+		return
+	}
+	filter = bson.M{
+		"profileapproved": 2,
+		"roles":           "User",
+	}
+	count2, err := atdb.GetCountDoc(config.Mongoconn, "lmsusers", filter)
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusConflict, resp)
+		return
+	}
+	filter = bson.M{
+		"profileapproved": 3,
+		"roles":           "User",
+	}
+	count3, err := atdb.GetCountDoc(config.Mongoconn, "lmsusers", filter)
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusConflict, resp)
+		return
+	}
+	filter = bson.M{
+		"profileapproved": 4,
+		"roles":           "User",
+	}
+	count4, err := atdb.GetCountDoc(config.Mongoconn, "lmsusers", filter)
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusConflict, resp)
+		return
+	}
+	// 1. Belum Lengkap
+	// 2. Menunggu Persetujuan
+	// 3. Disetujui
+	// 4. Ditolak
+	resp.Info = "Belum Lengkap : " + strconv.Itoa(int(count1))
+	resp.Location = "Menunggu Persetujuan" + strconv.Itoa(int(count2))
+	resp.Response = "Disetujui" + strconv.Itoa(int(count3))
+	resp.Status = "Ditolak" + strconv.Itoa(int(count4))
+	at.WriteJSON(w, http.StatusOK, resp)
+
 }
 
 func RefreshLMSCookie(respw http.ResponseWriter, req *http.Request) {

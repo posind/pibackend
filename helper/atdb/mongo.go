@@ -107,13 +107,21 @@ func GetRandomDoc[T any](db *mongo.Database, collection string, size uint) (resu
 }
 
 func GetAllDoc[T any](db *mongo.Database, collection string, filter bson.M) (doc T, err error) {
-	ctx := context.Background()
+	ctx := context.TODO()
 	cur, err := db.Collection(collection).Find(ctx, filter)
 	if err != nil {
 		return
 	}
 	defer cur.Close(ctx)
 	err = cur.All(ctx, &doc)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func GetCountDoc(db *mongo.Database, collection string, filter bson.M) (count int64, err error) {
+	count, err = db.Collection(collection).CountDocuments(context.TODO(), filter)
 	if err != nil {
 		return
 	}
