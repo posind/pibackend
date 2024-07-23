@@ -1,6 +1,8 @@
 package lms
 
 import (
+	"errors"
+
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper/atdb"
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,10 +13,12 @@ func GetRekapPendaftaranUsers(db *mongo.Database) (rkp RekapitulasiUser, err err
 	//copy data user
 	users, err := GetAllUser(config.Mongoconn)
 	if err != nil {
+		err = errors.New("GetAllUser:" + err.Error())
 		return
 	}
 	_, err = atdb.InsertManyDocs[User](config.Mongoconn, "lmsusers", users)
 	if err != nil {
+		err = errors.New("InsertManyDocs:" + err.Error())
 		return
 	}
 	//hitung setiap kelompok status user

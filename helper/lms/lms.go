@@ -1,6 +1,7 @@
 package lms
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -59,6 +60,7 @@ func GetAllUser(db *mongo.Database) (users []User, err error) {
 	url = strings.ReplaceAll(strconv.Itoa(total), "##TOTAL##", url)
 	_, res, err := atapi.GetWithBearer[Root](profile.Bearer, url)
 	if err != nil {
+		err = errors.New("GetWithBearer:" + err.Error() + profile.Bearer + " " + url)
 		return
 	}
 	users = res.Data.Data
