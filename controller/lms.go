@@ -84,14 +84,20 @@ func GetCountDocUser(w http.ResponseWriter, r *http.Request) {
 		at.WriteJSON(w, http.StatusConflict, resp)
 		return
 	}
+	count5, err := atdb.GetCountDoc(config.Mongoconn, "lmsusers", bson.M{"roles": "User"})
+	if err != nil {
+		resp.Response = err.Error()
+		at.WriteJSON(w, http.StatusConflict, resp)
+		return
+	}
 	// 1. Belum Lengkap
 	// 2. Menunggu Persetujuan
 	// 3. Disetujui
 	// 4. Ditolak
 	resp.Info = "Belum Lengkap : " + strconv.Itoa(int(count1))
-	resp.Location = "Menunggu Persetujuan" + strconv.Itoa(int(count2))
-	resp.Response = "Disetujui" + strconv.Itoa(int(count3))
-	resp.Status = "Ditolak" + strconv.Itoa(int(count4))
+	resp.Location = "Menunggu Persetujuan : " + strconv.Itoa(int(count2))
+	resp.Response = "Disetujui : " + strconv.Itoa(int(count3))
+	resp.Status = "Ditolak : " + strconv.Itoa(int(count4)) + "Total : " + strconv.Itoa(int(count5))
 	at.WriteJSON(w, http.StatusOK, resp)
 
 }
