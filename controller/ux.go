@@ -338,10 +338,10 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 		at.WriteJSON(w, http.StatusExpectationFailed, resp)
 		return
 	}
-	message := "*Meeting " + event.Summary + "*\n" + lap.Kode + "\nAgenda: " + event.Description + "\nTanggal: " + event.Date + "\nJam: " + event.TimeStart + " - " + event.TimeEnd + "\nNotulen : " + docuser.Name + "\nURL Input Risalah Pertemuan: " + "https://www.do.my.id/resume/#" + lap.ID.Hex()
+	message := "*" + event.Summary + "*\n" + lap.Kode + "\nLokasi:\n" + event.Location + "\nAgenda:\n" + event.Description + "\nTanggal: " + event.Date + "\nJam: " + event.TimeStart + " - " + event.TimeEnd + "\nNotulen : " + docuser.Name + "\nURL Input Risalah Pertemuan:\n" + "https://www.do.my.id/resume/#" + lap.ID.Hex()
 	dt := &whatsauth.TextMessage{
-		To:       lap.NoPetugas,
-		IsGroup:  false,
+		To:       lap.Project.WAGroupID,
+		IsGroup:  true,
 		Messages: message,
 	}
 	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
