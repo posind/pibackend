@@ -207,10 +207,10 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusExpectationFailed, respn)
 		return
 	}
-	message := "*" + hasil.Petugas + "*\nsudah dinilai oleh *" + hasil.Nama + " " + hasil.Phone + "* dengan rating *" + strconv.Itoa(rating.Rating) + "* komentar:\n" + rating.Komentar
+	message := "*Resume Pertemuan*\nNotula:" + hasil.Petugas + "*Efektifitas Pertemuan:*" + strconv.Itoa(rating.Rating) + "\nRisalah Pertemnuan:\n" + rating.Komentar
 	dt := &whatsauth.TextMessage{
-		To:       hasil.NoPetugas,
-		IsGroup:  false,
+		To:       hasil.Project.WAGroupID,
+		IsGroup:  true,
 		Messages: message,
 	}
 	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
