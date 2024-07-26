@@ -127,6 +127,7 @@ func PostPresensi(respw http.ResponseWriter, req *http.Request) {
 	at.WriteJSON(respw, http.StatusOK, resp)
 }
 
+// feedback dan meeting jadi satu disini
 func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 	var rating report.Rating
 	var respn model.Response
@@ -165,17 +166,22 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
-	//upload file markdown ke log repo
-	if hasil.Project.RepoLogName != "" {
+	var isRapat bool
+	if hasil.MeetID != primitive.NilObjectID {
+		isRapat = true
+	}
+	//upload file markdown ke log repo untuk tipe rapat
+	if hasil.Project.RepoLogName != "" && isRapat {
 		// Encode string ke base64
 		encodedString := base64.StdEncoding.EncodeToString([]byte(rating.Komentar))
 
 		// Format markdown dengan base64 string
 		//markdownContent := fmt.Sprintf("```base64\n%s\n```", encodedString)
+		fname := strings.ReplaceAll(hasil.MeetEvent.Summary, " ", "")
 		dt := model.LogInfo{
 			PhoneNumber: hasil.NoPetugas,
 			Alias:       hasil.Petugas,
-			FileName:    "README.md",
+			FileName:    fname + ".md",
 			RepoOrg:     hasil.Project.RepoOrg,
 			RepoName:    hasil.Project.Name,
 			Base64Str:   encodedString,
@@ -202,12 +208,17 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 	poin := float64(rating.Rating) / 5.0
 	_, err = report.TambahPoinLaporanbyPhoneNumber(config.Mongoconn, hasil.Project, hasil.NoPetugas, poin, "rating")
 	if err != nil {
-		respn.Info = "TambahPoinPushRepobyGithubUsername gagal"
+		respn.Info = "TambahPoinLaporanbyPhoneNumber gagal"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusExpectationFailed, respn)
 		return
 	}
-	message := "*Resume Pertemuan*\nNotula:" + hasil.Petugas + "*Efektifitas Pertemuan:*" + strconv.Itoa(rating.Rating) + "\nRisalah Pertemnuan:\n" + rating.Komentar
+	var message string
+	if isRapat {
+		message = "*Resume Pertemuan*" + hasil.MeetEvent.Summary + "\nWaktu: " + hasil.MeetEvent.TimeStart + "\nNotula:" + hasil.Petugas + "\nEfektifitas Pertemuan: " + strconv.Itoa(rating.Rating) + "\nRisalah Pertemuan:\n" + rating.Komentar
+	} else {
+		message = "*Feedback Pekerjaan*\nPetugas: " + hasil.Petugas + "\nRating Pekerjaan:" + strconv.Itoa(rating.Rating) + "\nCatatan:\n" + rating.Komentar
+	}
 	dt := &whatsauth.TextMessage{
 		To:       hasil.Project.WAGroupID,
 		IsGroup:  true,
@@ -333,12 +344,13 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 	_, err = report.TambahPoinLaporanbyPhoneNumber(config.Mongoconn, prjuser, docuser.PhoneNumber, 1, "meeting")
 	if err != nil {
 		var resp model.Response
-		resp.Info = "TambahPoinPushRepobyGithubUsername gagal"
+		resp.Info = "TambahPoinLaporanbyPhoneNumber gagal"
 		resp.Response = err.Error()
 		at.WriteJSON(w, http.StatusExpectationFailed, resp)
 		return
 	}
-	message := "*" + event.Summary + "*\n" + lap.Kode + "\nLokasi:\n" + event.Location + "\nAgenda:\n" + event.Description + "\nTanggal: " + event.Date + "\nJam: " + event.TimeStart + " - " + event.TimeEnd + "\nNotulen : " + docuser.Name + "\nURL Input Risalah Pertemuan:\n" + "https://www.do.my.id/resume/#" + lap.ID.Hex()
+
+	message := "*" + strings.TrimSpace(event.Summary) + "*\n" + lap.Kode + "\nLokasi:\n" + event.Location + "\nAgenda:\n" + event.Description + "\nTanggal: " + event.Date + "\nJam: " + event.TimeStart + " - " + event.TimeEnd + "\nNotulen : " + docuser.Name + "\nURL Input Risalah Pertemuan:\n" + "https://www.do.my.id/resume/#" + lap.ID.Hex()
 	dt := &whatsauth.TextMessage{
 		To:       lap.Project.WAGroupID,
 		IsGroup:  true,

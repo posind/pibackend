@@ -62,7 +62,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostLaporan(w, r)
 	case method == "POST" && path == "/notif/ux/postfeedback":
 		controller.PostFeedback(w, r)
-	case method == "POST" && path == "/notif/ux/postrating": //resume atau risalah rapat
+	case method == "POST" && path == "/notif/ux/postrating": //resume atau risalah rapat dan feedback
 		controller.PostRatingLaporan(w, r)
 	case method == "POST" && path == "/notif/ux/postmeeting":
 		controller.PostMeeting(w, r)
