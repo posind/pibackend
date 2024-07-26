@@ -217,7 +217,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 	if isRapat {
 		message = "*Resume Pertemuan*" + hasil.MeetEvent.Summary + "\nWaktu: " + hasil.MeetEvent.TimeStart + "\nNotula:" + hasil.Petugas + "\nEfektifitas Pertemuan: " + strconv.Itoa(rating.Rating) + "\nRisalah Pertemuan:\n" + rating.Komentar
 	} else {
-		message = "*Feedback Pekerjaan*\nPetugas: " + hasil.Petugas + "\nRating Pekerjaan: " + strconv.Itoa(rating.Rating) + "\nPemberi Feedback: " + hasil.Nama + " (" + hasil.Phone + ")\n" + hasil.Solusi + "\nCatatan:\n" + rating.Komentar
+		message = "*Feedback Pekerjaan " + hasil.Project.Name + "*\nPetugas: " + hasil.Petugas + "\nRating Pekerjaan: " + strconv.Itoa(rating.Rating) + "\nPemberi Feedback: " + hasil.Nama + " (" + hasil.Phone + ")\n" + hasil.Solusi + "\nCatatan:\n" + rating.Komentar
 	}
 	dt := &whatsauth.TextMessage{
 		To:       hasil.Project.WAGroupID,
