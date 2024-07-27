@@ -19,7 +19,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str string, err error) {
+func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str, joinMD string, err error) {
 	filter := CreateFilterMeetingYesterday(projectName, true)
 	laporanDocs, err := atdb.GetAllDoc[[]Laporan](db, "uxlaporan", filter) //CreateFilterMeetingYesterday(projectName)
 	if err != nil {
@@ -44,14 +44,16 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 		// Tambahkan halaman baru
 		pdf.AddPage()
 		pdf.SetFont("Arial", "UB", 16)
+		judul := "Risalah Pertemuan-" + strconv.Itoa(i+1)
 		pdf.MultiCell(
-			0,                                      // Lebar: 0 berarti lebar otomatis
-			10,                                     // Tinggi baris
-			"Risalah Pertemuan-"+strconv.Itoa(i+1), // Teks
-			"",                                     // Batas kiri
-			"",                                     // Batas kanan
-			false,                                  // Aligment horizontal
+			0,     // Lebar: 0 berarti lebar otomatis
+			10,    // Tinggi baris
+			judul, // Teks
+			"",    // Batas kiri
+			"",    // Batas kanan
+			false, // Aligment horizontal
 		)
+		joinMD = joinMD + "# " + judul + "\n"
 		// Tambahkan teks ke PDF
 		pdf.SetFont("Arial", "B", 12)
 		pdf.MultiCell(
@@ -62,6 +64,7 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 			"",                        // Batas kanan
 			false,                     // Aligment horizontal
 		)
+		joinMD = joinMD + "## " + laporan.MeetEvent.Summary + "\n"
 		pdf.SetFont("Arial", "I", 12)
 		pdf.MultiCell(
 			0,                          // Lebar: 0 berarti lebar otomatis
@@ -71,6 +74,7 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 			"",                         // Batas kanan
 			false,                      // Aligment horizontal
 		)
+		joinMD = joinMD + "Notula: " + laporan.Petugas + "\n"
 		pdf.MultiCell(
 			0, // Lebar: 0 berarti lebar otomatis
 			5, // Tinggi baris
@@ -79,6 +83,7 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 			"",    // Batas kanan
 			false, // Aligment horizontal
 		)
+		joinMD = joinMD + "Waktu: " + laporan.MeetEvent.Date + " (" + laporan.MeetEvent.TimeStart + " - " + laporan.MeetEvent.TimeEnd + ")" + "\n"
 		pdf.MultiCell(
 			0,                                     // Lebar: 0 berarti lebar otomatis
 			5,                                     // Tinggi baris
@@ -87,6 +92,7 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 			"",                                    // Batas kanan
 			false,                                 // Aligment horizontal
 		)
+		joinMD = joinMD + "Lokasi: " + laporan.MeetEvent.Location + "\n"
 		pdf.MultiCell(
 			0,         // Lebar: 0 berarti lebar otomatis
 			5,         // Tinggi baris
@@ -95,6 +101,7 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 			"",        // Batas kanan
 			false,     // Aligment horizontal
 		)
+		joinMD = joinMD + "### Agenda" + "\n"
 		pdf.MultiCell(
 			0,              // Lebar: 0 berarti lebar otomatis
 			5,              // Tinggi baris
@@ -103,6 +110,7 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 			"",             // Batas kanan
 			false,          // Aligment horizontal
 		)
+		joinMD = joinMD + laporan.Solusi + "\n"
 		pdf.SetFont("Arial", "UB", 12)
 		pdf.MultiCell(
 			0,         // Lebar: 0 berarti lebar otomatis
@@ -112,6 +120,7 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 			"",        // Batas kanan
 			false,     // Aligment horizontal
 		)
+		joinMD = joinMD + "### Risalah" + "\n"
 		pdf.SetFont("Arial", "", 12)
 		pdf.MultiCell(
 			0,                // Lebar: 0 berarti lebar otomatis
@@ -121,19 +130,20 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 			"",               // Batas kanan
 			false,            // Aligment horizontal
 		)
+		joinMD = joinMD + laporan.Komentar
 	}
 
 	// Simpan PDF ke file sementara
 	tempFile := projectName
 	err = pdf.OutputFileAndClose(tempFile)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	// Baca file PDF dan konversi ke base64
 	fileData, err := ioutil.ReadFile(tempFile)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	base64Str = base64.StdEncoding.EncodeToString(fileData)
@@ -141,7 +151,7 @@ func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str stri
 	// Hapus file sementara
 	err = os.Remove(tempFile)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	return
