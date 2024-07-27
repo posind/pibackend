@@ -249,11 +249,9 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
 	auth.SendWhatsAppPassword(respw, request.PhoneNumber, randomPassword)
 }
 
-const (
-    timeWindow = 5 * time.Minute
-    rateLimit  = 5
+var (
+	rl = auth.NewRateLimiter(1, 5) // 1 request per second, burst of 5
 )
-
 
 func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
 	var request struct {
@@ -268,26 +266,13 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    // Rate limiting
-	now := time.Now()
-	windowStart := now.Add(-timeWindow)
-	filter := bson.M{
-		"phonenumber": request.PhoneNumber,
-		"createdAt":   bson.M{"$gte": windowStart},
-	}
-
-	count, err := config.Mongoconn.Collection("stp").CountDocuments(context.Background(), filter)
-	if err != nil {
+    // Implementasi rate limiting
+	limiter := rl.GetLimiter(request.PhoneNumber)
+	if !limiter.Allow() {
 		var respn model.Response
-		respn.Response = "Failed to check rate limit"
-		at.WriteJSON(respw, http.StatusInternalServerError, respn)
-		return
-	}
-
-	if count >= rateLimit {
-		var respn model.Response
-		respn.Response = "Too many requests"
-		at.WriteJSON(respw, http.StatusUnauthorized, respn)
+		respn.Status = "Too Many Requests"
+		respn.Response = "Please try again later."
+		at.WriteJSON(respw, http.StatusTooManyRequests, respn)
 		return
 	}
 

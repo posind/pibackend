@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper/at"
@@ -13,8 +14,37 @@ import (
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/time/rate"
 	"google.golang.org/api/idtoken"
 )
+
+type RateLimiter struct {
+	limiters map[string]*rate.Limiter
+	mu       sync.Mutex
+	r        rate.Limit
+	burst    int
+}
+
+func NewRateLimiter(r rate.Limit, burst int) *RateLimiter {
+	return &RateLimiter{
+		limiters: make(map[string]*rate.Limiter),
+		r:        r,
+		burst:    burst,
+	}
+}
+
+func (rl *RateLimiter) GetLimiter(key string) *rate.Limiter {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+
+	limiter, exists := rl.limiters[key]
+	if !exists {
+		limiter = rate.NewLimiter(rl.r, rl.burst)
+		rl.limiters[key] = limiter
+	}
+
+	return limiter
+}
 
 func VerifyIDToken(idToken string, audience string) (*idtoken.Payload, error) {
 	payload, err := idtoken.Validate(context.Background(), idToken, audience)
