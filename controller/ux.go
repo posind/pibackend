@@ -12,6 +12,7 @@ import (
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/gcallapi"
+	"github.com/gocroot/helper/normalize"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/helper/whatsauth"
@@ -177,7 +178,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 
 		// Format markdown dengan base64 string
 		//markdownContent := fmt.Sprintf("```base64\n%s\n```", encodedString)
-		fname := strings.ReplaceAll(hasil.MeetEvent.Summary, " ", "")
+		fname := normalize.RemoveSpecialChars(hasil.MeetEvent.Summary)
 		dt := model.LogInfo{
 			PhoneNumber: hasil.NoPetugas,
 			Alias:       hasil.Petugas,

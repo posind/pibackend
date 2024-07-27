@@ -23,3 +23,15 @@ func NumberToAlphabet(num int) string {
 	// Gabungkan hasil ke dalam satu string
 	return strings.Join(result, "")
 }
+
+// RemoveSpecialChars removes the specified special characters from the input string
+func RemoveSpecialChars(input string) string {
+	// Define the characters to be removed
+	specialChars := []string{"\\", "/", ":", "*", "?", "\"", "<", ">", "|", " ", "'", "#", "$", "%", "^", "!", "@"}
+
+	// Replace each special character with an empty string
+	for _, char := range specialChars {
+		input = strings.ReplaceAll(input, char, "")
+	}
+	return input
+}
