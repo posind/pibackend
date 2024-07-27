@@ -1,6 +1,7 @@
 package report
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gocroot/config"
@@ -9,8 +10,45 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
+	"github.com/raykov/gofpdf"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+func RekapMeetingKemarin(db *mongo.Database, projectName string) (err error) {
+	filter := CreateFilterMeetingYesterday(projectName)
+	laporanDocs, err := atdb.GetAllDoc[[]Laporan](db, "uxlaporan", filter) //CreateFilterMeetingYesterday(projectName)
+	fmt.Println(len(laporanDocs))
+	if err != nil {
+		return
+	}
+	// Buat PDF
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.SetFont("Arial", "", 12)
+
+	for _, laporan := range laporanDocs {
+		// Tambahkan halaman baru
+		pdf.AddPage()
+
+		// Tambahkan teks ke PDF
+		pdf.MultiCell(
+			0,                // Lebar: 0 berarti lebar otomatis
+			10,               // Tinggi baris
+			laporan.Komentar, // Teks
+			"",               // Batas kiri
+			"",               // Batas kanan
+			false,            // Aligment horizontal
+		)
+	}
+
+	// Simpan PDF ke file
+	err = pdf.OutputFileAndClose("output.pdf")
+	if err != nil {
+		return
+	}
+	return
+
+}
 
 func RekapPagiHari(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response

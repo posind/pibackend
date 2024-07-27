@@ -8,6 +8,7 @@ require (
 	github.com/go-playground/webhooks v5.17.0+incompatible
 	github.com/go-playground/webhooks/v6 v6.3.0
 	github.com/google/go-github/v59 v59.0.0
+	github.com/raykov/gofpdf v1.16.7
 	github.com/whatsauth/itmodel v0.0.2
 	go.mongodb.org/mongo-driver v1.15.0
 	golang.org/x/crypto v0.25.0

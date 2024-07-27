@@ -1,6 +1,7 @@
 package report
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -15,10 +16,8 @@ var mongoinfo = atdb.DBInfo{
 var Mongoconn, ErrorMongoconn = atdb.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
-	//gid := "6281313112053-1492882006"
-	gid := "6281312000300-1488324890"
-	msg, _ := GenerateRekapMessageKemarinPerWAGroupID(Mongoconn, gid)
-	print(msg)
+	fmt.Println(mongoinfo.DBString)
+	RekapMeetingKemarin(Mongoconn, "lmsdesa")
 
 }
 
