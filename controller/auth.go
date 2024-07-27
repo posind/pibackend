@@ -135,7 +135,7 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
 		var respn model.Response
 		respn.Status = "Failed to verify captcha"
 		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusInternalServerError, respn)
+		at.WriteJSON(respw, http.StatusServiceUnavailable, respn)
 		return
 	}
 	defer captchaResponse.Body.Close()
@@ -249,6 +249,12 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
 	auth.SendWhatsAppPassword(respw, request.PhoneNumber, randomPassword)
 }
 
+var (
+	rateLimit  int64 = 5 // Max 5 requests
+	timeWindow = 1 * time.Minute
+)
+
+
 func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
 	var request struct {
 		PhoneNumber string `json:"phonenumber"`
@@ -262,8 +268,30 @@ func VerifyPasswordHandler(respw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Find user in the database
+    // Rate limiting
+	now := time.Now()
+	windowStart := now.Add(-timeWindow)
+	filter := bson.M{
+		"phonenumber": request.PhoneNumber,
+		"createdAt":   bson.M{"$gte": windowStart},
+	}
 
+	count, err := config.Mongoconn.Collection("stp").CountDocuments(context.Background(), filter)
+	if err != nil {
+		var respn model.Response
+		respn.Response = "Failed to check rate limit"
+		at.WriteJSON(respw, http.StatusInternalServerError, respn)
+		return
+	}
+
+	if count >= rateLimit {
+		var respn model.Response
+		respn.Response = "Too many requests"
+		at.WriteJSON(respw, http.StatusUnauthorized, respn)
+		return
+	}
+
+	// Find user in the database
 	userFilter := bson.M{"phonenumber": request.PhoneNumber}
 	user, err := atdb.GetOneDoc[model.Stp](config.Mongoconn, "stp", userFilter)
 	if err != nil {
