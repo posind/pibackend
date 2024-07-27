@@ -2,11 +2,8 @@ package report
 
 import (
 	"encoding/base64"
-	"fmt"
-	"io/ioutil"
+	"errors"
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper/at"
@@ -14,144 +11,83 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
-	"github.com/raykov/gofpdf"
+	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RekapMeetingKemarin(db *mongo.Database, projectName string) (base64Str, joinMD string, err error) {
-	filter := CreateFilterMeetingYesterday(projectName, true)
-	laporanDocs, err := atdb.GetAllDoc[[]Laporan](db, "uxlaporan", filter) //CreateFilterMeetingYesterday(projectName)
+func RekapMeetingKemarin(db *mongo.Database) (err error) {
+	filter := bson.M{"_id": YesterdayFilter()}
+	wagroupidlist, err := atdb.GetAllDistinctDoc(db, filter, "project.wagroupid", "uxlaporan")
 	if err != nil {
 		return
 	}
-	if len(laporanDocs) == 0 {
+	if len(wagroupidlist) == 0 {
 		return
 	}
-	// Buat PDF
-	pdf := gofpdf.New("P", "mm", "A4", "")
-	pdf.SetFont("Arial", "", 12)
+	for _, gid := range wagroupidlist { //iterasi di setiap wa group
+		// Type assertion to convert any to string
+		groupID, ok := gid.(string)
+		if !ok {
+			err = errors.New("wagroupid is not a string")
+			return
+		}
+		filter := bson.M{"wagroupid": groupID}
+		var projectDocuments []model.Project
+		projectDocuments, err = atdb.GetAllDoc[[]model.Project](db, "project", filter)
+		if err != nil {
+			return
+		}
+		for _, project := range projectDocuments {
+			var base64pdf, md string
+			base64pdf, md, err = GetPDFandMDMeeting(db, project.Name)
+			if err != nil {
+				return
+			}
+			dt := &itmodel.DocumentMessage{
+				To:        groupID,
+				IsGroup:   true,
+				Base64Doc: base64pdf,
+				Filename:  project.Name + ".pdf",
+				Caption:   "Berikut ini rekap rapat kemaren ya kak untuk project " + project.Name,
+			}
+			_, _, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIDocMessage)
+			if err != nil {
+				return
+			}
+			//upload file markdown ke log repo untuk tipe rapat
+			if project.RepoLogName != "" {
+				// Encode string ke base64
+				encodedString := base64.StdEncoding.EncodeToString([]byte(md))
 
-	// Menambahkan fungsi footer
-	pdf.SetFooterFunc(func() {
-		pdf.SetY(-15) // Posisi footer dari bawah halaman
-		pdf.SetFont("Arial", "I", 8)
-		pageNo := pdf.PageNo() // Mendapatkan nomor halaman
-		pdf.CellFormat(0, 10, fmt.Sprintf("Halaman %d", pageNo), "", 0, "C", false, 0, "")
-	})
+				// Format markdown dengan base64 string
+				//markdownContent := fmt.Sprintf("```base64\n%s\n```", encodedString)
+				dt := model.LogInfo{
+					PhoneNumber: project.Owner.PhoneNumber,
+					Alias:       project.Owner.Name,
+					FileName:    "README.md",
+					RepoOrg:     project.RepoOrg,
+					RepoName:    project.RepoLogName,
+					Base64Str:   encodedString,
+				}
+				var conf model.Config
+				conf, err = atdb.GetOneDoc[model.Config](db, "config", bson.M{"phonenumber": "62895601060000"})
+				if err != nil {
+					return
+				}
+				var statuscode int
+				var loginf model.LogInfo
+				statuscode, loginf, err = atapi.PostStructWithToken[model.LogInfo]("secret", conf.LeaflySecret, dt, conf.LeaflyURL)
+				if err != nil {
+					return
+				}
+				if statuscode != http.StatusOK {
+					err = errors.New(loginf.Error)
+					return
 
-	for i, laporan := range laporanDocs {
-		// Tambahkan halaman baru
-		pdf.AddPage()
-		pdf.SetFont("Arial", "UB", 16)
-		judul := "Risalah Pertemuan-" + strconv.Itoa(i+1)
-		pdf.MultiCell(
-			0,     // Lebar: 0 berarti lebar otomatis
-			10,    // Tinggi baris
-			judul, // Teks
-			"",    // Batas kiri
-			"",    // Batas kanan
-			false, // Aligment horizontal
-		)
-		joinMD = joinMD + "# " + judul + "\n"
-		// Tambahkan teks ke PDF
-		pdf.SetFont("Arial", "B", 12)
-		pdf.MultiCell(
-			0,                         // Lebar: 0 berarti lebar otomatis
-			5,                         // Tinggi baris
-			laporan.MeetEvent.Summary, // Teks
-			"",                        // Batas kiri
-			"",                        // Batas kanan
-			false,                     // Aligment horizontal
-		)
-		joinMD = joinMD + "## " + laporan.MeetEvent.Summary + "\n"
-		pdf.SetFont("Arial", "I", 12)
-		pdf.MultiCell(
-			0,                          // Lebar: 0 berarti lebar otomatis
-			5,                          // Tinggi baris
-			"Notula: "+laporan.Petugas, // Teks
-			"",                         // Batas kiri
-			"",                         // Batas kanan
-			false,                      // Aligment horizontal
-		)
-		joinMD = joinMD + "Notula: " + laporan.Petugas + "\n"
-		pdf.MultiCell(
-			0, // Lebar: 0 berarti lebar otomatis
-			5, // Tinggi baris
-			"Waktu: "+laporan.MeetEvent.Date+" ("+laporan.MeetEvent.TimeStart+" - "+laporan.MeetEvent.TimeEnd+")", // Teks
-			"",    // Batas kiri
-			"",    // Batas kanan
-			false, // Aligment horizontal
-		)
-		joinMD = joinMD + "Waktu: " + laporan.MeetEvent.Date + " (" + laporan.MeetEvent.TimeStart + " - " + laporan.MeetEvent.TimeEnd + ")" + "\n"
-		pdf.MultiCell(
-			0,                                     // Lebar: 0 berarti lebar otomatis
-			5,                                     // Tinggi baris
-			"Lokasi: "+laporan.MeetEvent.Location, // Teks
-			"",                                    // Batas kiri
-			"",                                    // Batas kanan
-			false,                                 // Aligment horizontal
-		)
-		joinMD = joinMD + "Lokasi: " + laporan.MeetEvent.Location + "\n"
-		pdf.MultiCell(
-			0,         // Lebar: 0 berarti lebar otomatis
-			5,         // Tinggi baris
-			"Agenda:", // Teks
-			"",        // Batas kiri
-			"",        // Batas kanan
-			false,     // Aligment horizontal
-		)
-		joinMD = joinMD + "### Agenda" + "\n"
-		pdf.MultiCell(
-			0,              // Lebar: 0 berarti lebar otomatis
-			5,              // Tinggi baris
-			laporan.Solusi, // Teks
-			"",             // Batas kiri
-			"",             // Batas kanan
-			false,          // Aligment horizontal
-		)
-		joinMD = joinMD + laporan.Solusi + "\n"
-		pdf.SetFont("Arial", "UB", 12)
-		pdf.MultiCell(
-			0,         // Lebar: 0 berarti lebar otomatis
-			5,         // Tinggi baris
-			"Risalah", // Teks
-			"",        // Batas kiri
-			"",        // Batas kanan
-			false,     // Aligment horizontal
-		)
-		joinMD = joinMD + "### Risalah" + "\n"
-		pdf.SetFont("Arial", "", 12)
-		pdf.MultiCell(
-			0,                // Lebar: 0 berarti lebar otomatis
-			5,                // Tinggi baris
-			laporan.Komentar, // Teks
-			"",               // Batas kiri
-			"",               // Batas kanan
-			false,            // Aligment horizontal
-		)
-		joinMD = joinMD + laporan.Komentar
-	}
-
-	// Simpan PDF ke file sementara
-	tempFile := projectName
-	err = pdf.OutputFileAndClose(tempFile)
-	if err != nil {
-		return
-	}
-
-	// Baca file PDF dan konversi ke base64
-	fileData, err := ioutil.ReadFile(tempFile)
-	if err != nil {
-		return
-	}
-
-	base64Str = base64.StdEncoding.EncodeToString(fileData)
-
-	// Hapus file sementara
-	err = os.Remove(tempFile)
-	if err != nil {
-		return
+				}
+			}
+		}
 	}
 
 	return

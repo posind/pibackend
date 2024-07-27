@@ -1,17 +1,18 @@
 package report
 
 import (
-	"github.com/gocroot/helper/atdb"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Fungsi untuk membuat filter
 func CreateFilterMeetingYesterday(projectName string, ismeeting bool) bson.M {
-	startOfDay, endOfDay := atdb.GetYesterdayStartEnd()
 	return bson.M{
 		"_id": bson.M{
-			"$gte": startOfDay,
-			"$lte": endOfDay,
+			"$gte": primitive.NewObjectIDFromTimestamp(GetDateKemarin()),
+			"$lt":  primitive.NewObjectIDFromTimestamp(GetDateKemarin().Add(24 * time.Hour)),
 		},
 		"project.name": projectName,
 		"meetid":       bson.M{"$exists": ismeeting}, // Kondisi MeetID tidak kosong

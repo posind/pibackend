@@ -183,7 +183,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 			Alias:       hasil.Petugas,
 			FileName:    fname + ".md",
 			RepoOrg:     hasil.Project.RepoOrg,
-			RepoName:    hasil.Project.Name,
+			RepoName:    hasil.Project.RepoLogName,
 			Base64Str:   encodedString,
 		}
 		conf, err := atdb.GetOneDoc[model.Config](config.Mongoconn, "config", bson.M{"phonenumber": "62895601060000"})

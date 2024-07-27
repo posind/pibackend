@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gocroot/config"
 	"github.com/gocroot/helper/atdb"
 )
 
@@ -16,10 +17,11 @@ var mongoinfo = atdb.DBInfo{
 var Mongoconn, ErrorMongoconn = atdb.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
+	config.WAAPIToken = ""
 	fmt.Println(mongoinfo.DBString)
-	_, md, err := RekapMeetingKemarin(Mongoconn, "lmsdesa")
+	err := RekapMeetingKemarin(Mongoconn)
 	fmt.Println(err)
-	fmt.Println(md)
+	//fmt.Println(md)
 
 }
 
