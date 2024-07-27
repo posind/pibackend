@@ -249,9 +249,9 @@ func GeneratePasswordHandler(respw http.ResponseWriter, r *http.Request) {
 	auth.SendWhatsAppPassword(respw, request.PhoneNumber, randomPassword)
 }
 
-var (
-	rateLimit  int64 = 5 // Max 5 requests
-	timeWindow = 1 * time.Minute
+const (
+    timeWindow = 5 * time.Minute
+    rateLimit  = 5
 )
 
 
