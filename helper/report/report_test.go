@@ -17,7 +17,9 @@ var Mongoconn, ErrorMongoconn = atdb.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
 	fmt.Println(mongoinfo.DBString)
-	RekapMeetingKemarin(Mongoconn, "lmsdesa")
+	_, md, err := RekapMeetingKemarin(Mongoconn, "lmsdesa")
+	fmt.Println(err)
+	fmt.Println(md)
 
 }
 
