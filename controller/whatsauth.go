@@ -72,6 +72,8 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 		//helper.WriteJSON(respw, httpstatus, resp)
 		//return
 	}
+	//kirim rekap risalah rapat ke grup
+	go report.RekapMeetingKemarin(config.Mongoconn)
 	//kirim report ke group
 	report.RekapPagiHari(respw, req)
 
