@@ -216,7 +216,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 	}
 	var message string
 	if isRapat {
-		message = "*Resume Pertemuan*" + hasil.MeetEvent.Summary + "\nWaktu: " + hasil.MeetEvent.TimeStart + "\nNotula:" + hasil.Petugas + "\nEfektifitas Pertemuan: " + strconv.Itoa(rating.Rating) + "\nRisalah Pertemuan:\n" + rating.Komentar
+		message = "*Resume Pertemuan*\n" + hasil.MeetEvent.Summary + "\nWaktu: " + hasil.MeetEvent.TimeStart + "\nNotula:" + hasil.Petugas + "\nEfektifitas Pertemuan: " + strconv.Itoa(rating.Rating) + "\nRisalah Pertemuan:\n" + rating.Komentar
 	} else {
 		message = "*Feedback Pekerjaan " + hasil.Project.Name + "*\nPetugas: " + hasil.Petugas + "\nRating Pekerjaan: " + strconv.Itoa(rating.Rating) + "\nPemberi Feedback: " + hasil.Nama + " (" + hasil.Phone + ")\n" + hasil.Solusi + "\nCatatan:\n" + rating.Komentar
 	}
