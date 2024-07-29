@@ -45,6 +45,7 @@ func PostDataProject(respw http.ResponseWriter, req *http.Request) {
 	prj.Owner = docuser
 	prj.Secret = watoken.RandomString(48)
 	prj.Name = normalize.SetIntoID(prj.Name)
+	prj.WAGroupID = normalize.SetIntoID(prj.WAGroupID)
 	existingprj, err := atdb.GetOneDoc[model.Project](config.Mongoconn, "project", primitive.M{"name": prj.Name})
 	if err != nil {
 		idprj, err := atdb.InsertOneDoc(config.Mongoconn, "project", prj)
