@@ -17,7 +17,7 @@ var mongoinfo = atdb.DBInfo{
 var Mongoconn, ErrorMongoconn = atdb.MongoConnect(mongoinfo)
 
 func TestGenerateReport(t *testing.T) {
-	config.WAAPIToken = "v4.public.eyJhbGlhcyI6IiIsImV4cCI6IjIwMjQtMDgtMjlUMjA6MDA6MDBaIiwiaWF0IjoiMjAyNC0wNy0zMFQyMDowMDowMFoiLCJpZCI6IjYyODk1NjAxMDYwMDAwIiwibmJmIjoiMjAyNC0wNy0zMFQyMDowMDowMFoiffszbcuYZe40dHBOjcsC3IyXNBXbZuKniOlFbazHhRKOUYapjWqAfafLpRZ8JzfXfgaCzixLAfI8nRBSEgBPIgM"
+	config.WAAPIToken = "v4.public."
 	fmt.Println(mongoinfo.DBString)
 	err := RekapMeetingKemarin(Mongoconn)
 	fmt.Println(err)

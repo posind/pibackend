@@ -29,20 +29,20 @@ func RekapMeetingKemarin(db *mongo.Database) (err error) {
 		// Type assertion to convert any to string
 		groupID, ok := gid.(string)
 		if !ok {
-			err = errors.New("wagroupid is not a string")
-			return
+			err = errors.New("wagroupid is not a string, skipping this iteration")
+			continue
 		}
 		filter := bson.M{"wagroupid": groupID}
 		var projectDocuments []model.Project
 		projectDocuments, err = atdb.GetAllDoc[[]model.Project](db, "project", filter)
 		if err != nil {
-			return
+			continue
 		}
 		for _, project := range projectDocuments {
 			var base64pdf, md string
 			base64pdf, md, err = GetPDFandMDMeeting(db, project.Name)
 			if err != nil {
-				return
+				continue
 			}
 			dt := &itmodel.DocumentMessage{
 				To:        groupID,
@@ -53,7 +53,7 @@ func RekapMeetingKemarin(db *mongo.Database) (err error) {
 			}
 			_, _, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIDocMessage)
 			if err != nil {
-				return
+				continue
 			}
 			//upload file markdown ke log repo untuk tipe rapat
 			if project.RepoLogName != "" {
@@ -73,11 +73,11 @@ func RekapMeetingKemarin(db *mongo.Database) (err error) {
 				var conf model.Config
 				conf, err = atdb.GetOneDoc[model.Config](db, "config", bson.M{"phonenumber": "62895601060000"})
 				if err != nil {
-					return
+					continue
 				}
 
 				//masalahnya disini pake token pribadi. kalo user awangga tidak masuk ke repo maka ga bisa
-				go atapi.PostStructWithToken[model.LogInfo]("secret", conf.LeaflySecret, dt, conf.LeaflyURL)
+				atapi.PostStructWithToken[model.LogInfo]("secret", conf.LeaflySecret, dt, conf.LeaflyURL)
 			}
 		}
 	}

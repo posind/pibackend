@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper/at"
@@ -48,7 +49,10 @@ func PostInboxNomor(respw http.ResponseWriter, req *http.Request) {
 func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 	var resp model.Response
 	httpstatus := http.StatusServiceUnavailable
-	//prof, err := helper.GetAppProfile(config.WAPhoneNumber, config.Mongoconn)
+
+	var wg sync.WaitGroup
+	wg.Add(3) // Menambahkan jumlah goroutine yang akan dijalankan
+
 	profs, err := atdb.GetAllDoc[[]model.Profile](config.Mongoconn, "profile", bson.M{})
 	if err != nil {
 		resp.Response = err.Error()
@@ -72,10 +76,21 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 		//helper.WriteJSON(respw, httpstatus, resp)
 		//return
 	}
-	//kirim rekap risalah rapat ke grup
-	go report.RekapMeetingKemarin(config.Mongoconn)
-	//kirim report ke group
-	report.RekapPagiHari(respw, req)
+
+	// Menjalankan fungsi RekapMeetingKemarin dalam goroutine
+	go func() {
+		defer wg.Done() // Memanggil wg.Done() setelah fungsi selesai
+		report.RekapMeetingKemarin(config.Mongoconn)
+	}()
+
+	// Menjalankan fungsi RekapPagiHari dalam goroutine
+	go func() {
+		defer wg.Done() // Memanggil wg.Done() setelah fungsi selesai
+		report.RekapPagiHari(respw, req)
+	}()
+
+	wg.Wait() // Menunggu sampai semua goroutine selesai
+	at.WriteJSON(respw, httpstatus, resp)
 
 }
 
