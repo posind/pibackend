@@ -3,10 +3,8 @@ package report
 import (
 	"encoding/base64"
 	"errors"
-	"net/http"
 
 	"github.com/gocroot/config"
-	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/whatsauth"
@@ -86,44 +84,44 @@ func RekapMeetingKemarin(db *mongo.Database) (err error) {
 
 }
 
-func RekapPagiHari(respw http.ResponseWriter, req *http.Request) {
-	var resp model.Response
+func RekapPagiHari(db *mongo.Database) (err error) {
 	filter := bson.M{"_id": YesterdayFilter()}
-	wagroupidlist, err := atdb.GetAllDistinctDoc(config.Mongoconn, filter, "project.wagroupid", "pushrepo")
+	wagroupidlist, err := atdb.GetAllDistinctDoc(db, filter, "project.wagroupid", "pushrepo")
 	if err != nil {
-		resp.Info = "Gagal Query Distincs project.wagroupid"
-		resp.Response = err.Error()
-		at.WriteJSON(respw, http.StatusUnauthorized, resp)
-		return
+		return errors.New("Gagal Query Distinct project.wagroupid: " + err.Error())
 	}
-	for _, gid := range wagroupidlist { //iterasi di setiap wa group
+
+	var lastErr error // Variabel untuk menyimpan kesalahan terakhir
+
+	for _, gid := range wagroupidlist { // Iterasi di setiap wa group
 		// Type assertion to convert any to string
 		groupID, ok := gid.(string)
 		if !ok {
-			resp.Info = "wagroupid is not a string"
-			resp.Response = "wagroupid is not a string"
-			at.WriteJSON(respw, http.StatusUnauthorized, resp)
-			return
+			lastErr = errors.New("wagroupid is not a string")
+			continue
 		}
-		msg, err := GenerateRekapMessageKemarinPerWAGroupID(config.Mongoconn, groupID)
+		var msg string
+		msg, err = GenerateRekapMessageKemarinPerWAGroupID(db, groupID)
 		if err != nil {
-			resp.Info = "Gagal Membuat Rekapitulasi perhitungan per wa group id"
-			resp.Response = err.Error()
-			at.WriteJSON(respw, http.StatusExpectationFailed, resp)
-			return
+			lastErr = errors.New("Gagal Membuat Rekapitulasi perhitungan per wa group id: " + err.Error())
+			continue
 		}
 		dt := &whatsauth.TextMessage{
 			To:       groupID,
 			IsGroup:  true,
 			Messages: msg,
 		}
+		var resp model.Response
 		_, resp, err = atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 		if err != nil {
-			resp.Info = "Tidak berhak"
-			resp.Response = err.Error()
-			at.WriteJSON(respw, http.StatusUnauthorized, resp)
-			return
+			lastErr = errors.New("Tidak berhak: " + err.Error() + ", " + resp.Info)
+			continue
 		}
 	}
 
+	if lastErr != nil {
+		return lastErr
+	}
+
+	return nil
 }

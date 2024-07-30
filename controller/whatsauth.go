@@ -53,12 +53,22 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 	var wg sync.WaitGroup
 	wg.Add(3) // Menambahkan jumlah goroutine yang akan dijalankan
 
-	profs, err := atdb.GetAllDoc[[]model.Profile](config.Mongoconn, "profile", bson.M{})
-	if err != nil {
-		resp.Response = err.Error()
-		at.WriteJSON(respw, httpstatus, resp)
-		return
-	} else {
+	// Mutex untuk mengamankan akses ke variabel resp dan httpstatus
+	var mu sync.Mutex
+	// Variabel untuk menyimpan kesalahan terakhir
+	var lastErr error
+
+	// 1. Refresh token
+	go func() {
+		defer wg.Done() // Memanggil wg.Done() setelah fungsi selesai
+		profs, err := atdb.GetAllDoc[[]model.Profile](config.Mongoconn, "profile", bson.M{})
+		if err != nil {
+			mu.Lock()
+			lastErr = err
+			resp.Response = err.Error()
+			mu.Unlock()
+			return
+		}
 		for _, prof := range profs {
 			dt := &whatsauth.WebHookInfo{
 				URL:    prof.URL,
@@ -66,32 +76,52 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 			}
 			res, err := whatsauth.RefreshToken(dt, prof.Phonenumber, config.WAAPIGetToken, config.Mongoconn)
 			if err != nil {
+				mu.Lock()
+				lastErr = err
 				resp.Response = err.Error()
-				break
-			} else {
-				resp.Response = at.Jsonstr(res.ModifiedCount)
-				httpstatus = http.StatusOK
+				httpstatus = http.StatusInternalServerError
+				mu.Unlock()
+				continue // Lanjutkan ke iterasi berikutnya
 			}
+			mu.Lock()
+			resp.Response = at.Jsonstr(res.ModifiedCount)
+			httpstatus = http.StatusOK
+			mu.Unlock()
 		}
-		//helper.WriteJSON(respw, httpstatus, resp)
-		//return
-	}
-
-	// Menjalankan fungsi RekapMeetingKemarin dalam goroutine
-	go func() {
-		defer wg.Done() // Memanggil wg.Done() setelah fungsi selesai
-		report.RekapMeetingKemarin(config.Mongoconn)
 	}()
 
-	// Menjalankan fungsi RekapPagiHari dalam goroutine
+	// 2. Menjalankan fungsi RekapMeetingKemarin dalam goroutine
 	go func() {
 		defer wg.Done() // Memanggil wg.Done() setelah fungsi selesai
-		report.RekapPagiHari(respw, req)
+		if err := report.RekapMeetingKemarin(config.Mongoconn); err != nil {
+			mu.Lock()
+			lastErr = err
+			resp.Response = err.Error()
+			httpstatus = http.StatusInternalServerError
+			mu.Unlock()
+		}
+	}()
+
+	// 3. Menjalankan fungsi RekapPagiHari dalam goroutine
+	go func() {
+		defer wg.Done() // Memanggil wg.Done() setelah fungsi selesai
+		if err := report.RekapPagiHari(config.Mongoconn); err != nil {
+			mu.Lock()
+			lastErr = err
+			resp.Response = err.Error()
+			httpstatus = http.StatusInternalServerError
+			mu.Unlock()
+		}
 	}()
 
 	wg.Wait() // Menunggu sampai semua goroutine selesai
-	at.WriteJSON(respw, httpstatus, resp)
 
+	// Menggunakan status yang benar dari kesalahan terakhir jika ada
+	if lastErr != nil {
+		at.WriteJSON(respw, httpstatus, resp)
+	} else {
+		at.WriteJSON(respw, http.StatusOK, resp)
+	}
 }
 
 func NotFound(respw http.ResponseWriter, req *http.Request) {
