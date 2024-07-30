@@ -75,17 +75,9 @@ func RekapMeetingKemarin(db *mongo.Database) (err error) {
 				if err != nil {
 					return
 				}
-				var statuscode int
-				var loginf model.LogInfo
-				statuscode, loginf, err = atapi.PostStructWithToken[model.LogInfo]("secret", conf.LeaflySecret, dt, conf.LeaflyURL)
-				if err != nil {
-					return
-				}
-				if statuscode != http.StatusOK {
-					err = errors.New(loginf.Error)
-					return
 
-				}
+				//masalahnya disini pake token pribadi. kalo user awangga tidak masuk ke repo maka ga bisa
+				go atapi.PostStructWithToken[model.LogInfo]("secret", conf.LeaflySecret, dt, conf.LeaflyURL)
 			}
 		}
 	}
