@@ -193,7 +193,7 @@ func FeedbackHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *
 		reply = "Invalid ID format: " + err.Error()
 		return
 	}
-	helpdeskuser, err := atdb.GetOneLatestDoc[model.Laporan](db, "helpdeskuser", bson.M{"_id": objectID, "phonenumbers": Pesan.Phone_number})
+	helpdeskuser, err := atdb.GetOneLatestDoc[model.Laporan](db, "helpdeskuser", bson.M{"_id": objectID, "phone": Pesan.Phone_number})
 	if err != nil {
 		reply = err.Error()
 		return
