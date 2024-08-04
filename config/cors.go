@@ -6,13 +6,8 @@ import (
 
 // Daftar origins yang diizinkan
 var Origins = []string{
-	"https://naskah.bukupedia.co.id",
-	"https://chatgpl.do.my.id",
-	"https://do.my.id",
-	"https://in.my.id",
-	"https://my.my.id",
-	"https://whatsauth.github.io",
-	"https://www.do.my.id",
+	"https://kb.pd.my.id",
+	"https://pd.my.id",
 }
 
 // Fungsi untuk memeriksa apakah origin diizinkan
