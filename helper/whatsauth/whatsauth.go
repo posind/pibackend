@@ -5,12 +5,19 @@ import (
 
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/kimseok"
+	"github.com/gocroot/helper/normalize"
+
+	"github.com/gocroot/mod"
+
+	"github.com/gocroot/helper/module"
+	"github.com/whatsauth/itmodel"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func WebHook(WAKeyword, WAPhoneNumber, WAAPIQRLogin, WAAPIMessage string, msg IteungMessage, db *mongo.Database) (resp Response, err error) {
+func WebHook(WAKeyword, WAPhoneNumber, WAAPIQRLogin, WAAPIMessage string, msg itmodel.IteungMessage, db *mongo.Database) (resp itmodel.Response, err error) {
 	if IsLoginRequest(msg, WAKeyword) { //untuk whatsauth request login
 		resp, err = HandlerQRLogin(msg, WAKeyword, WAPhoneNumber, db, WAAPIQRLogin)
 	} else { //untuk membalas pesan masuk
@@ -19,14 +26,14 @@ func WebHook(WAKeyword, WAPhoneNumber, WAAPIQRLogin, WAAPIMessage string, msg It
 	return
 }
 
-func RefreshToken(dt *WebHookInfo, WAPhoneNumber, WAAPIGetToken string, db *mongo.Database) (res *mongo.UpdateResult, err error) {
+func RefreshToken(dt *itmodel.WebHook, WAPhoneNumber, WAAPIGetToken string, db *mongo.Database) (res *mongo.UpdateResult, err error) {
 	profile, err := GetAppProfile(WAPhoneNumber, db)
 	if err != nil {
 		return
 	}
-	var resp User
+	var resp itmodel.User
 	if profile.Token != "" {
-		_, resp, err = atapi.PostStructWithToken[User]("Token", profile.Token, dt, WAAPIGetToken)
+		_, resp, err = atapi.PostStructWithToken[itmodel.User]("Token", profile.Token, dt, WAAPIGetToken)
 		if err != nil {
 			return
 		}
@@ -40,64 +47,84 @@ func RefreshToken(dt *WebHookInfo, WAPhoneNumber, WAAPIGetToken string, db *mong
 	return
 }
 
-func IsLoginRequest(msg IteungMessage, keyword string) bool {
-	return strings.Contains(msg.Message, keyword) && msg.From_link
+func IsLoginRequest(msg itmodel.IteungMessage, keyword string) bool {
+	return strings.Contains(msg.Message, keyword) // && msg.From_link
 }
 
-func GetUUID(msg IteungMessage, keyword string) string {
+func GetUUID(msg itmodel.IteungMessage, keyword string) string {
 	return strings.Replace(msg.Message, keyword, "", 1)
 }
 
-func HandlerQRLogin(msg IteungMessage, WAKeyword string, WAPhoneNumber string, db *mongo.Database, WAAPIQRLogin string) (resp Response, err error) {
-	dt := &WhatsauthRequest{
+func HandlerQRLogin(msg itmodel.IteungMessage, WAKeyword string, WAPhoneNumber string, db *mongo.Database, WAAPIQRLogin string) (resp itmodel.Response, err error) {
+	dt := &itmodel.WhatsauthRequest{
 		Uuid:        GetUUID(msg, WAKeyword),
 		Phonenumber: msg.Phone_number,
+		Aliasname:   msg.Alias_name,
 		Delay:       msg.From_link_delay,
 	}
 	structtoken, err := GetAppProfile(WAPhoneNumber, db)
 	if err != nil {
 		return
 	}
-	_, resp, err = atapi.PostStructWithToken[Response]("Token", structtoken.Token, dt, WAAPIQRLogin)
+	_, resp, err = atapi.PostStructWithToken[itmodel.Response]("Token", structtoken.Token, dt, WAAPIQRLogin)
 	return
 }
 
-func HandlerIncomingMessage(msg IteungMessage, WAPhoneNumber string, db *mongo.Database, WAAPIMessage string) (resp Response, err error) {
-	dt := &TextMessage{
-		To:       msg.Chat_number,
-		IsGroup:  false,
-		Messages: GetRandomReplyFromMongo(msg, db),
-	}
-	if msg.Chat_server == "g.us" { //jika pesan datang dari group maka balas ke group
-		dt.IsGroup = true
-	}
-	if (msg.Phone_number != "628112000279") && (msg.Phone_number != "6283131895000") { //ignore pesan datang dari iteung
-		var profile Profile
+func HandlerIncomingMessage(msg itmodel.IteungMessage, WAPhoneNumber string, db *mongo.Database, WAAPIMessage string) (resp itmodel.Response, err error) {
+	_, bukanbot := GetAppProfile(msg.Phone_number, db) //cek apakah nomor adalah bot
+	if bukanbot != nil {                               //jika tidak terdapat di profile
+		var profile itmodel.Profile
 		profile, err = GetAppProfile(WAPhoneNumber, db)
 		if err != nil {
 			return
 		}
-		_, resp, err = atapi.PostStructWithToken[Response]("Token", profile.Token, dt, WAAPIMessage)
+		msg.Message = normalize.NormalizeHiddenChar(msg.Message)
+		module.NormalizeAndTypoCorrection(&msg.Message, db, "typo")
+		modname, group, personal := module.GetModuleName(WAPhoneNumber, msg, db, "module")
+		var msgstr string
+		var isgrup bool
+		if msg.Chat_server != "g.us" { //chat personal
+			if personal && modname != "" {
+				msgstr = mod.Caller(profile, modname, msg, db)
+			} else {
+				msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
+			}
+
+		} else if strings.Contains(strings.ToLower(msg.Message), profile.Triggerword) { //chat group
+			isgrup = true
+			if group && modname != "" {
+				msgstr = mod.Caller(profile, modname, msg, db)
+			} else {
+				msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
+			}
+		}
+		dt := &itmodel.TextMessage{
+			To:       msg.Chat_number,
+			IsGroup:  isgrup,
+			Messages: msgstr,
+		}
+		_, resp, err = atapi.PostStructWithToken[itmodel.Response]("Token", profile.Token, dt, WAAPIMessage)
 		if err != nil {
 			return
 		}
+
 	}
 	return
 }
 
-func GetRandomReplyFromMongo(msg IteungMessage, db *mongo.Database) string {
-	rply, err := atdb.GetRandomDoc[Reply](db, "reply", 1)
+func GetRandomReplyFromMongo(msg itmodel.IteungMessage, botname string, db *mongo.Database) string {
+	rply, err := atdb.GetRandomDoc[itmodel.Reply](db, "reply", 1)
 	if err != nil {
 		return "Koneksi Database Gagal: " + err.Error()
 	}
-	replymsg := strings.ReplaceAll(rply[0].Message, "#BOTNAME#", msg.Alias_name)
+	replymsg := strings.ReplaceAll(rply[0].Message, "#BOTNAME#", botname)
 	replymsg = strings.ReplaceAll(replymsg, "\\n", "\n")
 	return replymsg
 }
 
-func GetAppProfile(phonenumber string, db *mongo.Database) (apitoken Profile, err error) {
+func GetAppProfile(phonenumber string, db *mongo.Database) (apitoken itmodel.Profile, err error) {
 	filter := bson.M{"phonenumber": phonenumber}
-	apitoken, err = atdb.GetOneDoc[Profile](db, "profile", filter)
+	apitoken, err = atdb.GetOneDoc[itmodel.Profile](db, "profile", filter)
 
 	return
 }

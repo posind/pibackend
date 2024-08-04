@@ -11,6 +11,7 @@ import (
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
+	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -21,8 +22,8 @@ func GetHome(respw http.ResponseWriter, req *http.Request) {
 }
 
 func PostInboxNomor(respw http.ResponseWriter, req *http.Request) {
-	var resp whatsauth.Response
-	var msg whatsauth.IteungMessage
+	var resp itmodel.Response
+	var msg itmodel.IteungMessage
 	httpstatus := http.StatusUnauthorized
 	resp.Response = "Wrong Secret"
 	waphonenumber := at.GetParam(req)
@@ -70,7 +71,7 @@ func GetNewToken(respw http.ResponseWriter, req *http.Request) {
 			return
 		}
 		for _, prof := range profs {
-			dt := &whatsauth.WebHookInfo{
+			dt := &itmodel.WebHook{
 				URL:    prof.URL,
 				Secret: prof.Secret,
 			}

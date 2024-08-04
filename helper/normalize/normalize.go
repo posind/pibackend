@@ -20,3 +20,23 @@ func SetIntoID(input string) string {
 
 	return input
 }
+
+func removeInvisibleChars(text string) string {
+	// Create a regular expression to match invisible characters
+	re := regexp.MustCompile(`\p{C}`)
+
+	// Replace all matches with an empty string
+	return re.ReplaceAllString(text, "")
+}
+
+func removeZeroWidthSpaces(text string) string {
+	// Create a regular expression to match specific zero-width characters
+	re := regexp.MustCompile(`\p{Cf}`)
+
+	// Replace all matches with an empty string
+	return re.ReplaceAllString(text, "")
+}
+
+func NormalizeHiddenChar(text string) string {
+	return removeZeroWidthSpaces(removeInvisibleChars(text))
+}

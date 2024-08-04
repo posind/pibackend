@@ -18,6 +18,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case method == "GET" && path == "/":
 		controller.GetHome(w, r)
+	//chat bot inbox
+	case method == "POST" && at.URLParam(path, "/webhook/nomor/:nomorwa"):
+		controller.PostInboxNomor(w, r)
 	//jalan setiap jam 3 pagi
 	case method == "GET" && path == "/refresh/token":
 		controller.GetNewToken(w, r)
