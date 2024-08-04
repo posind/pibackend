@@ -85,13 +85,13 @@ func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	if err != nil {
 		return err.Error()
 	}
-	var teamurl string
+
 	//suruh pilih nama team kalo tidak ada
 	if namateam == "" {
 		reply = "Silakan memilih regional dari operator yang anda tuju:\n"
 		for i, helpdesk := range helpdeskslist {
 			no := strconv.Itoa(i + 1)
-			teamurl = strings.ReplaceAll(helpdesk, " ", "+")
+			teamurl := strings.ReplaceAll(helpdesk, " ", "+")
 			reply += no + ". Regional " + helpdesk + "\n" + "wa.me/" + Profile.Phonenumber + "?text=bantuan+operator+" + teamurl + "\n"
 		}
 		return
@@ -107,7 +107,7 @@ func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		for i, scope := range scopelist {
 			no := strconv.Itoa(i + 1)
 			scurl := strings.ReplaceAll(scope, " ", "+")
-			reply += no + ". " + scope + "\n" + "wa.me/" + Profile.Phonenumber + "?text=bantuan+operator+" + teamurl + "+" + scurl + "\n"
+			reply += no + ". " + scope + "\n" + "wa.me/" + Profile.Phonenumber + "?text=bantuan+operator+" + namateam + "+" + scurl + "\n"
 		}
 		return
 	}
