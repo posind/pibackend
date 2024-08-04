@@ -80,17 +80,19 @@ func GetOperatorFromScopeandTeam(scope, team string, db *mongo.Database) (operat
 }
 
 // handling key word
-func StartHelpdesk(Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
+func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	namateam, helpdeskslist, err := GetNamaTeamFromPesan(Pesan, db)
 	if err != nil {
 		return err.Error()
 	}
+	var teamurl string
 	//suruh pilih nama team kalo tidak ada
 	if namateam == "" {
-		reply = "Silakan memilih helpdesk yang anda tuju:\n"
+		reply = "Silakan memilih regional dari operator yang anda tuju:\n"
 		for i, helpdesk := range helpdeskslist {
 			no := strconv.Itoa(i + 1)
-			reply += no + ". " + helpdesk + "\n" + "wa.me/62895601060000?text=bantuan+operator+" + helpdesk + "\n"
+			teamurl = strings.ReplaceAll(helpdesk, " ", "+")
+			reply += no + ". Regional " + helpdesk + "\n" + "wa.me/" + Profile.Phonenumber + "?text=bantuan+operator+" + teamurl + "\n"
 		}
 		return
 	}
@@ -101,10 +103,11 @@ func StartHelpdesk(Pesan itmodel.IteungMessage, db *mongo.Database) (reply strin
 	}
 	//pilih scope jika belum
 	if scope == "" {
-		reply = "Silakan memilih jenis bantuan yang anda butuhkan dari operator " + namateam + ":\n"
+		reply = "Silakan memilih asal provinsi anda dari regional " + namateam + " :\n"
 		for i, scope := range scopelist {
 			no := strconv.Itoa(i + 1)
-			reply += no + ". " + scope + "\n" + "wa.me/62895601060000?text=bantuan+operator+" + namateam + "+" + scope + "\n"
+			scurl := strings.ReplaceAll(scope, " ", "+")
+			reply += no + ". " + scope + "\n" + "wa.me/" + Profile.Phonenumber + "?text=bantuan+operator+" + teamurl + "+" + scurl + "\n"
 		}
 		return
 	}
@@ -161,7 +164,7 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 	reply = "*Penutupan Tiket Helpdesk*\nUser : " + helpdeskuser.Nama + "\nMasalah:\n" + helpdeskuser.Masalah
 
 	msgstr := "*Permintaan Feedback Helpdesk*\nOperator " + helpdeskuser.User.Name + " (" + helpdeskuser.User.PhoneNumber + ")\nMeminta tolong kakak " + helpdeskuser.User.Name + " untuk memberikan rating layanan (bintang 1-5) di link berikut:\n"
-	msgstr += "wa.me/62895601060000?text=" + helpdeskuser.ID.Hex() + "|+rating+bintang+layanan+helpdesk+:+5"
+	msgstr += "wa.me/" + Profile.Phonenumber + "?text=" + helpdeskuser.ID.Hex() + "|+rating+bintang+layanan+helpdesk+:+5"
 	dt := &itmodel.TextMessage{
 		To:       helpdeskuser.Phone,
 		IsGroup:  false,
@@ -233,7 +236,7 @@ func PenugasanOperator(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db 
 			}
 			//jika ada tiket yang statusnya belum closed
 			reply = "User " + user.Nama + " (" + user.Phone + ")\nMeminta tolong kakak " + user.User.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phone
-			reply += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/62895601060000?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+			reply += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 			return
 
 		}
@@ -256,7 +259,7 @@ func PenugasanOperator(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db 
 		}
 
 		msgstr := "User " + user.Nama + " (" + user.Phone + ")\nMeminta tolong kakak " + user.User.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phone
-		msgstr += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/62895601060000?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+		msgstr += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 		dt := &itmodel.TextMessage{
 			To:       user.User.PhoneNumber,
 			IsGroup:  false,
