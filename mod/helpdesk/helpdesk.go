@@ -26,6 +26,10 @@ func GetNamaTeamFromPesan(Pesan itmodel.IteungMessage, db *mongo.Database) (team
 	}
 	//pecah kalimat batasan spasi
 	msgs := strings.Fields(msg)
+	//jika nama team tidak ada atau hanya kata bantuan operator saja
+	if len(msgs) == 0 {
+		return
+	}
 	//mendapatkan keyword dari kata pertama dalam kalimat masuk ke team yang mana
 	for _, helpdesk := range helpdesks {
 		tim := helpdesk.(string)
