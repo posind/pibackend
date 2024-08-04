@@ -40,9 +40,14 @@ func GetNamaTeamFromPesan(Pesan itmodel.IteungMessage, db *mongo.Database) (team
 
 // mendapatkan scope helpdesk dari pesan
 func GetScopeFromTeam(Pesan itmodel.IteungMessage, team string, db *mongo.Database) (scope string, scopeslist []string, err error) {
+	msg := strings.ReplaceAll(Pesan.Message, "bantuan", "")
+	msg = strings.ReplaceAll(msg, "operator", "")
+	msg = strings.ReplaceAll(msg, team, "")
+	msg = strings.TrimSpace(msg)
 	filter := bson.M{
 		"team": team,
 	}
+	//ambil dulu semua scope di db berdasarkan team
 	scopes, err := atdb.GetAllDistinctDoc(db, filter, "scope", "user")
 	if err != nil {
 		return
@@ -50,7 +55,7 @@ func GetScopeFromTeam(Pesan itmodel.IteungMessage, team string, db *mongo.Databa
 	//mendapatkan keyword masuk ke team yang mana
 	for _, scp := range scopes {
 		scpe := scp.(string)
-		if strings.EqualFold(Pesan.Message, scpe) {
+		if strings.EqualFold(msg, scpe) {
 			scope = scpe
 			return
 		}
