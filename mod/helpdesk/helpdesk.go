@@ -19,14 +19,17 @@ func GetNamaTeamFromPesan(Pesan itmodel.IteungMessage, db *mongo.Database) (team
 	msg := strings.ReplaceAll(Pesan.Message, "bantuan", "")
 	msg = strings.ReplaceAll(msg, "operator", "")
 	msg = strings.TrimSpace(msg)
+	//ambil dulu semua nama team di database
 	helpdesks, err := atdb.GetAllDistinctDoc(db, bson.M{}, "team", "user")
 	if err != nil {
 		return
 	}
-	//mendapatkan keyword masuk ke team yang mana
+	//pecah kalimat batasan spasi
+	msgs := strings.Fields(msg)
+	//mendapatkan keyword dari kata pertama dalam kalimat masuk ke team yang mana
 	for _, helpdesk := range helpdesks {
 		tim := helpdesk.(string)
-		if strings.EqualFold(msg, tim) {
+		if strings.EqualFold(msgs[0], tim) {
 			team = tim
 			return
 		}
