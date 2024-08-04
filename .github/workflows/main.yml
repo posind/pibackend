@@ -26,7 +26,7 @@ jobs:
         run: 'gcloud info'
       - name: 'Deploy a gen 2 cloud function'
         run: |
-          gcloud functions deploy domyid \
+          gcloud functions deploy pdmyid \
             --region=asia-southeast2 \
             --allow-unauthenticated \
             --entry-point=WebHook \
@@ -36,8 +36,8 @@ jobs:
             --timeout=540s \
             --set-env-vars MONGOSTRING='${{ secrets.MONGOSTRING }}',PRKEY='${{ secrets.PRKEY }}'
       - name: 'Cek eksistensi fungsi'
-        run: 'gcloud functions describe domyid --region=asia-southeast2'
+        run: 'gcloud functions describe pdmyid --region=asia-southeast2'
       - name: 'Cek log debugging'
-        run: 'gcloud functions logs read domyid --region=asia-southeast2'
+        run: 'gcloud functions logs read pdmyid --region=asia-southeast2'
       - name: 'Cleaning Artifact Registry'
         run: 'gcloud artifacts repositories delete gcf-artifacts --location=asia-southeast2 --quiet'
