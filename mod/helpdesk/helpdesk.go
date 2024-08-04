@@ -7,6 +7,7 @@ import (
 
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/model"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,7 +19,7 @@ func GetNamaTeamFromPesan(Pesan itmodel.IteungMessage, db *mongo.Database) (team
 	msg := strings.ReplaceAll(Pesan.Message, "bantuan", "")
 	msg = strings.ReplaceAll(msg, "operator", "")
 	msg = strings.TrimSpace(msg)
-	helpdesks, err := atdb.GetAllDistinctDoc(db, bson.M{}, "team", "helpdesk")
+	helpdesks, err := atdb.GetAllDistinctDoc(db, bson.M{}, "team", "user")
 	if err != nil {
 		return
 	}
@@ -39,7 +40,7 @@ func GetScopeFromTeam(Pesan itmodel.IteungMessage, team string, db *mongo.Databa
 	filter := bson.M{
 		"team": team,
 	}
-	scopes, err := atdb.GetAllDistinctDoc(db, filter, "scope", "helpdesk")
+	scopes, err := atdb.GetAllDistinctDoc(db, filter, "scope", "user")
 	if err != nil {
 		return
 	}
@@ -56,22 +57,22 @@ func GetScopeFromTeam(Pesan itmodel.IteungMessage, team string, db *mongo.Databa
 }
 
 // mendapatkan scope helpdesk dari pesan
-func GetOperatorFromScopeandTeam(scope, team string, db *mongo.Database) (operator Helpdesk, err error) {
+func GetOperatorFromScopeandTeam(scope, team string, db *mongo.Database) (operator model.Userdomyikado, err error) {
 	filter := bson.M{
 		"scope": scope,
 		"team":  team,
 	}
-	operator, err = atdb.GetOneLowestDoc[Helpdesk](db, "helpdesk", filter, "jumlahantrian")
+	operator, err = atdb.GetOneLowestDoc[model.Userdomyikado](db, "user", filter, "jumlahantrian")
 	if err != nil {
 		return
 	}
 	operator.JumlahAntrian += 1
 	filter = bson.M{
-		"scope":        scope,
-		"team":         team,
-		"phonenumbers": operator.Phonenumbers,
+		"scope":       scope,
+		"team":        team,
+		"phonenumber": operator.PhoneNumber,
 	}
-	_, err = atdb.ReplaceOneDoc(db, "helpdesk", filter, operator)
+	_, err = atdb.ReplaceOneDoc(db, "user", filter, operator)
 	if err != nil {
 		return
 	}
@@ -148,18 +149,18 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 	op := helpdeskuser.Operator
 	op.JumlahAntrian -= 1
 	filter := bson.M{
-		"scope":        op.Scope,
-		"team":         op.Team,
-		"phonenumbers": op.Phonenumbers,
+		"scope":       op.Scope,
+		"team":        op.Team,
+		"phonenumber": op.PhoneNumber,
 	}
-	_, err = atdb.ReplaceOneDoc(db, "helpdesk", filter, op)
+	_, err = atdb.ReplaceOneDoc(db, "user", filter, op)
 	if err != nil {
 		reply = err.Error()
 		return
 	}
 	reply = "*Penutupan Tiket Helpdesk*\nUser : " + helpdeskuser.Name + "\nMasalah:\n" + helpdeskuser.Masalah
 
-	msgstr := "*Permintaan Feedback Helpdesk*\nOperator " + helpdeskuser.Operator.Name + " (" + helpdeskuser.Operator.Phonenumbers + ")\nMeminta tolong kakak " + helpdeskuser.Name + " untuk memberikan rating layanan (bintang 1-5) di link berikut:\n"
+	msgstr := "*Permintaan Feedback Helpdesk*\nOperator " + helpdeskuser.Operator.Name + " (" + helpdeskuser.Operator.PhoneNumber + ")\nMeminta tolong kakak " + helpdeskuser.Name + " untuk memberikan rating layanan (bintang 1-5) di link berikut:\n"
 	msgstr += "wa.me/62895601060000?text=" + helpdeskuser.ID.Hex() + "|+rating+bintang+layanan+helpdesk+:+5"
 	dt := &itmodel.TextMessage{
 		To:       helpdeskuser.Phonenumbers,
@@ -204,7 +205,7 @@ func FeedbackHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *
 
 	msgstr := "*Feedback Diterima*\nUser " + helpdeskuser.Name + " (" + helpdeskuser.Phonenumbers + ")\nMemberikan rating " + rate + " bintang"
 	dt := &itmodel.TextMessage{
-		To:       helpdeskuser.Operator.Phonenumbers,
+		To:       helpdeskuser.Operator.PhoneNumber,
 		IsGroup:  false,
 		Messages: msgstr,
 	}
@@ -241,8 +242,8 @@ func PenugasanOperator(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db 
 	}
 	if !user.Terlayani {
 		user.Masalah += "\n" + Pesan.Message
-		if user.Operator.Name == "" || user.Operator.Phonenumbers == "" {
-			var op Helpdesk
+		if user.Operator.Name == "" || user.Operator.PhoneNumber == "" {
+			var op model.Userdomyikado
 			op, err = GetOperatorFromScopeandTeam(user.Scope, user.Team, db)
 			if err != nil {
 				return
@@ -257,12 +258,12 @@ func PenugasanOperator(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db 
 		msgstr := "User " + user.Name + " (" + user.Phonenumbers + ")\nMeminta tolong kakak " + user.Operator.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phonenumbers
 		msgstr += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/62895601060000?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 		dt := &itmodel.TextMessage{
-			To:       user.Operator.Phonenumbers,
+			To:       user.Operator.PhoneNumber,
 			IsGroup:  false,
 			Messages: msgstr,
 		}
 		go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
-		reply = "Kakak kami hubungkan dengan operator kami yang bernama *" + user.Operator.Name + "* di nomor wa.me/" + user.Operator.Phonenumbers + "\nMohon tunggu sebentar kami akan kontak kakak melalui nomor tersebut.\n_Terima kasih_"
+		reply = "Kakak kami hubungkan dengan operator kami yang bernama *" + user.Operator.Name + "* di nomor wa.me/" + user.Operator.PhoneNumber + "\nMohon tunggu sebentar kami akan kontak kakak melalui nomor tersebut.\n_Terima kasih_"
 
 	}
 	return
