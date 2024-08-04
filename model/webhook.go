@@ -16,6 +16,8 @@ type Laporan struct {
 	Petugas     string               `json:"petugas,omitempty" bson:"petugas,omitempty"`
 	NoPetugas   string               `json:"nopetugas,omitempty" bson:"nopetugas,omitempty"`
 	Kode        string               `json:"kode,omitempty" bson:"kode,omitempty"`
+	Team        string               `json:"team,omitempty" bson:"team,omitempty"`
+	Scope       string               `json:"scope,omitempty" bson:"scope,omitempty"`
 	Nama        string               `json:"nama,omitempty" bson:"nama,omitempty"`
 	Phone       string               `json:"phone,omitempty" bson:"phone,omitempty"`
 	Masalah     string               `json:"masalah,omitempty" bson:"masalah,omitempty"`

@@ -109,11 +109,11 @@ func StartHelpdesk(Pesan itmodel.IteungMessage, db *mongo.Database) (reply strin
 		return
 	}
 	//menuliskan pertanyaan bantuan
-	user := User{
-		Scope:        scope,
-		Team:         namateam,
-		Name:         Pesan.Alias_name,
-		Phonenumbers: Pesan.Phone_number,
+	user := model.Laporan{
+		Scope: scope,
+		Team:  namateam,
+		Nama:  Pesan.Alias_name,
+		Phone: Pesan.Phone_number,
 	}
 	_, err = atdb.InsertOneDoc(db, "helpdeskuser", user)
 	if err != nil {
@@ -134,7 +134,7 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 		reply = "Invalid ID format: " + err.Error()
 		return
 	}
-	helpdeskuser, err := atdb.GetOneLatestDoc[User](db, "helpdeskuser", bson.M{"_id": objectID, "operator.phonenumbers": Pesan.Phone_number})
+	helpdeskuser, err := atdb.GetOneLatestDoc[model.Laporan](db, "helpdeskuser", bson.M{"_id": objectID, "user.phonenumber": Pesan.Phone_number})
 	if err != nil {
 		reply = err.Error()
 		return
@@ -146,7 +146,7 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 		reply = err.Error()
 		return
 	}
-	op := helpdeskuser.Operator
+	op := helpdeskuser.User
 	op.JumlahAntrian -= 1
 	filter := bson.M{
 		"scope":       op.Scope,
@@ -158,12 +158,12 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 		reply = err.Error()
 		return
 	}
-	reply = "*Penutupan Tiket Helpdesk*\nUser : " + helpdeskuser.Name + "\nMasalah:\n" + helpdeskuser.Masalah
+	reply = "*Penutupan Tiket Helpdesk*\nUser : " + helpdeskuser.Nama + "\nMasalah:\n" + helpdeskuser.Masalah
 
-	msgstr := "*Permintaan Feedback Helpdesk*\nOperator " + helpdeskuser.Operator.Name + " (" + helpdeskuser.Operator.PhoneNumber + ")\nMeminta tolong kakak " + helpdeskuser.Name + " untuk memberikan rating layanan (bintang 1-5) di link berikut:\n"
+	msgstr := "*Permintaan Feedback Helpdesk*\nOperator " + helpdeskuser.User.Name + " (" + helpdeskuser.User.PhoneNumber + ")\nMeminta tolong kakak " + helpdeskuser.User.Name + " untuk memberikan rating layanan (bintang 1-5) di link berikut:\n"
 	msgstr += "wa.me/62895601060000?text=" + helpdeskuser.ID.Hex() + "|+rating+bintang+layanan+helpdesk+:+5"
 	dt := &itmodel.TextMessage{
-		To:       helpdeskuser.Phonenumbers,
+		To:       helpdeskuser.Phone,
 		IsGroup:  false,
 		Messages: msgstr,
 	}
@@ -182,7 +182,7 @@ func FeedbackHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *
 		reply = "Invalid ID format: " + err.Error()
 		return
 	}
-	helpdeskuser, err := atdb.GetOneLatestDoc[User](db, "helpdeskuser", bson.M{"_id": objectID, "phonenumbers": Pesan.Phone_number})
+	helpdeskuser, err := atdb.GetOneLatestDoc[model.Laporan](db, "helpdeskuser", bson.M{"_id": objectID, "phonenumbers": Pesan.Phone_number})
 	if err != nil {
 		reply = err.Error()
 		return
@@ -201,11 +201,11 @@ func FeedbackHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *
 		return
 	}
 
-	reply = "Terima kasih atas pemberian feedback ke operator " + helpdeskuser.Operator.Name + "\nSemoga kami selalu bisa melayani lebih baik lagi."
+	reply = "Terima kasih atas pemberian feedback ke operator " + helpdeskuser.User.Name + "\nSemoga kami selalu bisa melayani lebih baik lagi."
 
-	msgstr := "*Feedback Diterima*\nUser " + helpdeskuser.Name + " (" + helpdeskuser.Phonenumbers + ")\nMemberikan rating " + rate + " bintang"
+	msgstr := "*Feedback Diterima*\nUser " + helpdeskuser.Nama + " (" + helpdeskuser.Phone + ")\nMemberikan rating " + rate + " bintang"
 	dt := &itmodel.TextMessage{
-		To:       helpdeskuser.Operator.PhoneNumber,
+		To:       helpdeskuser.User.PhoneNumber,
 		IsGroup:  false,
 		Messages: msgstr,
 	}
@@ -217,11 +217,11 @@ func FeedbackHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *
 // handling non key word
 func PenugasanOperator(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string, err error) {
 	//check apakah tiket dari user sudah di tutup atau belum
-	user, err := atdb.GetOneLatestDoc[User](db, "helpdeskuser", bson.M{"phonenumbers": Pesan.Phone_number})
+	user, err := atdb.GetOneLatestDoc[model.Laporan](db, "helpdeskuser", bson.M{"phone": Pesan.Phone_number})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			//check apakah dia operator yang belum tutup tiketnya
-			user, err = atdb.GetOneLatestDoc[User](db, "helpdeskuser", bson.M{"terlayani": bson.M{"$exists": false}, "operator.phonenumbers": Pesan.Phone_number})
+			user, err = atdb.GetOneLatestDoc[model.Laporan](db, "helpdeskuser", bson.M{"terlayani": bson.M{"$exists": false}, "user.phonenumber": Pesan.Phone_number})
 			if err != nil {
 				if err == mongo.ErrNoDocuments {
 					err = nil
@@ -232,7 +232,7 @@ func PenugasanOperator(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db 
 				return
 			}
 			//jika ada tiket yang statusnya belum closed
-			reply = "User " + user.Name + " (" + user.Phonenumbers + ")\nMeminta tolong kakak " + user.Operator.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phonenumbers
+			reply = "User " + user.Nama + " (" + user.Phone + ")\nMeminta tolong kakak " + user.User.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phone
 			reply += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/62895601060000?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 			return
 
@@ -242,28 +242,28 @@ func PenugasanOperator(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db 
 	}
 	if !user.Terlayani {
 		user.Masalah += "\n" + Pesan.Message
-		if user.Operator.Name == "" || user.Operator.PhoneNumber == "" {
+		if user.User.Name == "" || user.User.PhoneNumber == "" {
 			var op model.Userdomyikado
 			op, err = GetOperatorFromScopeandTeam(user.Scope, user.Team, db)
 			if err != nil {
 				return
 			}
-			user.Operator = op
+			user.User = op
 		}
 		_, err = atdb.ReplaceOneDoc(db, "helpdeskuser", bson.M{"_id": user.ID}, user)
 		if err != nil {
 			return
 		}
 
-		msgstr := "User " + user.Name + " (" + user.Phonenumbers + ")\nMeminta tolong kakak " + user.Operator.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phonenumbers
+		msgstr := "User " + user.Nama + " (" + user.Phone + ")\nMeminta tolong kakak " + user.User.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phone
 		msgstr += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/62895601060000?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 		dt := &itmodel.TextMessage{
-			To:       user.Operator.PhoneNumber,
+			To:       user.User.PhoneNumber,
 			IsGroup:  false,
 			Messages: msgstr,
 		}
 		go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
-		reply = "Kakak kami hubungkan dengan operator kami yang bernama *" + user.Operator.Name + "* di nomor wa.me/" + user.Operator.PhoneNumber + "\nMohon tunggu sebentar kami akan kontak kakak melalui nomor tersebut.\n_Terima kasih_"
+		reply = "Kakak kami hubungkan dengan operator kami yang bernama *" + user.User.Name + "* di nomor wa.me/" + user.User.PhoneNumber + "\nMohon tunggu sebentar kami akan kontak kakak melalui nomor tersebut.\n_Terima kasih_"
 
 	}
 	return
