@@ -17,11 +17,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func WebHook(WAKeyword, WAPhoneNumber, WAAPIQRLogin, WAAPIMessage string, msg itmodel.IteungMessage, db *mongo.Database) (resp itmodel.Response, err error) {
-	if IsLoginRequest(msg, WAKeyword) { //untuk whatsauth request login
-		resp, err = HandlerQRLogin(msg, WAKeyword, WAPhoneNumber, db, WAAPIQRLogin)
+func WebHook(profile itmodel.Profile, msg itmodel.IteungMessage, db *mongo.Database) (resp itmodel.Response, err error) {
+	if IsLoginRequest(msg, profile.QRKeyword) { //untuk whatsauth request login
+		resp, err = HandlerQRLogin(msg, profile, db)
 	} else { //untuk membalas pesan masuk
-		resp, err = HandlerIncomingMessage(msg, WAPhoneNumber, db, WAAPIMessage)
+		resp, err = HandlerIncomingMessage(msg, profile, db)
 	}
 	return
 }
@@ -55,32 +55,27 @@ func GetUUID(msg itmodel.IteungMessage, keyword string) string {
 	return strings.Replace(msg.Message, keyword, "", 1)
 }
 
-func HandlerQRLogin(msg itmodel.IteungMessage, WAKeyword string, WAPhoneNumber string, db *mongo.Database, WAAPIQRLogin string) (resp itmodel.Response, err error) {
+func HandlerQRLogin(msg itmodel.IteungMessage, profile itmodel.Profile, db *mongo.Database) (resp itmodel.Response, err error) {
 	dt := &itmodel.WhatsauthRequest{
-		Uuid:        GetUUID(msg, WAKeyword),
+		Uuid:        GetUUID(msg, profile.QRKeyword),
 		Phonenumber: msg.Phone_number,
 		Aliasname:   msg.Alias_name,
 		Delay:       msg.From_link_delay,
 	}
-	structtoken, err := GetAppProfile(WAPhoneNumber, db)
+	structtoken, err := GetAppProfile(profile.Phonenumber, db)
 	if err != nil {
 		return
 	}
-	_, resp, err = atapi.PostStructWithToken[itmodel.Response]("Token", structtoken.Token, dt, WAAPIQRLogin)
+	_, resp, err = atapi.PostStructWithToken[itmodel.Response]("Token", structtoken.Token, dt, profile.URLQRLogin)
 	return
 }
 
-func HandlerIncomingMessage(msg itmodel.IteungMessage, WAPhoneNumber string, db *mongo.Database, WAAPIMessage string) (resp itmodel.Response, err error) {
+func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, db *mongo.Database) (resp itmodel.Response, err error) {
 	_, bukanbot := GetAppProfile(msg.Phone_number, db) //cek apakah nomor adalah bot
 	if bukanbot != nil {                               //jika tidak terdapat di profile
-		var profile itmodel.Profile
-		profile, err = GetAppProfile(WAPhoneNumber, db)
-		if err != nil {
-			return
-		}
 		msg.Message = normalize.NormalizeHiddenChar(msg.Message)
 		module.NormalizeAndTypoCorrection(&msg.Message, db, "typo")
-		modname, group, personal := module.GetModuleName(WAPhoneNumber, msg, db, "module")
+		modname, group, personal := module.GetModuleName(profile.Phonenumber, msg, db, "module")
 		var msgstr string
 		var isgrup bool
 		if msg.Chat_server != "g.us" { //chat personal
@@ -103,7 +98,7 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, WAPhoneNumber string, db 
 			IsGroup:  isgrup,
 			Messages: msgstr,
 		}
-		_, resp, err = atapi.PostStructWithToken[itmodel.Response]("Token", profile.Token, dt, WAAPIMessage)
+		_, resp, err = atapi.PostStructWithToken[itmodel.Response]("Token", profile.Token, dt, profile.URLAPIText)
 		if err != nil {
 			return
 		}
