@@ -8,13 +8,14 @@ import (
 	"strconv"
 
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/model"
 	"github.com/raykov/gofpdf"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func GetPDFandMDMeeting(db *mongo.Database, projectName string) (base64Str, joinMD string, err error) {
 	filter := CreateFilterMeetingYesterday(projectName, true)
-	laporanDocs, err := atdb.GetAllDoc[[]Laporan](db, "uxlaporan", filter) //CreateFilterMeetingYesterday(projectName)
+	laporanDocs, err := atdb.GetAllDoc[[]model.Laporan](db, "uxlaporan", filter) //CreateFilterMeetingYesterday(projectName)
 	if err != nil {
 		return
 	}

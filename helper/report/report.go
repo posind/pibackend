@@ -108,7 +108,7 @@ func GetDataRepoMasukKemarinPerWaGroupID(db *mongo.Database, groupId string) (ph
 
 func GetDataLaporanKemarinPerWAGroupID(db *mongo.Database, waGroupId string) (phoneNumberCount map[string]PhoneNumberInfo, err error) {
 	filter := bson.M{"_id": YesterdayFilter(), "project.wagroupid": waGroupId}
-	laps, err := atdb.GetAllDoc[[]Laporan](db, "uxlaporan", filter)
+	laps, err := atdb.GetAllDoc[[]model.Laporan](db, "uxlaporan", filter)
 	if err != nil {
 		return
 	}
@@ -121,7 +121,7 @@ func GetRankDataLaporanHariini(db *mongo.Database, filterhari bson.M, waGroupId 
 	// Create filter to query data for today
 	filter := bson.M{"_id": filterhari, "project.wagroupid": waGroupId}
 	//nopetugass, _ := atdb.GetAllDistinctDoc(db, filter, "nopetugas", "uxlaporan")
-	laps, _ := atdb.GetAllDoc[[]Laporan](db, "uxlaporan", filter)
+	laps, _ := atdb.GetAllDoc[[]model.Laporan](db, "uxlaporan", filter)
 	print(len(laps))
 	//ranklist := []PushRank{}
 	for _, lap := range laps {
@@ -152,7 +152,7 @@ func GetRankDataLayananHarian(db *mongo.Database, filterhari bson.M) (ranklist [
 	for _, username := range usernamelist {
 		filter := bson.M{"petugas": username, "_id": filterhari}
 		// Query the database
-		var pushdata []Laporan
+		var pushdata []model.Laporan
 		cur, err := pushrepo.Find(context.Background(), filter)
 		if err != nil {
 			return

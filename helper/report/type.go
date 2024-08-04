@@ -1,8 +1,6 @@
 package report
 
 import (
-	"github.com/gocroot/helper/gcallapi"
-	"github.com/gocroot/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -62,25 +60,6 @@ type TaskList struct {
 	ProjectWAGroupID string             `json:"projectwagroupid,omitempty" bson:"projectwagroupid,omitempty"`
 	IsDone           bool               `json:"isdone,omitempty" bson:"isdone,omitempty"`
 	Poin             float64            `json:"poin,omitempty" bson:"poin,omitempty"`
-}
-
-type Laporan struct {
-	ID          primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty" query:"id" url:"_id,omitempty" reqHeader:"_id"`
-	MeetID      primitive.ObjectID   `json:"meetid,omitempty" bson:"meetid,omitempty"`
-	MeetEvent   gcallapi.SimpleEvent `json:"meetevent,omitempty" bson:"meetevent,omitempty"`
-	Project     model.Project        `json:"project,omitempty" bson:"project,omitempty"`
-	User        model.Userdomyikado  `json:"user,omitempty" bson:"user,omitempty"`
-	Petugas     string               `json:"petugas,omitempty" bson:"petugas,omitempty"`
-	NoPetugas   string               `json:"nopetugas,omitempty" bson:"nopetugas,omitempty"`
-	Kode        string               `json:"kode,omitempty" bson:"kode,omitempty"`
-	Nama        string               `json:"nama,omitempty" bson:"nama,omitempty"`
-	Phone       string               `json:"phone,omitempty" bson:"phone,omitempty"`
-	Masalah     string               `json:"masalah,omitempty" bson:"masalah,omitempty"`
-	Solusi      string               `json:"solusi,omitempty" bson:"solusi,omitempty"`
-	Komentar    string               `json:"komentar,omitempty" bson:"komentar,omitempty"`
-	Terlayani   bool                 `json:"terlayani,omitempty" bson:"terlayani,omitempty"`
-	Rating      float64              `json:"rating,omitempty" bson:"rating,omitempty"`
-	RateLayanan int                  `json:"ratelayanan,omitempty" bson:"ratelayanan,omitempty"`
 }
 
 type Rating struct {

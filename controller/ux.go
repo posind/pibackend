@@ -48,7 +48,7 @@ func PostTaskList(w http.ResponseWriter, r *http.Request) {
 		at.WriteJSON(w, http.StatusForbidden, resp)
 		return
 	}
-	lapuser, err := atdb.GetOneLatestDoc[report.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": tasklists[0].LaporanID})
+	lapuser, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": tasklists[0].LaporanID})
 	if err != nil {
 		resp.Response = "Error : user tidak di temukan " + err.Error()
 		at.WriteJSON(w, http.StatusForbidden, resp)
@@ -148,7 +148,7 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
-	hasil, err := atdb.GetOneLatestDoc[report.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
+	hasil, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
 	if err != nil {
 		respn.Status = "Error : Data laporan tidak di temukan"
 		respn.Response = err.Error()
@@ -249,7 +249,7 @@ func GetLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
-	hasil, err := atdb.GetOneLatestDoc[report.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
+	hasil, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Data laporan tidak di temukan"
@@ -296,7 +296,7 @@ func PostMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//lojik inputan post
-	var lap report.Laporan
+	var lap model.Laporan
 	lap.User = docuser
 	lap.Project = prjuser
 	lap.Phone = prjuser.Owner.PhoneNumber
@@ -379,7 +379,7 @@ func PostLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusForbidden, respn)
 		return
 	}
-	var lap report.Laporan
+	var lap model.Laporan
 	err = json.NewDecoder(req.Body).Decode(&lap)
 	if err != nil {
 		var respn model.Response
@@ -476,7 +476,7 @@ func PostFeedback(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusForbidden, respn)
 		return
 	}
-	var lap report.Laporan
+	var lap model.Laporan
 	err = json.NewDecoder(req.Body).Decode(&lap)
 	if err != nil {
 		var respn model.Response
