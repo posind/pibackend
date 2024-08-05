@@ -21,9 +21,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//chat bot inbox
 	case method == "POST" && at.URLParam(path, "/webhook/nomor/:nomorwa"):
 		controller.PostInboxNomor(w, r)
-	//jalan setiap jam 3 pagi
-	case method == "GET" && path == "/refresh/token":
-		controller.GetNewToken(w, r)
+	//disable refresh token dulu
+	//case method == "GET" && path == "/refresh/token":
+	//	controller.GetNewToken(w, r)
 	case method == "GET" && path == "/data/pushrepo/kemarin":
 		controller.GetYesterdayDistincWAGroup(w, r)
 	case method == "GET" && path == "/data/user":
