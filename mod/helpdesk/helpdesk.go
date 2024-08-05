@@ -91,8 +91,28 @@ func GetOperatorFromScopeandTeam(scope, team string, db *mongo.Database) (operat
 	return
 }
 
-// handling key word
+// handling key word, keyword :bantuan operator
 func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
+	//check apakah tiket dari user sudah di tutup atau belum
+	user, err := atdb.GetOneLatestDoc[model.Laporan](db, "helpdeskuser", bson.M{"terlayani": bson.M{"$exists": false}, "phone": Pesan.Phone_number})
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			return err.Error()
+		}
+		//berarti tiket udah close semua
+	} else { //ada tiket yang belum close
+		msgstr := "User " + user.Nama + " (" + user.Phone + ")\nMeminta tolong kakak " + user.User.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phone
+		msgstr += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+		dt := &itmodel.TextMessage{
+			To:       user.User.PhoneNumber,
+			IsGroup:  false,
+			Messages: msgstr,
+		}
+		go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+		reply = "Kakak kami hubungkan dengan operator kami yang bernama *" + user.User.Name + "* di nomor wa.me/" + user.User.PhoneNumber + "\nMohon tunggu sebentar kami akan kontak kakak melalui nomor tersebut.\n_Terima kasih_"
+		return
+	}
+	//mendapatkan semua nama team dari db
 	namateam, helpdeskslist, err := GetNamaTeamFromPesan(Pesan, db)
 	if err != nil {
 		return err.Error()
@@ -124,7 +144,7 @@ func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		return
 	}
 	//menuliskan pertanyaan bantuan
-	user := model.Laporan{
+	user = model.Laporan{
 		Scope: scope,
 		Team:  namateam,
 		Nama:  Pesan.Alias_name,
