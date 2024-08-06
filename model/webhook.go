@@ -68,6 +68,7 @@ type Userdomyikado struct {
 	Scope                string             `json:"scope,omitempty" bson:"scope,omitempty"`
 	Section              string             `json:"section,omitempty" bson:"section,omitempty"`
 	Chapter              string             `json:"chapter,omitempty" bson:"chapter,omitempty"`
+	LinkedDevice         string             `json:"linkeddevice,omitempty" bson:"linkeddevice,omitempty"`
 	JumlahAntrian        int                `json:"jumlahantrian,omitempty" bson:"jumlahantrian,omitempty"`
 }
 

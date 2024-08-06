@@ -28,21 +28,26 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	case method == "GET" && path == "/data/user/helpdesk/all":
 		controller.GetHelpdeskAll(w, r)
 
-	case method == "GET" && path == "/data/pushrepo/kemarin":
-		controller.GetYesterdayDistincWAGroup(w, r)
+	//user data
 	case method == "GET" && path == "/data/user":
 		controller.GetDataUser(w, r)
+	//generate token linked device
+	case method == "PUT" && path == "/data/user":
+		controller.PutTokenDataUser(w, r)
+
 	case method == "PUT" && path == "/data/user/task/doing":
 		controller.PutTaskUser(w, r)
 	case method == "GET" && path == "/data/user/task/done":
 		controller.GetTaskDone(w, r)
 	case method == "POST" && path == "/data/user/task/done":
 		controller.PostTaskUser(w, r)
+	case method == "GET" && path == "/data/pushrepo/kemarin":
+		controller.GetYesterdayDistincWAGroup(w, r)
 	//disabel pendaftaran
 	//case method == "POST" && path == "/data/user":
 	//	controller.PostDataUser(w, r)
-	case method == "POST" && at.URLParam(path, "/data/user/wa/:nomorwa"):
-		controller.PostDataUserFromWA(w, r)
+	//case method == "POST" && at.URLParam(path, "/data/user/wa/:nomorwa"):
+	//	controller.PostDataUserFromWA(w, r)
 	case method == "POST" && path == "/data/proyek":
 		controller.PostDataProject(w, r)
 	case method == "GET" && path == "/data/proyek":

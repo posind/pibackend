@@ -12,6 +12,8 @@ var WAAPITextMessage string = "https://api.wa.my.id/api/v2/send/message/text"
 
 var WAAPIGetToken string = "https://api.wa.my.id/api/signup"
 
+var WAAPIGetDevice string = "https://api.wa.my.id/api/device/"
+
 var PublicKeyWhatsAuth string
 
 var WAAPIToken string
