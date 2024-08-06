@@ -12,7 +12,7 @@ require (
 	github.com/google/go-github/v59 v59.0.0
 	github.com/kimseokgis/backend-ai v0.0.0-20240731161356-5480aad28fd3
 	github.com/raykov/gofpdf v1.16.7
-	github.com/whatsauth/itmodel v0.0.7
+	github.com/whatsauth/itmodel v0.0.8
 	go.mongodb.org/mongo-driver v1.16.0
 	golang.org/x/crypto v0.25.0
 	golang.org/x/oauth2 v0.21.0
