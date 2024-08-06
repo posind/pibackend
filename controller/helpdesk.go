@@ -131,7 +131,7 @@ func PostTaskUser(w http.ResponseWriter, r *http.Request) {
 	at.WriteJSON(w, http.StatusOK, respn)
 }
 
-func GetTaskUser(respw http.ResponseWriter, req *http.Request) {
+func GetHelpdeskAll(respw http.ResponseWriter, req *http.Request) {
 	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
 	if err != nil {
 		var respn model.Response
@@ -151,21 +151,36 @@ func GetTaskUser(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	docuser.Name = payload.Alias
-	filter := bson.M{
-		"isdone": bson.M{
+	//melakukan pengambilan data belum terlayani
+	filterbelumterlayani := bson.M{
+		"terlayani": bson.M{
 			"$exists": false,
 		},
-		"phonenumber": docuser.PhoneNumber,
+		"user.phonenumber": docuser.PhoneNumber,
 	}
-	taskuser, err := atdb.GetAllDoc[[]report.TaskList](config.Mongoconn, "tasklist", filter)
-	if err != nil || len(taskuser) == 0 {
-		at.WriteJSON(respw, http.StatusNotFound, taskuser)
-		return
+	userbelumterlayani, _ := atdb.GetAllDoc[[]model.Laporan](config.Mongoconn, "helpdeskuser", filterbelumterlayani)
+	//melakukan pengambilan data sudah terlayani
+	filtersudahterlayani := bson.M{
+		"terlayani": bson.M{
+			"$exists": true,
+		},
+		"user.phonenumber": docuser.PhoneNumber,
 	}
-	at.WriteJSON(respw, http.StatusOK, taskuser)
+	usersudahterlayani, _ := atdb.GetAllDoc[[]model.Laporan](config.Mongoconn, "helpdeskuser", filtersudahterlayani)
+	//melakukan pengambilan semu data user terlayani atau belum
+	filtersemua := bson.M{
+		"user.phonenumber": docuser.PhoneNumber,
+	}
+	usersemua, _ := atdb.GetAllDoc[[]model.Laporan](config.Mongoconn, "helpdeskuser", filtersemua)
+	rekap := model.HelpdeskRekap{
+		ToDo: len(userbelumterlayani),
+		Done: len(usersudahterlayani),
+		All:  len(usersemua),
+	}
+	at.WriteJSON(respw, http.StatusOK, rekap)
 }
 
-func GetTaskDoing(respw http.ResponseWriter, req *http.Request) {
+func GetLatestHelpdesk(respw http.ResponseWriter, req *http.Request) {
 	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
 	if err != nil {
 		var respn model.Response
@@ -185,7 +200,7 @@ func GetTaskDoing(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	docuser.Name = payload.Alias
-	taskdoing, err := atdb.GetOneLatestDoc[report.TaskList](config.Mongoconn, "taskdoing", bson.M{"phonenumber": docuser.PhoneNumber})
+	taskdoing, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "helpdeskuser", bson.M{"phonenumber": docuser.PhoneNumber})
 	if err != nil {
 		at.WriteJSON(respw, http.StatusNotFound, taskdoing)
 		return

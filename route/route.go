@@ -24,22 +24,23 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//disable refresh token dulu
 	//case method == "GET" && path == "/refresh/token":
 	//	controller.GetNewToken(w, r)
+	//akses data helpdesk layanan user
+	case method == "GET" && path == "/data/user/helpdesk/all":
+		controller.GetHelpdeskAll(w, r)
+
 	case method == "GET" && path == "/data/pushrepo/kemarin":
 		controller.GetYesterdayDistincWAGroup(w, r)
 	case method == "GET" && path == "/data/user":
 		controller.GetDataUser(w, r)
-	case method == "GET" && path == "/data/user/task/todo":
-		controller.GetTaskUser(w, r)
-	case method == "GET" && path == "/data/user/task/doing":
-		controller.GetTaskDoing(w, r)
 	case method == "PUT" && path == "/data/user/task/doing":
 		controller.PutTaskUser(w, r)
 	case method == "GET" && path == "/data/user/task/done":
 		controller.GetTaskDone(w, r)
 	case method == "POST" && path == "/data/user/task/done":
 		controller.PostTaskUser(w, r)
-	case method == "POST" && path == "/data/user":
-		controller.PostDataUser(w, r)
+	//disabel pendaftaran
+	//case method == "POST" && path == "/data/user":
+	//	controller.PostDataUser(w, r)
 	case method == "POST" && at.URLParam(path, "/data/user/wa/:nomorwa"):
 		controller.PostDataUserFromWA(w, r)
 	case method == "POST" && path == "/data/proyek":
