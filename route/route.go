@@ -29,6 +29,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.GetHelpdeskAll(w, r)
 	case method == "GET" && path == "/data/user/helpdesk/masuk":
 		controller.GetLatestHelpdeskMasuk(w, r)
+	case method == "GET" && path == "/data/user/helpdesk/selesai":
+		controller.GetLatestHelpdeskSelesai(w, r)
 
 	//user data
 	case method == "GET" && path == "/data/user":

@@ -215,6 +215,41 @@ func GetLatestHelpdeskMasuk(respw http.ResponseWriter, req *http.Request) {
 	at.WriteJSON(respw, http.StatusOK, userbelumterlayani)
 }
 
+func GetLatestHelpdeskSelesai(respw http.ResponseWriter, req *http.Request) {
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : Token Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(req)
+		respn.Location = "Decode Token Error"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusForbidden, respn)
+		return
+	}
+	//check eksistensi user
+	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
+	if err != nil {
+		docuser.PhoneNumber = payload.Id
+		docuser.Name = payload.Alias
+		at.WriteJSON(respw, http.StatusNotFound, docuser)
+		return
+	}
+	docuser.Name = payload.Alias
+	//melakukan pengambilan data sudah terlayani
+	filtersudahterlayani := bson.M{
+		"terlayani": bson.M{
+			"$exists": true,
+		},
+		"user.phonenumber": docuser.PhoneNumber,
+	}
+	userbelumterlayani, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "helpdeskuser", filtersudahterlayani)
+	if err != nil {
+		at.WriteJSON(respw, http.StatusNotFound, userbelumterlayani)
+		return
+	}
+	at.WriteJSON(respw, http.StatusOK, userbelumterlayani)
+}
+
 func GetTaskDone(respw http.ResponseWriter, req *http.Request) {
 	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
 	if err != nil {
