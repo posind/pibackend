@@ -75,11 +75,13 @@ func PutTokenDataUser(respw http.ResponseWriter, req *http.Request) {
 			at.WriteJSON(respw, http.StatusFailedDependency, docuser)
 			return
 		}
-		_, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id}, docuser)
-		if err != nil {
-			at.WriteJSON(respw, http.StatusExpectationFailed, docuser)
-			return
-		}
+	} else {
+		docuser.LinkedDevice = ""
+	}
+	_, err = atdb.ReplaceOneDoc(config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id}, docuser)
+	if err != nil {
+		at.WriteJSON(respw, http.StatusExpectationFailed, docuser)
+		return
 	}
 	at.WriteJSON(respw, http.StatusOK, docuser)
 }
