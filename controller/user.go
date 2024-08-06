@@ -69,7 +69,7 @@ func PutTokenDataUser(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusMisdirectedRequest, docuser)
 		return
 	}
-	if hcode == http.StatusOK && qrstat.Status {
+	if hcode == http.StatusOK && !qrstat.Status {
 		docuser.LinkedDevice, err = watoken.EncodeforHours(docuser.PhoneNumber, docuser.Name, config.PrivateKey, 43830)
 		if err != nil {
 			at.WriteJSON(respw, http.StatusFailedDependency, docuser)
