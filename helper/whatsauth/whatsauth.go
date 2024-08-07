@@ -86,6 +86,11 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 			}
 
 		} else if strings.Contains(strings.ToLower(msg.Message), profile.Triggerword) { //chat group
+			// Menghapus nama panggilan dari pesan
+			msg.Message = strings.Replace(msg.Message, profile.Triggerword, "", 1)
+			// Menghapus spasi tambahan jika ada
+			msg.Message = strings.TrimSpace(msg.Message)
+			//set grup true
 			isgrup = true
 			if group && modname != "" {
 				msgstr = mod.Caller(profile, modname, msg, db)
