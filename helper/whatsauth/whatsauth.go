@@ -86,7 +86,7 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 			}
 
 		} else if strings.Contains(strings.ToLower(msg.Message), profile.Triggerword) { //chat group
-			msg.Message = HapusNamaPanggilanBot(msg.Message, profile.Triggerword)
+			msg.Message = HapusNamaPanggilanBot(msg.Message, profile.Triggerword, profile.Botname)
 			//set grup true
 			isgrup = true
 			if group && modname != "" {
@@ -109,19 +109,26 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 	return
 }
 
-func HapusNamaPanggilanBot(msg string, namapanggilan string) string {
-	if strings.Contains(strings.ToLower(msg), namapanggilan+" ") { //kalo dipanggil di depan kalimat
-		// Menghapus nama panggilan dari pesan
-		msg = strings.Replace(msg, namapanggilan+" ", "", 1)
-		// Menghapus spasi tambahan jika ada
-		msg = strings.TrimSpace(msg)
+// HapusNamaPanggilanBot menghapus semua kemunculan nama panggilan dan nama lengkap dari pesan
+func HapusNamaPanggilanBot(msg string, namapanggilan string, namalengkap string) string {
+	// Mengubah pesan dan nama panggilan menjadi lowercase untuk pencocokan yang tidak peka huruf besar-kecil
+	namapanggilan = strings.ToLower(namapanggilan)
+	namalengkap = strings.ToLower(namalengkap)
+	msg = strings.ToLower(msg)
 
-	} else if strings.Contains(strings.ToLower(msg), " "+namapanggilan) { //kalo dipanggil di belakang kalimat
-		// Menghapus nama panggilan dari pesan
-		msg = strings.Replace(msg, " "+namapanggilan, "", 1)
-		// Menghapus spasi tambahan jika ada
-		msg = strings.TrimSpace(msg)
-	}
+	// Hapus semua kemunculan nama lengkap dari pesan
+	msg = strings.ReplaceAll(msg, namalengkap+" ", "")
+	msg = strings.ReplaceAll(msg, " "+namalengkap, "")
+	//msg = strings.ReplaceAll(msg, namalengkap, "")
+
+	// Hapus semua kemunculan nama panggilan dari pesan
+	msg = strings.ReplaceAll(msg, namapanggilan+" ", "")
+	msg = strings.ReplaceAll(msg, " "+namapanggilan, "")
+	//msg = strings.ReplaceAll(msg, namapanggilan, "")
+
+	// Menghapus spasi tambahan jika ada
+	msg = strings.TrimSpace(msg)
+
 	return msg
 }
 
