@@ -86,10 +86,7 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 			}
 
 		} else if strings.Contains(strings.ToLower(msg.Message), profile.Triggerword) { //chat group
-			// Menghapus nama panggilan dari pesan
-			msg.Message = strings.Replace(msg.Message, profile.Triggerword, "", 1)
-			// Menghapus spasi tambahan jika ada
-			msg.Message = strings.TrimSpace(msg.Message)
+			msg.Message = HapusNamaPanggilanBot(msg.Message, profile.Triggerword)
 			//set grup true
 			isgrup = true
 			if group && modname != "" {
@@ -110,6 +107,22 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 
 	}
 	return
+}
+
+func HapusNamaPanggilanBot(msg string, namapanggilan string) string {
+	if strings.Contains(strings.ToLower(msg), namapanggilan+" ") { //kalo dipanggil di depan kalimat
+		// Menghapus nama panggilan dari pesan
+		msg = strings.Replace(msg, namapanggilan+" ", "", 1)
+		// Menghapus spasi tambahan jika ada
+		msg = strings.TrimSpace(msg)
+
+	} else if strings.Contains(strings.ToLower(msg), " "+namapanggilan) { //kalo dipanggil di belakang kalimat
+		// Menghapus nama panggilan dari pesan
+		msg = strings.Replace(msg, " "+namapanggilan, "", 1)
+		// Menghapus spasi tambahan jika ada
+		msg = strings.TrimSpace(msg)
+	}
+	return msg
 }
 
 func GetRandomReplyFromMongo(msg itmodel.IteungMessage, botname string, db *mongo.Database) string {
