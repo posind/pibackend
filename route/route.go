@@ -38,6 +38,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//mendapatkan data sent item
 	case method == "GET" && at.URLParam(path, "/data/peserta/sent/:id"):
 		controller.GetSentItem(w, r)
+	//simpan feedback user
+	case method == "POST" && path == "/data/peserta/unsubscribe": //resume atau risalah rapat dan feedback
+		controller.PostUnsubscribe(w, r)
 	//generate token linked device
 	case method == "PUT" && path == "/data/user":
 		controller.PutTokenDataUser(w, r)
@@ -79,8 +82,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostLaporan(w, r)
 	case method == "POST" && path == "/notif/ux/postfeedback":
 		controller.PostFeedback(w, r)
-	case method == "POST" && path == "/notif/ux/postrating": //resume atau risalah rapat dan feedback
-		controller.PostRatingLaporan(w, r)
+
 	case method == "POST" && path == "/notif/ux/postmeeting":
 		controller.PostMeeting(w, r)
 	case method == "POST" && at.URLParam(path, "/notif/ux/postpresensi/:id"):

@@ -18,4 +18,6 @@ type Peserta struct {
 	Position      string             `bson:"position,omitempty" json:"position,omitempty"`
 	Approved      string             `bson:"Approved,omitempty" json:"Approved,omitempty"`
 	IsOnWhatsApp  bool               `bson:"isOnWhatsApp,omitempty" json:"isOnWhatsApp,omitempty"`
+	Komentar      string             `json:"komentar,omitempty" bson:"komentar,omitempty"`
+	Rating        int                `json:"rating,omitempty" bson:"rating,omitempty"`
 }

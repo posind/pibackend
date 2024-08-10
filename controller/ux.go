@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -12,13 +11,11 @@ import (
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/gcallapi"
-	"github.com/gocroot/helper/normalize"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
 	"github.com/whatsauth/itmodel"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -129,7 +126,7 @@ func PostPresensi(respw http.ResponseWriter, req *http.Request) {
 }
 
 // feedback dan meeting jadi satu disini
-func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
+func PostUnsubscribe(respw http.ResponseWriter, req *http.Request) {
 	var rating report.Rating
 	var respn model.Response
 	err := json.NewDecoder(req.Body).Decode(&rating)
@@ -148,92 +145,24 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
-	hasil, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
+	hasil, err := atdb.GetOneLatestDoc[model.Peserta](config.Mongoconn, "sent", primitive.M{"_id": objectId})
 	if err != nil {
 		respn.Status = "Error : Data laporan tidak di temukan"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
-	filter := bson.M{"_id": bson.M{"$eq": hasil.ID}}
-	fields := bson.M{
-		"rating":   rating.Rating,
-		"komentar": rating.Komentar,
-	}
-	res, err := atdb.UpdateOneDoc(config.Mongoconn, "uxlaporan", filter, fields)
+	hasil.Rating = rating.Rating
+	hasil.Komentar = rating.Komentar
+	res, err := atdb.InsertOneDoc(config.Mongoconn, "unsubs", hasil)
 	if err != nil {
 		respn.Status = "Error : Data laporan tidak berhasil di update data rating"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
-	var isRapat bool
-	if hasil.MeetID != primitive.NilObjectID {
-		isRapat = true
-	}
-	//upload file markdown ke log repo untuk tipe rapat
-	if hasil.Project.RepoLogName != "" && isRapat {
-		// Encode string ke base64
-		encodedString := base64.StdEncoding.EncodeToString([]byte(rating.Komentar))
-
-		// Format markdown dengan base64 string
-		//markdownContent := fmt.Sprintf("```base64\n%s\n```", encodedString)
-		fname := normalize.RemoveSpecialChars(hasil.MeetEvent.Summary)
-		dt := model.LogInfo{
-			PhoneNumber: hasil.NoPetugas,
-			Alias:       hasil.Petugas,
-			FileName:    fname + ".md",
-			RepoOrg:     hasil.Project.RepoOrg,
-			RepoName:    hasil.Project.RepoLogName,
-			Base64Str:   encodedString,
-		}
-		conf, err := atdb.GetOneDoc[model.Config](config.Mongoconn, "config", bson.M{"phonenumber": "62895601060000"})
-		if err != nil {
-			respn.Response = err.Error()
-			at.WriteJSON(respw, http.StatusNoContent, respn)
-			return
-		}
-		statuscode, loginf, err := atapi.PostStructWithToken[model.LogInfo]("secret", conf.LeaflySecret, dt, conf.LeaflyURL)
-		if err != nil {
-			respn.Response = err.Error()
-			at.WriteJSON(respw, http.StatusBadRequest, respn)
-			return
-		}
-		if statuscode != http.StatusOK {
-			respn.Response = loginf.Error
-			at.WriteJSON(respw, http.StatusBadRequest, respn)
-			return
-
-		}
-	}
-	poin := float64(rating.Rating) / 5.0
-	_, err = report.TambahPoinLaporanbyPhoneNumber(config.Mongoconn, hasil.Project, hasil.NoPetugas, poin, "rating")
-	if err != nil {
-		respn.Info = "TambahPoinLaporanbyPhoneNumber gagal"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusExpectationFailed, respn)
-		return
-	}
-	var message string
-	if isRapat {
-		message = "*Resume Pertemuan*\n" + hasil.MeetEvent.Summary + "\nWaktu: " + hasil.MeetEvent.TimeStart + "\nNotula:" + hasil.Petugas + "\nEfektifitas Pertemuan: " + strconv.Itoa(rating.Rating) + "\nRisalah Pertemuan:\n" + rating.Komentar
-	} else {
-		message = "*Feedback Pekerjaan " + hasil.Project.Name + "*\nPetugas: " + hasil.Petugas + "\nRating Pekerjaan: " + strconv.Itoa(rating.Rating) + "\nPemberi Feedback: " + hasil.Nama + " (" + hasil.Phone + ")\n" + hasil.Solusi + "\nCatatan:\n" + rating.Komentar
-	}
-	dt := &whatsauth.TextMessage{
-		To:       hasil.Project.WAGroupID,
-		IsGroup:  true,
-		Messages: message,
-	}
-	_, resp, err := atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
-	if err != nil {
-		resp.Info = "Tidak berhak"
-		resp.Response = err.Error()
-		at.WriteJSON(respw, http.StatusUnauthorized, resp)
-		return
-	}
-	respn.Response = strconv.Itoa(int(res.ModifiedCount))
-	respn.Info = hasil.Nama
+	respn.Response = res.Hex()
+	respn.Info = hasil.Fullname
 	at.WriteJSON(respw, http.StatusOK, respn)
 }
 
