@@ -38,7 +38,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//mendapatkan data sent item
 	case method == "GET" && at.URLParam(path, "/data/peserta/sent/:id"):
 		controller.GetSentItem(w, r)
-	//simpan feedback user
+	//simpan feedback unsubs user
 	case method == "POST" && path == "/data/peserta/unsubscribe": //resume atau risalah rapat dan feedback
 		controller.PostUnsubscribe(w, r)
 	//generate token linked device
