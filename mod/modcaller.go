@@ -11,12 +11,15 @@ import (
 	"github.com/gocroot/mod/presensi"
 	"github.com/gocroot/mod/siakad"
 	"github.com/gocroot/mod/tasklist"
+	"github.com/gocroot/mod/unsubscribe"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func Caller(Profile itmodel.Profile, Modulename string, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	switch Modulename {
+	case "unsubscribe":
+		reply = unsubscribe.Unsubscribe(Pesan, db)
 	case "idgrup":
 		reply = idgrup.IDGroup(Pesan)
 	case "feedbackhelpdesk":

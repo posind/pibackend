@@ -2,9 +2,8 @@ package model
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
-// Profile represents the structure of data from CSV
 type Peserta struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"` // Field ID untuk MongoDB
 	KodeProvinsi  string             `bson:"kodeProvinsi,omitempty" json:"kodeProvinsi,omitempty"`
 	KodeKabupaten string             `bson:"kodeKabupaten,omitempty" json:"kodeKabupaten,omitempty"`
 	KodeKecamatan string             `bson:"kodeKecamatan,omitempty" json:"kodeKecamatan,omitempty"`
