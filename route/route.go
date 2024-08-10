@@ -35,6 +35,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//user data
 	case method == "GET" && path == "/data/user":
 		controller.GetDataUser(w, r)
+	//mendapatkan data sent item
+	case method == "GET" && at.URLParam(path, "/data/peserta/sent/:id"):
+		controller.GetSentItem(w, r)
 	//generate token linked device
 	case method == "PUT" && path == "/data/user":
 		controller.PutTokenDataUser(w, r)
@@ -84,8 +87,6 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostPresensi(w, r)
 	case method == "POST" && at.URLParam(path, "/notif/ux/posttasklists/:id"):
 		controller.PostTaskList(w, r)
-	case method == "GET" && at.URLParam(path, "/notif/ux/getlaporan/:id"):
-		controller.GetLaporan(w, r)
 	case method == "POST" && at.URLParam(path, "/webhook/nomor/:nomorwa"):
 		controller.PostInboxNomor(w, r)
 	// LMS

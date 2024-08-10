@@ -237,7 +237,8 @@ func PostRatingLaporan(respw http.ResponseWriter, req *http.Request) {
 	at.WriteJSON(respw, http.StatusOK, respn)
 }
 
-func GetLaporan(respw http.ResponseWriter, req *http.Request) {
+// mendapatkan user yang sent dan mau unnsubscribe
+func GetSentItem(respw http.ResponseWriter, req *http.Request) {
 	id := at.GetParam(req)
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -249,14 +250,15 @@ func GetLaporan(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
-	hasil, err := atdb.GetOneLatestDoc[model.Laporan](config.Mongoconn, "uxlaporan", primitive.M{"_id": objectId})
+	hasil, err := atdb.GetOneLatestDoc[model.Peserta](config.Mongoconn, "sent", primitive.M{"_id": objectId})
 	if err != nil {
 		var respn model.Response
-		respn.Status = "Error : Data laporan tidak di temukan"
+		respn.Status = "Error : Data profile user sent tidak di temukan"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
+	hasil.PhoneNumber = ""
 	at.WriteJSON(respw, http.StatusOK, hasil)
 }
 
