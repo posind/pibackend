@@ -85,7 +85,8 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 				msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
 			}
 
-		} else if strings.Contains(strings.ToLower(msg.Message), profile.Triggerword) { //chat group
+			//chat group
+		} else if strings.Contains(strings.ToLower(msg.Message), profile.Triggerword+" ") || strings.Contains(strings.ToLower(msg.Message), " "+profile.Triggerword) || strings.ToLower(msg.Message) == profile.Triggerword {
 			msg.Message = HapusNamaPanggilanBot(msg.Message, profile.Triggerword, profile.Botname)
 			//set grup true
 			isgrup = true
