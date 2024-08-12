@@ -47,6 +47,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//mendapatkan data list nomor sender untuk broadcast
 	case method == "GET" && path == "/data/sender":
 		controller.GetDataSenders(w, r)
+	//mendapatkan data list nomor sender yang kena blokir dari broadcast
+	case method == "GET" && path == "/data/blokir":
+		controller.GetDataSendersTerblokir(w, r)
 
 	case method == "PUT" && path == "/data/user/task/doing":
 		controller.PutTaskUser(w, r)
