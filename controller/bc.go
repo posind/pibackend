@@ -8,7 +8,6 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/model"
-	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -31,7 +30,7 @@ func GetDataSenders(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
-	existingprjs, err := atdb.GetAllDoc[[]itmodel.Profile](config.Mongoconn, "sender", primitive.M{})
+	existingprjs, err := atdb.GetAllDoc[[]model.SenderDasboard](config.Mongoconn, "sender", primitive.M{})
 	if err != nil {
 		var respn model.Response
 		respn.Status = "Error : Data senders tidak di temukan"

@@ -16,6 +16,12 @@ type Profile struct {
 	PublicKey   string `bson:"publickey"`
 }
 
+type SenderDasboard struct {
+	Phonenumber string `bson:"phonenumber"`
+	Botname     string `bson:"botname"`
+	Triggerword string `bson:"triggerword"`
+}
+
 type LogInfo struct {
 	PhoneNumber string `json:"phonenumber,omitempty" bson:"phonenumber,omitempty"`
 	Alias       string `json:"alias,omitempty" bson:"alias,omitempty"`
