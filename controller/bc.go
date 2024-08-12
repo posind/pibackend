@@ -181,7 +181,9 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 	if httpstatuscode != 200 || err != nil {
 		var respn model.Response
 		respn.Status = "Error : Nomor yang diinputkan tidak valid"
-		respn.Response = err.Error()
+		if err != nil {
+			respn.Response = err.Error()
+		}
 		at.WriteJSON(respw, http.StatusExpectationFailed, respn)
 		return
 	}
