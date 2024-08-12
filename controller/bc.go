@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gocroot/config"
@@ -83,4 +84,49 @@ func GetDataSendersTerblokir(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	at.WriteJSON(respw, http.StatusOK, existingprjs)
+}
+
+func GetRekapBlast(respw http.ResponseWriter, req *http.Request) {
+	var respn model.Response
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
+	if err != nil {
+		respn.Status = "Error : Token Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(req)
+		respn.Location = "Decode Token Error"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusForbidden, respn)
+		return
+	}
+	//check eksistensi user
+	docuser, err := atdb.GetOneDoc[model.Userdomyikado](config.Mongoconn, "user", primitive.M{"phonenumber": payload.Id})
+	if err != nil {
+		docuser.PhoneNumber = payload.Id
+		docuser.Name = payload.Alias
+		at.WriteJSON(respw, http.StatusNotFound, docuser)
+		return
+	}
+	docuser.Name = payload.Alias
+	//melakukan pengambilan data belum terlayani
+	// Menghitung jumlah dokumen dalam koleksi
+	countqueue, err := config.Mongoconn.Collection("peserta").CountDocuments(context.TODO(), nil)
+	if err != nil {
+		respn.Status = "Error : penghitungan data queue"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusConflict, respn)
+		return
+	}
+	countsent, err := config.Mongoconn.Collection("sent").CountDocuments(context.TODO(), nil)
+	if err != nil {
+		respn.Status = "Error : penghitungan data sent"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusConflict, respn)
+		return
+	}
+
+	rekap := model.HelpdeskRekap{
+		ToDo: int(countqueue),
+		Done: int(countsent),
+		All:  int(countqueue + countsent),
+	}
+	at.WriteJSON(respw, http.StatusOK, rekap)
 }

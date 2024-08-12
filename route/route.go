@@ -50,6 +50,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//mendapatkan data list nomor sender yang kena blokir dari broadcast
 	case method == "GET" && path == "/data/blokir":
 		controller.GetDataSendersTerblokir(w, r)
+	//mendapatkan data rekap pengiriman wa blast
+	case method == "GET" && path == "/data/rekap":
+		controller.GetRekapBlast(w, r)
 
 	case method == "PUT" && path == "/data/user/task/doing":
 		controller.PutTaskUser(w, r)
