@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gocroot/config"
@@ -9,6 +8,7 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/model"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -108,14 +108,14 @@ func GetRekapBlast(respw http.ResponseWriter, req *http.Request) {
 	docuser.Name = payload.Alias
 	//melakukan pengambilan data belum terlayani
 	// Menghitung jumlah dokumen dalam koleksi
-	countqueue, err := config.Mongoconn.Collection("peserta").CountDocuments(context.TODO(), nil)
+	countqueue, err := atdb.GetCountDoc(config.Mongoconn, "peserta", bson.M{})
 	if err != nil {
 		respn.Status = "Error : penghitungan data queue"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusConflict, respn)
 		return
 	}
-	countsent, err := config.Mongoconn.Collection("sent").CountDocuments(context.TODO(), nil)
+	countsent, err := atdb.GetCountDoc(config.Mongoconn, "sent", bson.M{})
 	if err != nil {
 		respn.Status = "Error : penghitungan data sent"
 		respn.Response = err.Error()
