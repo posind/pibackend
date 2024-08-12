@@ -44,6 +44,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//generate token linked device
 	case method == "PUT" && path == "/data/user":
 		controller.PutTokenDataUser(w, r)
+	//Menambhahkan data nomor sender untuk broadcast
+	case method == "PUT" && path == "/data/sender":
+		controller.PutNomorBlast(w, r)
 	//mendapatkan data list nomor sender untuk broadcast
 	case method == "GET" && path == "/data/sender":
 		controller.GetDataSenders(w, r)
