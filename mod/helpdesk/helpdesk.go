@@ -101,15 +101,16 @@ func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		}
 		//berarti tiket udah close semua
 	} else { //ada tiket yang belum close
-		msgstr := "User " + user.Nama + " (" + user.Phone + ")\nMeminta tolong kakak " + user.User.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phone
-		msgstr += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+		msgstr := "*Permintaan bantuan dari Pengguna " + user.Nama + " (" + user.Phone + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + user.Phone + " untuk memberikan solusi terkait masalah yang sedang dialami:\n\n" + user.Masalah
+		msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 		dt := &itmodel.TextMessage{
 			To:       user.User.PhoneNumber,
 			IsGroup:  false,
 			Messages: msgstr,
 		}
 		go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
-		reply = "Kakak kami hubungkan dengan operator kami yang bernama *" + user.User.Name + "* di nomor wa.me/" + user.User.PhoneNumber + "\nMohon tunggu sebentar kami akan kontak kakak melalui nomor tersebut.\n_Terima kasih_"
+		reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + user.User.Name + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + user.User.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
+		//reply = "Kakak kami hubungkan dengan operator kami yang bernama *" + user.User.Name + "* di nomor wa.me/" + user.User.PhoneNumber + "\nMohon tunggu sebentar kami akan kontak kakak melalui nomor tersebut.\n_Terima kasih_"
 		return
 	}
 	//mendapatkan semua nama team dari db
@@ -120,7 +121,8 @@ func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 
 	//suruh pilih nama team kalo tidak ada
 	if namateam == "" {
-		reply = "Silakan memilih regional dari operator yang anda tuju:\n"
+		reply = "Selamat datang Bapak/Ibu " + Pesan.Alias_name + "\n\nTerima kasih telah menghubungi kami *Helpdesk LMS Pamong Desa*\n\n"
+		reply += "Untuk mendapatkan layanan yang lebih baik, mohon bantuan Bapak/Ibu *untuk memilih regional* tujuan Anda terlebih dahulu:\n"
 		for i, helpdesk := range helpdeskslist {
 			no := strconv.Itoa(i + 1)
 			teamurl := strings.ReplaceAll(helpdesk, " ", "+")
@@ -135,7 +137,7 @@ func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	}
 	//pilih scope jika belum
 	if scope == "" {
-		reply = "Silakan memilih asal provinsi anda dari regional " + namateam + " :\n"
+		reply = "Terima kasih.\nSekarang, mohon pilih provinsi asal Bapak/Ibu dari daftar berikut:\n" // " + namateam + " :\n"
 		for i, scope := range scopelist {
 			no := strconv.Itoa(i + 1)
 			scurl := strings.ReplaceAll(scope, " ", "+")
@@ -154,7 +156,7 @@ func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	if err != nil {
 		return err.Error()
 	}
-	reply = "Silahkan kak " + Pesan.Alias_name + " mengetik pertanyaan atau bantuan yang ingin dijawab oleh operator: "
+	reply = "Silakan ketik pertanyaan atau masalah yang ingin Bapak/Ibu " + Pesan.Alias_name + " sampaikan. Kami siap membantu Anda" // + " mengetik pertanyaan atau bantuan yang ingin dijawab oleh operator: "
 
 	return
 }
@@ -193,9 +195,9 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 		reply = err.Error()
 		return
 	}
-	reply = "*Penutupan Tiket Helpdesk*\nUser : " + helpdeskuser.Nama + "\nMasalah:\n" + helpdeskuser.Masalah
+	reply = "*Penutupan Tiket Helpdesk*\n\nUser : " + helpdeskuser.Nama + "\nMasalah:\n" + helpdeskuser.Masalah
 
-	msgstr := "*Permintaan Feedback Helpdesk*\nOperator " + helpdeskuser.User.Name + " (" + helpdeskuser.User.PhoneNumber + ")\nMeminta tolong kakak " + helpdeskuser.User.Name + " untuk memberikan rating layanan (bintang 1-5) di link berikut:\n"
+	msgstr := "*Permintaan Feedback Helpdesk*\n\nAdmin " + helpdeskuser.User.Name + " (" + helpdeskuser.User.PhoneNumber + ")\nMeminta tolong Bapak/Ibu " + helpdeskuser.User.Name + " untuk memberikan rating layanan (bintang 1-5) di link berikut:\n"
 	msgstr += "wa.me/" + Profile.Phonenumber + "?text=" + helpdeskuser.ID.Hex() + "|+rating+bintang+layanan+helpdesk+:+5"
 	dt := &itmodel.TextMessage{
 		To:       helpdeskuser.Phone,
@@ -236,9 +238,9 @@ func FeedbackHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *
 		return
 	}
 
-	reply = "Terima kasih atas pemberian feedback ke operator " + helpdeskuser.User.Name + "\nSemoga kami selalu bisa melayani lebih baik lagi."
+	reply = "Terima kasih banyak atas waktu Bapak/Ibu untuk memberikan penilaian terhadap pelayanan Admin " + helpdeskuser.User.Name + "\n\nApresiasi Bapak/Ibu sangat berarti bagi kami untuk terus memberikan yang terbaik.."
 
-	msgstr := "*Feedback Diterima*\nUser " + helpdeskuser.Nama + " (" + helpdeskuser.Phone + ")\nMemberikan rating " + rate + " bintang"
+	msgstr := "*Feedback Diterima*\n*" + helpdeskuser.Nama + "*\n*" + helpdeskuser.Phone + "*\nMemberikan rating " + rate + " bintang"
 	dt := &itmodel.TextMessage{
 		To:       helpdeskuser.User.PhoneNumber,
 		IsGroup:  false,
@@ -267,8 +269,8 @@ func PenugasanOperator(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db 
 				return
 			}
 			//jika ada tiket yang statusnya belum closed
-			reply = "User " + user.Nama + " (" + user.Phone + ")\nMeminta tolong kakak " + user.User.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phone
-			reply += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+			reply = "*Permintaan bantuan dari Pengguna " + user.Nama + " (" + user.Phone + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + user.Phone + " untuk memberikan solusi terkait masalah yang sedang dialami:\n\n" + user.Masalah
+			reply += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 			return
 
 		}
@@ -290,15 +292,16 @@ func PenugasanOperator(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db 
 			return
 		}
 
-		msgstr := "User " + user.Nama + " (" + user.Phone + ")\nMeminta tolong kakak " + user.User.Name + " untuk mencarikan solusi dari masalahnya:\n" + user.Masalah + "\nSilahkan langsung kontak di nomor wa.me/" + user.Phone
-		msgstr += "\n\nJika sudah teratasi mohon inputkan solusi yang sudah di berikan ke user melalui link berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+		msgstr := "*Permintaan bantuan dari Pengguna " + user.Nama + " (" + user.Phone + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + user.Phone + " untuk memberikan solusi terkait masalah yang sedang dialami:\n\n" + user.Masalah
+		msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 		dt := &itmodel.TextMessage{
 			To:       user.User.PhoneNumber,
 			IsGroup:  false,
 			Messages: msgstr,
 		}
 		go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
-		reply = "Kakak kami hubungkan dengan operator kami yang bernama *" + user.User.Name + "* di nomor wa.me/" + user.User.PhoneNumber + "\nMohon tunggu sebentar kami akan kontak kakak melalui nomor tersebut.\n_Terima kasih_"
+
+		reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + user.User.Name + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + user.User.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
 
 	}
 	return
