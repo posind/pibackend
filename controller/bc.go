@@ -198,7 +198,7 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusMisdirectedRequest, docuser)
 		return
 	}
-	if hcode == http.StatusOK && !qrstat.Status { //jika sudah linked
+	if hcode == http.StatusOK && !qrstat.Status { //jika sudah linked status false
 		contohsender, err := atdb.GetOneLatestDoc[itmodel.Profile](config.Mongoconn, "sender", bson.M{})
 		if err != nil {
 			at.WriteJSON(respw, http.StatusFailedDependency, docuser)
