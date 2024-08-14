@@ -82,7 +82,7 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 			if personal && modname != "" {
 				msgstr = mod.Caller(profile, modname, msg, db)
 			} else {
-				if msg.Phone_number != "6281510040020" {
+				if profile.Phonenumber != "6281510040020" {
 					msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
 				} else {
 					msgstr = ""
@@ -97,7 +97,7 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 			if group && modname != "" {
 				msgstr = mod.Caller(profile, modname, msg, db)
 			} else {
-				if msg.Phone_number != "6281510040020" {
+				if profile.Phonenumber != "6281510040020" {
 					msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
 				} else {
 					msgstr = ""
