@@ -8,6 +8,7 @@ import (
 var Origins = []string{
 	"https://kb.pd.my.id",
 	"https://pd.my.id",
+	"https://helpdesk-pamongdesa.kemendagri.go.id",
 }
 
 // Fungsi untuk memeriksa apakah origin diizinkan
