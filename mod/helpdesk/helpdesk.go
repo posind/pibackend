@@ -96,7 +96,7 @@ func GetOperatorFromScopeandTeam(scope, team string, db *mongo.Database) (operat
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	statuscode, res, err := atapi.GetStructWithToken[Data]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
 	if statuscode != 200 { //404 jika user not found
-		msg := "Mohon maaf Bapak/Ibu " + Pesan.Alias_name + ", untuk bisa terhubung dengan admin kami, silahkan chat menggunakan nomor yang terdaftar di sistem LMS Pamong Desa kami.\n" + UserNotFound(Profile, Pesan, db)
+		msg := "Mohon maaf Bapak/Ibu " + Pesan.Alias_name + ", nomor anda *belum terdaftar* pada sistem kami.\n" + UserNotFound(Profile, Pesan, db)
 		return msg
 	}
 	if err != nil {
@@ -126,11 +126,14 @@ func UserNotFound(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mong
 	}
 	//pilih scope jika belum
 	if scope == "" {
-		reply = "Jika masih butuh bantuan, mohon pilih provinsi asal Bapak/Ibu dari daftar berikut:\n" // " + namateam + " :\n"
+		reply = "Jika masih membutuhkan bantuan, mohon pilih provinsi asal Bapak/Ibu dari daftar berikut:\n" // " + namateam + " :\n"
 		for i, scope := range scopelist {
 			no := strconv.Itoa(i + 1)
-			scurl := strings.ReplaceAll(scope, " ", "+")
-			reply += no + ". " + scope + "\n" + "wa.me/" + Profile.Phonenumber + "?text=bantuan+operator+" + "+" + scurl + "\n"
+			usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"scope": scope})
+			if err != nil {
+				return err.Error()
+			}
+			reply += no + ". " + scope + "\n" + "wa.me/" + Profile.Phonenumber + "?text=adminpusat+" + usr.Section + "\n"
 		}
 		return
 	}
