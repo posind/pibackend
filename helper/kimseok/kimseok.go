@@ -62,8 +62,10 @@ func CheckSession(phonenumber string, db *mongo.Database) (result bool, err erro
 		if err != nil {
 			return
 		}
+	} else {
+		result = true
 	}
-	return true, nil
+	return
 }
 
 // balasan jika tidak ditemukan key word
@@ -79,7 +81,7 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 		if err != nil {
 			return err.Error()
 		}
-		reply = dt.Answer + "\ndari session yang belum ada"
+		reply = dt.Answer
 
 	}
 	//jika tidak ada di db komplain lanjut ke selanjutnya
