@@ -94,15 +94,14 @@ func GetOperatorFromScopeandTeam(scope, team string, db *mongo.Database) (operat
 
 // helpdesk sudah terintegrasi dengan lms pamong desa backend
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
-	statuscode, res, err := atapi.GetStructWithToken[Data]("token", config.APITOKENPD, config.APIGETPDLMS+Profile.Phonenumber)
-	if err != mongo.ErrNoDocuments {
-		return err.Error()
-	}
-	if statuscode != 200 {
+	statuscode, res, err := atapi.GetStructWithToken[Data]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
+	if statuscode != 200 { //404 jika user not found
 		return "Backend API status code:" + strconv.Itoa(statuscode)
 	}
-
-	msgstr := "*Permintaan bantuan dari Pengguna " + res.Fullname + " (" + Profile.Phonenumber + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Profile.Phonenumber + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
+	if err != nil {
+		return err.Error()
+	}
+	msgstr := "*Permintaan bantuan dari Pengguna " + res.Fullname + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
 	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 	dt := &itmodel.TextMessage{
 		To:       res.ContactAdminProvince[0].Phone,
