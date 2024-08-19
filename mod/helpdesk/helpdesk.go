@@ -178,7 +178,7 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
 
-	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
+	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\nMohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
 
 	return
 
