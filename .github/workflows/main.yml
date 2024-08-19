@@ -34,7 +34,7 @@ jobs:
             --runtime=go122 \
             --trigger-http \
             --timeout=540s \
-            --set-env-vars MONGOSTRING='${{ secrets.MONGOSTRING }}',PRKEY='${{ secrets.PRKEY }}',PHONENUMBER='${{ secrets.PHONENUMBER }}'
+            --set-env-vars MONGOSTRING='${{ secrets.MONGOSTRING }}',PRKEY='${{ secrets.PRKEY }}',PHONENUMBER='${{ secrets.PHONENUMBER }}',PDTOKEN='${{ secrets.PDTOKEN }}'
       - name: 'Cek eksistensi fungsi'
         run: 'gcloud functions describe pamongdesa --region=asia-southeast2'
       - name: 'Cek log debugging'

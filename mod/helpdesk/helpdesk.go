@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gocroot/config"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/model"
@@ -89,6 +90,31 @@ func GetOperatorFromScopeandTeam(scope, team string, db *mongo.Database) (operat
 		return
 	}
 	return
+}
+
+// helpdesk sudah terintegrasi dengan lms pamong desa backend
+func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
+	statuscode, res, err := atapi.GetStructWithToken[Data]("token", config.APITOKENPD, config.APIGETPDLMS+Profile.Phonenumber)
+	if err != mongo.ErrNoDocuments {
+		return err.Error()
+	}
+	if statuscode != 200 {
+		return "Backend API status code:" + strconv.Itoa(statuscode)
+	}
+
+	msgstr := "*Permintaan bantuan dari Pengguna " + res.Fullname + " (" + Profile.Phonenumber + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Profile.Phonenumber + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
+	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+	dt := &itmodel.TextMessage{
+		To:       res.ContactAdminProvince[0].Phone,
+		IsGroup:  false,
+		Messages: msgstr,
+	}
+	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+
+	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + res.ContactAdminProvince[0].Fullname + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + res.ContactAdminProvince[0].Phone + "\nTerima kasih atas kesabaran Bapak/Ibu"
+
+	return
+
 }
 
 // handling key word, keyword :bantuan operator
