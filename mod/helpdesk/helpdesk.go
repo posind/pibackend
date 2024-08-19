@@ -92,6 +92,27 @@ func GetOperatorFromScopeandTeam(scope, team string, db *mongo.Database) (operat
 	return
 }
 
+// mendapatkan section helpdesk dari pesan
+func GetOperatorFromSection(section string, db *mongo.Database) (operator model.Userdomyikado, err error) {
+	filter := bson.M{
+		"section": section,
+	}
+	operator, err = atdb.GetOneLowestDoc[model.Userdomyikado](db, "user", filter, "jumlahantrian")
+	if err != nil {
+		return
+	}
+	operator.JumlahAntrian += 1
+	filter = bson.M{
+		"section":     section,
+		"phonenumber": operator.PhoneNumber,
+	}
+	_, err = atdb.ReplaceOneDoc(db, "user", filter, operator)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // helpdesk sudah terintegrasi dengan lms pamong desa backend
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	statuscode, res, err := atapi.GetStructWithToken[Data]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
@@ -138,6 +159,29 @@ func UserNotFound(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mong
 		return
 	}
 	return
+}
+
+// penugasan helpdeskpusat jika user belum terdaftar
+func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
+	Pesan.Message = strings.ReplaceAll(Pesan.Message, "adminpusat", "")
+	Pesan.Message = strings.TrimSpace(Pesan.Message)
+	op, err := GetOperatorFromSection(Pesan.Message, db)
+	if err != nil {
+		return err.Error()
+	}
+	msgstr := "*Permintaan bantuan dari Pengguna " + Pesan.Alias_name + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
+	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+	dt := &itmodel.TextMessage{
+		To:       op.PhoneNumber,
+		IsGroup:  false,
+		Messages: msgstr,
+	}
+	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+
+	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
+
+	return
+
 }
 
 // handling key word, keyword :bantuan operator
