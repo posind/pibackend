@@ -79,7 +79,7 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 		if err != nil {
 			return err.Error()
 		}
-		reply = strings.TrimSpace(dt.Answer)
+		reply = dt.Answer
 
 	}
 	//jika tidak ada di db komplain lanjut ke selanjutnya
@@ -88,10 +88,11 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 		if err != nil {
 			return err.Error()
 		}
-		reply = strings.TrimSpace(dt.Answer)
+		reply = dt.Answer
 
 	}
-	reply = strings.ReplaceAll(reply, "XXX", msg.Alias_name) //rename XXX jadi nama yang kirim pesan
+	reply = strings.ReplaceAll(reply, "XXX", msg.Alias_name)      //rename XXX jadi nama yang kirim pesan
+	reply = strings.ReplaceAll(reply, "YYY", Profile.Phonenumber) //rename YYY jadi nomor profile
 	return reply
 }
 
