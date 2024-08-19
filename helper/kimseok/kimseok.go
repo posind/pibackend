@@ -53,9 +53,8 @@ func GetQnAfromSliceWithJaro(q string, qnas []Datasets) (dt Datasets) {
 
 // check session udah ada atau belum
 func CheckSession(phonenumber string, db *mongo.Database) (result bool, err error) {
-	_, err = atdb.GetOneDoc[Session](db, "session", bson.M{"phonenumber": phonenumber})
+	ses, err := atdb.GetOneDoc[Session](db, "session", bson.M{"phonenumber": phonenumber})
 	if err != nil {
-		var ses Session
 		ses.PhoneNumber = phonenumber
 		ses.CreatedAt = time.Now()
 		_, err = db.Collection("session").InsertOne(context.TODO(), ses)
@@ -63,6 +62,8 @@ func CheckSession(phonenumber string, db *mongo.Database) (result bool, err erro
 			return
 		}
 	} else {
+		ses.CreatedAt = time.Now()
+		atdb.ReplaceOneDoc(db, "session", bson.M{"phonenumber": phonenumber}, ses) //refresh waktu session dengan waktu sekarang
 		result = true
 	}
 	return
