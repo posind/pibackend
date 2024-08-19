@@ -28,6 +28,8 @@ func Caller(Profile itmodel.Profile, Modulename string, Pesan itmodel.IteungMess
 		reply = helpdesk.EndHelpdesk(Profile, Pesan, db)
 	case "helpdesk":
 		reply = helpdesk.HelpdeskPDLMS(Profile, Pesan, db)
+	case "helpdeskpusat":
+		reply = helpdesk.HelpdeskPusat(Profile, Pesan, db)
 	case "presensi-masuk":
 		reply = presensi.PresensiMasuk(Pesan, db)
 	case "presensi-pulang":
