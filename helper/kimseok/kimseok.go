@@ -79,7 +79,7 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 		if err != nil {
 			return err.Error()
 		}
-		reply = dt.Answer
+		reply = dt.Answer + "\ndari session yang belum ada"
 
 	}
 	//jika tidak ada di db komplain lanjut ke selanjutnya
