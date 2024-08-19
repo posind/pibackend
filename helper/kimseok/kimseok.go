@@ -62,8 +62,18 @@ func CheckSession(phonenumber string, db *mongo.Database) (result bool, err erro
 			return
 		}
 	} else {
+		//refresh waktu session dengan waktu sekarang
 		ses.CreatedAt = time.Now()
-		atdb.ReplaceOneDoc(db, "session", bson.M{"phonenumber": phonenumber}, ses) //refresh waktu session dengan waktu sekarang
+		_, err = atdb.DeleteManyDocs(db, "session", bson.M{"phonenumber": phonenumber})
+		if err != nil {
+			return
+		}
+		ses.PhoneNumber = phonenumber
+		ses.CreatedAt = time.Now()
+		_, err = db.Collection("session").InsertOne(context.TODO(), ses)
+		if err != nil {
+			return
+		}
 		result = true
 	}
 	return
