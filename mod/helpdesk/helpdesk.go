@@ -96,7 +96,7 @@ func GetOperatorFromScopeandTeam(scope, team string, db *mongo.Database) (operat
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	statuscode, res, err := atapi.GetStructWithToken[Data]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
 	if statuscode != 200 { //404 jika user not found
-		msg := "Mohon maaf Bapak/Ibu, untuk bisa terhubung dengan admin kami, silahkan chat menggunakan nomor yang terdaftar di LMS Pamong Desa" // + strconv.Itoa(statuscode)
+		msg := "Mohon maaf Bapak/Ibu " + Pesan.Alias_name + ", untuk bisa terhubung dengan admin kami, silahkan chat menggunakan nomor yang terdaftar di sistem LMS Pamong Desa kami.\nTerima Kasih" // + strconv.Itoa(statuscode)
 		return msg
 	}
 	if err != nil {
