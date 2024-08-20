@@ -33,12 +33,13 @@ func MenuSessionHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *
 		for _, menu := range Sesdoc.Menulist {
 			if menuno == menu.No {
 				msgs, err := GetMenuFromKeywordAndSetSession(menu.Keyword, Sesdoc, db)
-				if err != nil { //jika di coll menu tidak ada maka akan proses keyword ke module dan faq
+				if err != nil {
+					//jika di coll menu tidak ada maka akan proses keyword ke module
 					modname, _, _ := GetModuleName(Profile.Phonenumber, msg, db, "module")
-					if modname == "" {
+					if modname == "" { //jika module tidak ada keyword tersebut maka langsung saja diarahkan ke faq
 						dt, err := atdb.GetOneDoc[Datasets](db, "faq", bson.M{"question": menu.Keyword})
 						if err != nil {
-							return err.Error()
+							return "modname: " + modname + "\npesan: " + msg.Message + "\nerror getmenufromkeywordandsession:" + err.Error()
 						}
 						return dt.Answer
 					} else {
