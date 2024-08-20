@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/module"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -51,50 +52,11 @@ func GetQnAfromSliceWithJaro(q string, qnas []Datasets) (dt Datasets) {
 
 }
 
-// check session udah ada atau belum
-func CheckSession(phonenumber string, db *mongo.Database) (result bool, err error) {
-	ses, err := atdb.GetOneDoc[Session](db, "session", bson.M{"phonenumber": phonenumber})
-	if err != nil {
-		ses.PhoneNumber = phonenumber
-		ses.CreatedAt = time.Now()
-		_, err = db.Collection("session").InsertOne(context.TODO(), ses)
-		if err != nil {
-			return
-		}
-	} else {
-		//refresh waktu session dengan waktu sekarang
-		ses.CreatedAt = time.Now()
-		_, err = atdb.DeleteManyDocs(db, "session", bson.M{"phonenumber": phonenumber})
-		if err != nil {
-			return
-		}
-		ses.PhoneNumber = phonenumber
-		ses.CreatedAt = time.Now()
-		_, err = db.Collection("session").InsertOne(context.TODO(), ses)
-		if err != nil {
-			return
-		}
-		result = true
-	}
-	return
-}
-
 // balasan jika tidak ditemukan key word
 func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname string, db *mongo.Database) string {
 	var reply string
-	//check apakah ada session, klo ga ada kasih reply menu
-	ses, err := CheckSession(msg.Phone_number, db)
-	if err != nil {
-		return err.Error()
-	}
-	if !ses { //jika tidak ada session atau session=false maka return menu
-		dt, err := QueriesDataRegexpALL(db, "menu")
-		if err != nil {
-			return err.Error()
-		}
-		reply = dt.Answer
-
-	}
+	//check session menu
+	reply = module.MenuSessionHandler(Profile, msg, db)
 	//jika tidak ada di db komplain lanjut ke selanjutnya
 	if reply == "" {
 		dt, err := QueriesDataRegexpALL(db, msg.Message)
@@ -104,8 +66,6 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 		reply = dt.Answer
 
 	}
-	reply = strings.ReplaceAll(reply, "XXX", msg.Alias_name)      //rename XXX jadi nama yang kirim pesan
-	reply = strings.ReplaceAll(reply, "YYY", Profile.Phonenumber) //rename YYY jadi nomor profile
 	return reply
 }
 

@@ -97,6 +97,10 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 				//msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
 			}
 		}
+		//fill template message
+		msgstr = strings.ReplaceAll(msgstr, "XXX", msg.Alias_name)      //rename XXX jadi nama yang kirim pesan
+		msgstr = strings.ReplaceAll(msgstr, "YYY", profile.Phonenumber) //rename YYY jadi nomor profile
+		//kirim balasan
 		dt := &itmodel.TextMessage{
 			To:       msg.Chat_number,
 			IsGroup:  isgrup,
