@@ -33,7 +33,11 @@ func MenuSessionHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *
 			if menuno == menu.No {
 				msg, err := GetMenuFromKeywordAndSetSession(menu.Keyword, Sesdoc, db)
 				if err != nil { //jika menu tidak ada maka akan memuntahkan keyword nya saja
-					return menu.Keyword
+					dt, err := atdb.GetOneDoc[Datasets](db, "faq", bson.M{"question": menu.Keyword})
+					if err != nil {
+						return err.Error()
+					}
+					return dt.Answer
 				}
 				return msg
 			}
