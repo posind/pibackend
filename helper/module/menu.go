@@ -74,7 +74,7 @@ func GetMenuFromKeywordAndSetSession(keyword string, session Session, db *mongo.
 	if err != nil {
 		return
 	}
-	atdb.UpdateOneDoc(db, "session", bson.M{"_id": session.ID}, bson.M{"list": dt.List})
+	atdb.UpdateOneDoc(db, "session", bson.M{"phonenumber": session.PhoneNumber}, bson.M{"list": dt.List})
 	msg = dt.Header + "\n"
 	for _, item := range dt.List {
 		msg += strconv.Itoa(item.No) + ". " + item.Konten + "\n"
