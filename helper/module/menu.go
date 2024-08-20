@@ -35,7 +35,7 @@ func MenuSessionHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *
 				msgs, err := GetMenuFromKeywordAndSetSession(menu.Keyword, Sesdoc, db)
 				if err != nil {
 					//jika di coll menu tidak ada maka akan proses keyword ke module
-					msg.Message = msgs
+					msg.Message = menu.Keyword
 					modname, _, _ := GetModuleName(Profile.Phonenumber, msg, db, "module")
 					if modname == "" { //jika module tidak ada keyword tersebut maka langsung saja diarahkan ke faq
 						dt, err := atdb.GetOneDoc[Datasets](db, "faq", bson.M{"question": menu.Keyword})
