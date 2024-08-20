@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/mod"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,15 +32,21 @@ func MenuSessionHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *
 	if err == nil { //kalo nomor
 		for _, menu := range Sesdoc.Menulist {
 			if menuno == menu.No {
-				msg, err := GetMenuFromKeywordAndSetSession(menu.Keyword, Sesdoc, db)
-				if err != nil { //jika menu tidak ada maka akan memuntahkan keyword nya saja
-					dt, err := atdb.GetOneDoc[Datasets](db, "faq", bson.M{"question": menu.Keyword})
-					if err != nil {
-						return err.Error()
+				msgs, err := GetMenuFromKeywordAndSetSession(menu.Keyword, Sesdoc, db)
+				if err != nil { //jika di coll menu tidak ada maka akan proses keyword ke module dan faq
+					modname, _, _ := GetModuleName(Profile.Phonenumber, msg, db, "module")
+					if modname == "" {
+						dt, err := atdb.GetOneDoc[Datasets](db, "faq", bson.M{"question": menu.Keyword})
+						if err != nil {
+							return err.Error()
+						}
+						return dt.Answer
+					} else {
+						return mod.Caller(Profile, modname, msg, db)
+
 					}
-					return dt.Answer
 				}
-				return msg
+				return msgs
 			}
 		}
 		return "Mohon maaf nomor menu yang anda masukkan tidak ada di daftar menu"
