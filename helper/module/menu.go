@@ -48,6 +48,7 @@ func MenuSessionHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *
 func CheckSession(phonenumber string, db *mongo.Database) (session Session, result bool, err error) {
 	session, err = atdb.GetOneDoc[Session](db, "session", bson.M{"phonenumber": phonenumber})
 	session.CreatedAt = time.Now()
+	session.PhoneNumber = phonenumber
 	if err != nil { //insert session klo belum ada
 		_, err = db.Collection("session").InsertOne(context.TODO(), session)
 		if err != nil {
