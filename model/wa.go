@@ -12,3 +12,8 @@ type SendText struct {
 	IsGroup  bool   `json:"isgroup"`
 	Messages string `json:"messages"`
 }
+
+type Prefill struct {
+	Key   string `bson:"key"`
+	Value string `bson:"value"`
+}
