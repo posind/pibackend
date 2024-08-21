@@ -3,6 +3,7 @@ package helpdesk
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -189,8 +190,9 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 		Messages: msgstr,
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
-
-	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\nMohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
+	reply = GetPrefillMessage("userbantuanadmin", db)
+	reply = fmt.Sprintf(reply, op.Name, op.PhoneNumber)
+	//reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\nMohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
 
 	return
 }
@@ -226,8 +228,10 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		Messages: msgstr,
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+	reply = GetPrefillMessage("userbantuanadmin", db)
+	reply = fmt.Sprintf(reply, op.Name, op.PhoneNumber)
 
-	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\nMohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
+	//reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\nMohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
 
 	return
 

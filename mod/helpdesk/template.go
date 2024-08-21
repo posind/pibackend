@@ -1,4 +1,4 @@
-package whatsauth
+package helpdesk
 
 import (
 	"github.com/gocroot/helper/atdb"
