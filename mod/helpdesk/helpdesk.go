@@ -125,14 +125,23 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	}
 	msgstr := "*Permintaan bantuan dari Pengguna " + res.Fullname + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
 	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+	var helpdeskno, helpdeskname string
+	if len(res.ContactAdminProvince) == 0 {
+
+		msg := "Mohon maaf Bapak/Ibu " + Pesan.Alias_name + ", API helpdesk pamongdesa sedang tidak bisa diakses.\n" + UserNotFound(Profile, Pesan, db)
+		return msg
+	}
+	//jika arraynya ada
+	helpdeskno = res.ContactAdminProvince[0].Phone
+	helpdeskname = res.ContactAdminProvince[0].Fullname
 	dt := &itmodel.TextMessage{
-		To:       res.ContactAdminProvince[0].Phone,
+		To:       helpdeskno,
 		IsGroup:  false,
 		Messages: msgstr,
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
 
-	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + res.ContactAdminProvince[0].Fullname + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + res.ContactAdminProvince[0].Phone + "\nTerima kasih atas kesabaran Bapak/Ibu"
+	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + helpdeskname + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + helpdeskno + "\nTerima kasih atas kesabaran Bapak/Ibu"
 
 	return
 
