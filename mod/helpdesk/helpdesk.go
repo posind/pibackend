@@ -2,6 +2,7 @@ package helpdesk
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -128,7 +129,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	var helpdeskno, helpdeskname string
 	if len(res.ContactAdminProvince) == 0 {
 
-		msg := "Mohon maaf Bapak/Ibu " + Pesan.Alias_name + ", API helpdesk pamongdesa sedang tidak bisa diakses.\n" + UserNotFound(Profile, Pesan, db)
+		msg := "Mohon maaf Bapak/Ibu " + res.Fullname + " dari desa " + res.Village + ", helpdesk pamongdesa anda.\n" + fmt.Sprintf("%+v", res.ContactAdminProvince) // + UserNotFound(Profile, Pesan, db)
 		return msg
 	}
 	//jika arraynya ada
