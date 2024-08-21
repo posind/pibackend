@@ -150,19 +150,17 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 // Jika user tidak terdaftar maka akan mengeluarkan list operator pusat
 func UserNotFound(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	//check apakah ada session, klo ga ada kasih reply menu
-	Sesdoc, ses, err := CheckSession(Pesan.Phone_number, db)
+	Sesdoc, _, err := CheckSession(Pesan.Phone_number, db)
 	if err != nil {
 		return err.Error()
 	}
-	if !ses { //jika tidak ada session atau session=false maka return menu dan update session isi list nomor menunya
-		msg, err := GetMenuFromKeywordAndSetSession("menu", Sesdoc, db)
-		if err != nil {
-			return err.Error()
-		}
-		return msg
 
+	msg, err := GetMenuFromKeywordAndSetSession("adminpusat", Sesdoc, db)
+	if err != nil {
+		return err.Error()
 	}
-	return
+	return msg
+
 }
 
 // penugasan helpdeskpusat jika user belum terdaftar
