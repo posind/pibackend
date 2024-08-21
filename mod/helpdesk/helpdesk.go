@@ -2,7 +2,6 @@ package helpdesk
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -139,9 +138,8 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	msgstr := "*Permintaan bantuan dari Pengguna " + res.Data.Fullname + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
 	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 	var helpdeskno, helpdeskname string
-	if len(res.Data.ContactAdminProvince) == 0 {
-
-		msg := "Mohon maaf Bapak/Ibu " + res.Data.Fullname + " dari desa " + res.Data.Village + ", helpdesk pamongdesa anda.\n" + fmt.Sprintf("%+v", res.Data.ContactAdminProvince) // + UserNotFound(Profile, Pesan, db)
+	if len(res.Data.ContactAdminProvince) == 0 { //kalo kosong data kontak admin provinsinya maka arahkan ke tim 16
+		msg := "Mohon maaf Bapak/Ibu " + res.Data.Fullname + " dari desa " + res.Data.Village + ", helpdesk pamongdesa anda.\n" + UserNotFound(Profile, Pesan, db)
 		return msg
 	}
 	//jika arraynya ada
