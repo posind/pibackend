@@ -1,6 +1,7 @@
 package helpdesk
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -138,8 +139,8 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	msgstr := "*Permintaan bantuan dari Pengguna " + res.Data.Fullname + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
 	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 	var helpdeskno, helpdeskname string
-	if len(res.Data.ContactAdminProvince) == 0 { //kalo kosong data kontak admin provinsinya maka arahkan ke tim 16
-		msg := "Mohon maaf Bapak/Ibu " + res.Data.Fullname + " dari desa " + res.Data.Village + ", helpdesk pamongdesa anda.\n" + UserNotFound(Profile, Pesan, db)
+	if len(res.Data.ContactAdminProvince) == 0 { //kalo kosong data kontak admin provinsinya maka arahkan ke tim 16 tapi sesuikan dengan provinsinya
+		msg := "Mohon maaf Bapak/Ibu " + res.Data.Fullname + " dari desa " + res.Data.Village + ", helpdesk pamongdesa anda.\n" + AdminNotFoundWithProvinsi(Profile, Pesan, res.Data.Province, db)
 		return msg
 	}
 	//jika arraynya ada
@@ -158,6 +159,42 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 
 }
 
+func GetSectionFromProvinsiRegex(db *mongo.Database, queries string) (section string, err error) {
+	var user model.Userdomyikado
+	filter := bson.M{"scope": primitive.Regex{Pattern: queries, Options: "i"}}
+	err = db.Collection("datasets").FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return
+	}
+	section = user.Section
+	return
+}
+
+// Jika user tidak terdaftar maka akan mengeluarkan list operator pusat
+func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMessage, provinsi string, db *mongo.Database) (reply string) {
+	//tambah lojik query ke provinsi
+	sec, err := GetSectionFromProvinsiRegex(db, provinsi)
+	if err != nil {
+		return err.Error()
+	}
+	op, err := GetOperatorFromSection(sec, db)
+	if err != nil {
+		return err.Error()
+	}
+	msgstr := "*Permintaan bantuan dari Pengguna " + Pesan.Alias_name + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
+	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
+	dt := &itmodel.TextMessage{
+		To:       op.PhoneNumber,
+		IsGroup:  false,
+		Messages: msgstr,
+	}
+	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+
+	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\nMohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
+
+	return
+}
+
 // Jika user tidak terdaftar maka akan mengeluarkan list operator pusat
 func UserNotFound(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	//check apakah ada session, klo ga ada kasih reply menu
@@ -171,7 +208,6 @@ func UserNotFound(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mong
 		return err.Error()
 	}
 	return msg
-
 }
 
 // penugasan helpdeskpusat jika user belum terdaftar
