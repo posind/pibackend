@@ -149,23 +149,18 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 
 // Jika user tidak terdaftar maka akan mengeluarkan list operator pusat
 func UserNotFound(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
-	//mendapatkan semua nama team pusat dari db
-	scope, scopelist, err := GetScopeFromTeam(Pesan, "pusat", db)
+	//check apakah ada session, klo ga ada kasih reply menu
+	Sesdoc, ses, err := CheckSession(Pesan.Phone_number, db)
 	if err != nil {
 		return err.Error()
 	}
-	//pilih scope jika belum
-	if scope == "" {
-		reply = "Jika masih membutuhkan bantuan, mohon pilih provinsi asal Bapak/Ibu dari daftar berikut:\n" // " + namateam + " :\n"
-		for i, scope := range scopelist {
-			no := strconv.Itoa(i + 1)
-			usr, err := atdb.GetOneDoc[model.Userdomyikado](db, "user", bson.M{"scope": scope})
-			if err != nil {
-				return err.Error()
-			}
-			reply += no + ". " + scope + "\n" + "wa.me/" + Profile.Phonenumber + "?text=adminpusat+" + usr.Section + "\n"
+	if !ses { //jika tidak ada session atau session=false maka return menu dan update session isi list nomor menunya
+		msg, err := GetMenuFromKeywordAndSetSession("menu", Sesdoc, db)
+		if err != nil {
+			return err.Error()
 		}
-		return
+		return msg
+
 	}
 	return
 }
