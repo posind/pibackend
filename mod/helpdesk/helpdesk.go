@@ -114,11 +114,23 @@ func GetOperatorFromSection(section string, db *mongo.Database) (operator model.
 	return
 }
 
+func GetNamadanDesaFromAPI(phonenumber string) (namadandesa string) {
+	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+phonenumber)
+	if err != nil {
+		return
+	}
+	if statuscode != 200 { //404 jika user not found
+		return
+	}
+	namadandesa = res.Data.Fullname + " dari " + res.Data.Village
+	return
+}
+
 // helpdesk sudah terintegrasi dengan lms pamong desa backend
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
 	if statuscode != 200 { //404 jika user not found
-		msg := "Mohon maaf Bapak/Ibu " + Pesan.Alias_name + ", nomor anda *belum terdaftar* pada sistem kami.\n" + UserNotFound(Profile, Pesan, db)
+		msg := "Mohon maaf Bapak/Ibu, nomor anda *belum terdaftar* pada sistem kami.\n" + UserNotFound(Profile, Pesan, db)
 		return msg
 	}
 	if err != nil {
