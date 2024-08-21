@@ -116,7 +116,7 @@ func GetOperatorFromSection(section string, db *mongo.Database) (operator model.
 
 // helpdesk sudah terintegrasi dengan lms pamong desa backend
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
-	statuscode, res, err := atapi.GetStructWithToken[Data]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
+	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
 	if statuscode != 200 { //404 jika user not found
 		msg := "Mohon maaf Bapak/Ibu " + Pesan.Alias_name + ", nomor anda *belum terdaftar* pada sistem kami.\n" + UserNotFound(Profile, Pesan, db)
 		return msg
@@ -124,17 +124,17 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	if err != nil {
 		return err.Error()
 	}
-	msgstr := "*Permintaan bantuan dari Pengguna " + res.Fullname + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
+	msgstr := "*Permintaan bantuan dari Pengguna " + res.Data.Fullname + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
 	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 	var helpdeskno, helpdeskname string
-	if len(res.ContactAdminProvince) == 0 {
+	if len(res.Data.ContactAdminProvince) == 0 {
 
-		msg := "Mohon maaf Bapak/Ibu " + res.Fullname + " dari desa " + res.Village + ", helpdesk pamongdesa anda.\n" + fmt.Sprintf("%+v", res.ContactAdminProvince) // + UserNotFound(Profile, Pesan, db)
+		msg := "Mohon maaf Bapak/Ibu " + res.Data.Fullname + " dari desa " + res.Data.Village + ", helpdesk pamongdesa anda.\n" + fmt.Sprintf("%+v", res.Data.ContactAdminProvince) // + UserNotFound(Profile, Pesan, db)
 		return msg
 	}
 	//jika arraynya ada
-	helpdeskno = res.ContactAdminProvince[0].Phone
-	helpdeskname = res.ContactAdminProvince[0].Fullname
+	helpdeskno = res.Data.ContactAdminProvince[0].Phone
+	helpdeskname = res.Data.ContactAdminProvince[0].Fullname
 	dt := &itmodel.TextMessage{
 		To:       helpdeskno,
 		IsGroup:  false,
