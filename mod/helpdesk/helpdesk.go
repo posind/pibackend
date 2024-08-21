@@ -127,6 +127,17 @@ func GetNamadanDesaFromAPI(phonenumber string) (namadandesa string) {
 	return
 }
 
+func GetDataFromAPI(phonenumber string) (data Response) {
+	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+phonenumber)
+	if err != nil {
+		return
+	}
+	if statuscode != 200 { //404 jika user not found
+		return
+	}
+	return res
+}
+
 // helpdesk sudah terintegrasi dengan lms pamong desa backend
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
@@ -137,7 +148,10 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	if err != nil {
 		return err.Error()
 	}
-	msgstr := "*Permintaan bantuan dari Pengguna " + res.Data.Fullname + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
+	msgstr := GetPrefillMessage("adminbantuanadmin", db)
+	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
+
+	//msgstr := "*Permintaan bantuan dari Pengguna " + res.Data.Fullname + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
 	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 	var helpdeskno, helpdeskname string
 	if len(res.Data.ContactAdminProvince) == 0 { //kalo kosong data kontak admin provinsinya maka arahkan ke tim 16 tapi sesuikan dengan provinsinya
@@ -184,7 +198,10 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 	if err != nil {
 		return err.Error()
 	}
-	msgstr := "*Permintaan bantuan dari Pengguna " + Pesan.Alias_name + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
+	res := GetDataFromAPI(Pesan.Phone_number)
+	msgstr := GetPrefillMessage("adminbantuanadmin", db)
+	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
+	//msgstr := "*Permintaan bantuan dari Pengguna " + Pesan.Alias_name + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
 	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 	dt := &itmodel.TextMessage{
 		To:       op.PhoneNumber,
@@ -222,7 +239,10 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	if err != nil {
 		return err.Error()
 	}
-	msgstr := "*Permintaan bantuan dari Pengguna " + Pesan.Alias_name + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
+	res := GetDataFromAPI(Pesan.Phone_number)
+	msgstr := GetPrefillMessage("adminbantuanadmin", db)
+	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
+	//msgstr := "*Permintaan bantuan dari Pengguna " + Pesan.Alias_name + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
 	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 	dt := &itmodel.TextMessage{
 		To:       op.PhoneNumber,
