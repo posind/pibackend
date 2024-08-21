@@ -153,8 +153,10 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		Messages: msgstr,
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+	reply = GetPrefillMessage("userbantuanadmin", db)
+	reply = fmt.Sprintf(reply, helpdeskname, helpdeskno)
 
-	reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + helpdeskname + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + helpdeskno + "\nTerima kasih atas kesabaran Bapak/Ibu"
+	//reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + helpdeskname + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + helpdeskno + "\nTerima kasih atas kesabaran Bapak/Ibu"
 
 	return
 
