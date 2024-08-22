@@ -138,44 +138,6 @@ func GetDataFromAPI(phonenumber string) (data Response) {
 	return res
 }
 
-// helpdesk sudah terintegrasi dengan lms pamong desa backend
-func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
-	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
-	if statuscode != 200 { //404 jika user not found
-		msg := "Mohon maaf Bapak/Ibu, nomor anda *belum terdaftar* pada sistem kami.\n" + UserNotFound(Profile, Pesan, db)
-		return msg
-	}
-	if err != nil {
-		return err.Error()
-	}
-	msgstr := GetPrefillMessage("adminbantuanadmin", db)
-	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
-
-	//msgstr := "*Permintaan bantuan dari Pengguna " + res.Data.Fullname + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
-	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
-	var helpdeskno, helpdeskname string
-	if len(res.Data.ContactAdminProvince) == 0 { //kalo kosong data kontak admin provinsinya maka arahkan ke tim 16 tapi sesuikan dengan provinsinya
-		msg := "Mohon maaf Bapak/Ibu " + res.Data.Fullname + " dari desa " + res.Data.Village + ", helpdesk pamongdesa anda.\n" + AdminNotFoundWithProvinsi(Profile, Pesan, res.Data.Province, db)
-		return msg
-	}
-	//jika arraynya ada
-	helpdeskno = res.Data.ContactAdminProvince[0].Phone
-	helpdeskname = res.Data.ContactAdminProvince[0].Fullname
-	dt := &itmodel.TextMessage{
-		To:       helpdeskno,
-		IsGroup:  false,
-		Messages: msgstr,
-	}
-	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
-	reply = GetPrefillMessage("userbantuanadmin", db)
-	reply = fmt.Sprintf(reply, helpdeskname, helpdeskno)
-
-	//reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + helpdeskname + "*.\n\n Mohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + helpdeskno + "\nTerima kasih atas kesabaran Bapak/Ibu"
-
-	return
-
-}
-
 func GetSectionFromProvinsiRegex(db *mongo.Database, queries string) (section string, err error) {
 	var user model.Userdomyikado
 	filter := bson.M{"scope": primitive.Regex{Pattern: queries, Options: "i"}}
@@ -187,33 +149,40 @@ func GetSectionFromProvinsiRegex(db *mongo.Database, queries string) (section st
 	return
 }
 
-// Jika user tidak terdaftar maka akan mengeluarkan list operator pusat
-func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMessage, provinsi string, db *mongo.Database) (reply string) {
-	//tambah lojik query ke provinsi
-	sec, err := GetSectionFromProvinsiRegex(db, provinsi)
+// helpdesk sudah terintegrasi dengan lms pamong desa backend
+func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
+	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
+	if statuscode != 200 { //404 jika user not found
+		msg := "Mohon maaf Bapak/Ibu, nomor anda *belum terdaftar* pada sistem kami.\n" + UserNotFound(Profile, Pesan, db)
+		return msg
+	}
 	if err != nil {
 		return err.Error()
 	}
-	op, err := GetOperatorFromSection(sec, db)
-	if err != nil {
-		return err.Error()
+	if len(res.Data.ContactAdminProvince) == 0 { //kalo kosong data kontak admin provinsinya maka arahkan ke tim 16 tapi sesuikan dengan provinsinya
+		msg := "Mohon maaf Bapak/Ibu " + res.Data.Fullname + " dari desa " + res.Data.Village + ", helpdesk pamongdesa anda.\n" + AdminNotFoundWithProvinsi(Profile, Pesan, res.Data.Province, db)
+		return msg
 	}
-	res := GetDataFromAPI(Pesan.Phone_number)
+	//jika arraynya ada adminnya maka lanjut ke start session hub
+	helpdeskno := res.Data.ContactAdminProvince[0].Phone
+	helpdeskname := res.Data.ContactAdminProvince[0].Fullname
+	//pesan ke admin
 	msgstr := GetPrefillMessage("adminbantuanadmin", db)
 	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
-	//msgstr := "*Permintaan bantuan dari Pengguna " + Pesan.Alias_name + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
-	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 	dt := &itmodel.TextMessage{
-		To:       op.PhoneNumber,
+		To:       helpdeskno,
 		IsGroup:  false,
 		Messages: msgstr,
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
-	reply = GetPrefillMessage("userbantuanadmin", db)
-	reply = fmt.Sprintf(reply, op.Name, op.PhoneNumber)
-	//reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\nMohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
-
+	//pesan ke user
+	reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
+	reply = fmt.Sprintf(reply, helpdeskname, helpdeskno)
+	//insert ke database dan set hub session
+	InserNewTicket(Pesan.Phone_number, helpdeskname, helpdeskno, db)
+	CheckHubSession(Pesan.Phone_number, helpdeskno, db)
 	return
+
 }
 
 // Jika user tidak terdaftar maka akan mengeluarkan list operator pusat
@@ -231,7 +200,7 @@ func UserNotFound(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mong
 	return msg
 }
 
-// penugasan helpdeskpusat jika user belum terdaftar
+// penugasan helpdeskpusat jika user belum terdaftar, ini limpahan dari pilihan menu adminpusat
 func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	Pesan.Message = strings.ReplaceAll(Pesan.Message, "adminpusat", "")
 	Pesan.Message = strings.TrimSpace(Pesan.Message)
@@ -240,25 +209,52 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		return err.Error()
 	}
 	res := GetDataFromAPI(Pesan.Phone_number)
-	msgstr := GetPrefillMessage("adminbantuanadmin", db)
+	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan untuk admin
 	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
-	//msgstr := "*Permintaan bantuan dari Pengguna " + Pesan.Alias_name + " (" + Pesan.Phone_number + ")*\n\nMohon dapat segera menghubungi beliau melalui WhatsApp di nomor wa.me/" + Pesan.Phone_number + " untuk memberikan solusi terkait masalah yang sedang dialami." //:\n\n" + user.Masalah
-	//msgstr += "\n\nSetelah masalah teratasi, dimohon untuk menginputkan solusi yang telah diberikan ke dalam sistem melalui tautan berikut:\nwa.me/" + Profile.Phonenumber + "?text=" + user.ID.Hex() + "|+solusi+dari+operator+helpdesk+:+"
 	dt := &itmodel.TextMessage{
 		To:       op.PhoneNumber,
 		IsGroup:  false,
 		Messages: msgstr,
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
-	reply = GetPrefillMessage("userbantuanadmin", db)
+	reply = GetPrefillMessage("userbantuanadmin", db) //pesan untuk user
 	reply = fmt.Sprintf(reply, op.Name, op.PhoneNumber)
-
-	//reply = "Segera, Bapak/Ibu akan dihubungkan dengan salah satu Admin kami, *" + op.Name + "*.\n\nMohon tunggu sebentar, kami akan menghubungi Anda melalui WhatsApp di nomor wa.me/" + op.PhoneNumber + "\nTerima kasih atas kesabaran Bapak/Ibu"
-
+	//insert ke database dan set hub session
+	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
+	CheckHubSession(Pesan.Phone_number, op.PhoneNumber, db)
 	return
 
 }
 
+// Jika user terdaftar tapi belum ada operator provinsi maka akan mengeluarkan list operator pusat
+func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMessage, provinsi string, db *mongo.Database) (reply string) {
+	//tambah lojik query ke provinsi
+	sec, err := GetSectionFromProvinsiRegex(db, provinsi)
+	if err != nil {
+		return err.Error()
+	}
+	op, err := GetOperatorFromSection(sec, db)
+	if err != nil {
+		return err.Error()
+	}
+	res := GetDataFromAPI(Pesan.Phone_number)
+	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan untuk admin
+	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
+	dt := &itmodel.TextMessage{
+		To:       op.PhoneNumber,
+		IsGroup:  false,
+		Messages: msgstr,
+	}
+	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+	reply = GetPrefillMessage("userbantuanadmin", db) //pesan untuk user
+	reply = fmt.Sprintf(reply, op.Name, op.PhoneNumber)
+	//insert ke database dan set hub session
+	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
+	CheckHubSession(Pesan.Phone_number, op.PhoneNumber, db)
+	return
+}
+
+// legacy
 // handling key word, keyword :bantuan operator
 func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	//check apakah tiket dari user sudah di tutup atau belum
