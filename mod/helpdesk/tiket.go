@@ -11,10 +11,10 @@ func IsTicketClosed(phonefield string, phonenumber string, db *mongo.Database) (
 	tiket, err = atdb.GetOneLatestDoc[Bantuan](db, "tiket", bson.M{"terlayani": bson.M{"$exists": false}, phonefield: phonenumber})
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
+			//tiket udah close karena no doc
+			closed = true
 			return
 		}
-		//tiket udah close karena no doc
-		closed = true
 		return
 	}
 	//ada tiket yang belum closed

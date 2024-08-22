@@ -151,6 +151,16 @@ func GetSectionFromProvinsiRegex(db *mongo.Database, queries string) (section st
 
 // helpdesk sudah terintegrasi dengan lms pamong desa backend
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
+	//check apakah tiketnya udah tutup atau belum
+	isclosed, tiket, _ := IsTicketClosed("userphone", Pesan.Phone_number, db)
+	if !isclosed { //ada yang belum closed, lanjutkan sesi hub
+		//pesan ke user
+		reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
+		reply = fmt.Sprintf(reply, tiket.AdminName, tiket.AdminPhone)
+		CheckHubSession(Pesan.Phone_number, tiket.AdminPhone, db)
+		return
+	}
+	//jika tiket sudah clear
 	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
 	if statuscode != 200 { //404 jika user not found
 		msg := "Mohon maaf Bapak/Ibu, nomor anda *belum terdaftar* pada sistem kami.\n" + UserNotFound(Profile, Pesan, db)
@@ -200,7 +210,7 @@ func UserNotFound(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mong
 	return msg
 }
 
-// penugasan helpdeskpusat jika user belum terdaftar, ini limpahan dari pilihan menu adminpusat
+// penugasan helpdeskpusat jika user belum terdaftar, ini limpahan dari pilihan func UserNotFound
 func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	Pesan.Message = strings.ReplaceAll(Pesan.Message, "adminpusat", "")
 	Pesan.Message = strings.TrimSpace(Pesan.Message)
