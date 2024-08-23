@@ -22,7 +22,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	//check apakah tiketnya udah tutup atau belum
 	isclosed, tiket, err := IsTicketClosed("userphone", Pesan.Phone_number, db)
 	if err != nil {
-		return err.Error()
+		return "IsTicketClosed: " + err.Error()
 	}
 	if !isclosed { //ada yang belum closed, lanjutkan sesi hub
 		//pesan ke user
