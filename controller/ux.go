@@ -11,6 +11,7 @@ import (
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/gcallapi"
+	"github.com/gocroot/helper/kimseok"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/helper/whatsauth"
@@ -164,6 +165,30 @@ func PostUnsubscribe(respw http.ResponseWriter, req *http.Request) {
 	respn.Response = res.Hex()
 	respn.Info = hasil.Fullname
 	at.WriteJSON(respw, http.StatusOK, respn)
+}
+
+// mendapatkan data FAQ
+func GetFAQ(respw http.ResponseWriter, req *http.Request) {
+	id := at.GetParam(req)
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : ObjectID Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(req)
+		respn.Location = "Encode Object ID Error"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
+		return
+	}
+	hasil, err := atdb.GetOneLatestDoc[kimseok.Datasets](config.Mongoconn, "faq", primitive.M{"_id": objectId})
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : Data profile user sent tidak di temukan"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
+	at.WriteJSON(respw, http.StatusOK, hasil)
 }
 
 // mendapatkan user yang sent dan mau unnsubscribe
