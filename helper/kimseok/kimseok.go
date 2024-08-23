@@ -9,6 +9,7 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/hub"
 	"github.com/gocroot/helper/module"
+	"github.com/gocroot/helper/tiket"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -56,15 +57,17 @@ func GetQnAfromSliceWithJaro(q string, qnas []Datasets) (dt Datasets) {
 // balasan jika tidak ditemukan key word
 func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname string, db *mongo.Database) string {
 	var reply string
-	//check session menu
-	reply = module.MenuSessionHandler(Profile, msg, db)
-	//jika tidak ada di db komplain lanjut ke selanjutnya
-	if reply == "" {
-		dt, err := QueriesDataRegexpALL(db, msg.Message)
-		if err != nil {
-			return err.Error()
+	//check session menu, ignore kalo admin
+	if !tiket.IsAdmin(msg.Phone_number, db) {
+		reply = module.MenuSessionHandler(Profile, msg, db)
+		//jika tidak ada di db komplain lanjut ke selanjutnya
+		if reply == "" {
+			dt, err := QueriesDataRegexpALL(db, msg.Message)
+			if err != nil {
+				return err.Error()
+			}
+			reply = dt.Answer
 		}
-		reply = dt.Answer
 	}
 	//jika reply kosong maka lanjutkan cek ke session message hub
 	if reply == "" {

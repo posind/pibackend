@@ -42,3 +42,12 @@ func UpdateAdminMsgInTiket(adminphone string, adminmsg string, db *mongo.Databas
 	}
 	return
 }
+
+func IsAdmin(adminphone string, db *mongo.Database) (isadmin bool) {
+	_, err := atdb.GetOneLatestDoc[Bantuan](db, "tiket", bson.M{"adminphone": adminphone})
+	if err != nil {
+		return
+	}
+	isadmin = true
+	return
+}
