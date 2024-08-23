@@ -66,7 +66,12 @@ func HubHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *mongo.Da
 func CheckHubSessionUser(userphone string, db *mongo.Database) (session SessionHub, result bool, err error) {
 	session, err = atdb.GetOneDoc[SessionHub](db, "hub", bson.M{"userphone": userphone})
 	session.CreatedAt = time.Now()
-	if err != nil { //insert session klo belum ada
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			//klo documen ga ada maka false dan error nil
+			err = nil
+			return
+		}
 		return
 	} else { //jika sesssion udah ada
 		//refresh waktu session dengan waktu sekarang
@@ -87,7 +92,12 @@ func CheckHubSessionUser(userphone string, db *mongo.Database) (session SessionH
 func CheckHubSessionAdmin(adminphone string, db *mongo.Database) (session SessionHub, result bool, err error) {
 	session, err = atdb.GetOneDoc[SessionHub](db, "hub", bson.M{"adminphone": adminphone})
 	session.CreatedAt = time.Now()
-	if err != nil { //return session klo belum ada
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			//klo documen ga ada maka false dan error nil
+			err = nil
+			return
+		}
 		return
 	} else { //jika sesssion udah ada
 		//refresh waktu session dengan waktu sekarang
