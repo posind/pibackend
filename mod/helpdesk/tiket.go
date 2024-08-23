@@ -8,8 +8,8 @@ import (
 )
 
 // phonefield: userphone or adminphone
-func IsTicketClosed(phonefield string, phonenumber string, db *mongo.Database) (closed bool, tiket tiket.Bantuan, err error) {
-	tiket, err = atdb.GetOneLatestDoc[tiket.Bantuan](db, "tiket", bson.M{"terlayani": bson.M{"$exists": false}, phonefield: phonenumber})
+func IsTicketClosed(phonefield string, phonenumber string, db *mongo.Database) (closed bool, stiket tiket.Bantuan, err error) {
+	stiket, err = atdb.GetOneLatestDoc[tiket.Bantuan](db, "tiket", bson.M{"terlayani": bson.M{"$exists": false}, phonefield: phonenumber})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			//tiket udah close karena no doc
