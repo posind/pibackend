@@ -18,7 +18,7 @@ func UpdateUserMsgInTiket(userphone string, usermsg string, db *mongo.Database) 
 	}
 
 	tiket.UserMessage += "\n" + wkt + " : " + usermsg
-	_, err = atdb.ReplaceOneDoc(db, "helpdeskuser", bson.M{"_id": tiket.ID}, tiket)
+	_, err = atdb.ReplaceOneDoc(db, "tiket", bson.M{"_id": tiket.ID}, tiket)
 	if err != nil {
 		return
 	}
@@ -35,8 +35,8 @@ func UpdateAdminMsgInTiket(adminphone string, adminmsg string, db *mongo.Databas
 		return
 	}
 
-	tiket.UserMessage += "\n" + wkt + " : " + adminmsg
-	_, err = atdb.ReplaceOneDoc(db, "helpdeskuser", bson.M{"_id": tiket.ID}, tiket)
+	tiket.AdminMessage += "\n" + wkt + " : " + adminmsg
+	_, err = atdb.ReplaceOneDoc(db, "tiket", bson.M{"_id": tiket.ID}, tiket)
 	if err != nil {
 		return
 	}
