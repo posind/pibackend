@@ -46,8 +46,6 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	helpdeskname := res.Data.ContactAdminProvince[0].Fullname
 	if helpdeskname == "" || helpdeskno == "" {
 		return "Nama atau nomor helpdesk tidak ditemukan"
-	} else { //untuk debug aja. hapus klo udah
-		return "Nama helpdesk:" + helpdeskname + "\nNo helpdesk:" + helpdeskno
 	}
 	//pesan ke admin
 	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan ke admin
