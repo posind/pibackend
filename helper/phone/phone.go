@@ -1,9 +1,10 @@
 package phone
 
-import "regexp"
-
 func MaskPhoneNumber(phone string) string {
-	// Regular expression untuk menangkap tiga bagian: enam digit pertama, tiga digit di tengah, dan sisanya.
-	re := regexp.MustCompile(`(\d{6})(\d{3})(\d+)`)
-	return re.ReplaceAllString(phone, `$1xxx$3`)
+	if len(phone) < 9 {
+		// Jika nomor telepon terlalu pendek untuk disamarkan, kembalikan tanpa perubahan
+		return phone
+	}
+	// Ambil bagian pertama dari nomor telepon hingga posisi ke-6, tambahkan "xxx", lalu tambahkan sisa dari digit ke-9
+	return phone[:6] + "xxx" + phone[9:]
 }
