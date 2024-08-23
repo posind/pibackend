@@ -10,6 +10,7 @@ import (
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/hub"
 	"github.com/gocroot/model"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
@@ -157,7 +158,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		//pesan ke user
 		reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
 		reply = fmt.Sprintf(reply, tiket.AdminName, tiket.AdminPhone)
-		CheckHubSession(Pesan.Phone_number, tiket.AdminPhone, db)
+		hub.CheckHubSession(Pesan.Phone_number, tiket.UserName, tiket.AdminPhone, tiket.AdminName, db)
 		return
 	}
 	//jika tiket sudah clear
@@ -177,7 +178,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	helpdeskno := res.Data.ContactAdminProvince[0].Phone
 	helpdeskname := res.Data.ContactAdminProvince[0].Fullname
 	//pesan ke admin
-	msgstr := GetPrefillMessage("adminbantuanadmin", db)
+	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan ke admin
 	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
 	dt := &itmodel.TextMessage{
 		To:       helpdeskno,
@@ -190,7 +191,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	reply = fmt.Sprintf(reply, helpdeskname, helpdeskno)
 	//insert ke database dan set hub session
 	InserNewTicket(Pesan.Phone_number, helpdeskname, helpdeskno, db)
-	CheckHubSession(Pesan.Phone_number, helpdeskno, db)
+	hub.CheckHubSession(Pesan.Phone_number, res.Data.Fullname, helpdeskno, helpdeskname, db)
 	return
 
 }
@@ -231,7 +232,7 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	reply = fmt.Sprintf(reply, op.Name, op.PhoneNumber)
 	//insert ke database dan set hub session
 	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
-	CheckHubSession(Pesan.Phone_number, op.PhoneNumber, db)
+	hub.CheckHubSession(Pesan.Phone_number, Pesan.Alias_name, op.PhoneNumber, op.Name, db)
 	return
 
 }
@@ -260,7 +261,7 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 	reply = fmt.Sprintf(reply, op.Name, op.PhoneNumber)
 	//insert ke database dan set hub session
 	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
-	CheckHubSession(Pesan.Phone_number, op.PhoneNumber, db)
+	hub.CheckHubSession(Pesan.Phone_number, res.Data.Fullname, op.PhoneNumber, op.Name, db)
 	return
 }
 

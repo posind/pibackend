@@ -64,8 +64,8 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 			return err.Error()
 		}
 		reply = dt.Answer
-
 	}
+	//jika reply kosong maka lanjutkan cek ke session hub
 	return reply
 }
 
