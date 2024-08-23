@@ -66,8 +66,8 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 			if err != nil {
 				return err.Error()
 			}
-			if dt.Answer != "" {
-				reply = dt.Answer + "\n> helpdesk-pamongdesa.kemendagri.go.id/faq/#" + dt.ID.Hex() + "\n> " + strconv.FormatFloat(score, 'f', 6, 64)
+			if dt.Answer != "" && score > 0.9 {
+				reply = dt.Answer + "\n> _" + dt.ID.Hex() + " " + strconv.FormatFloat(score, 'f', 6, 64) + "_"
 			}
 		}
 	}
@@ -91,6 +91,7 @@ func QueriesDataRegexpALL(db *mongo.Database, queries string) (dest Datasets, sc
 		return
 	}
 	if len(qnas) > 0 {
+		score = 1
 		dest = GetRandomFromQnASlice(qnas)
 		return
 	}
