@@ -13,6 +13,7 @@ func IsTicketClosed(phonefield string, phonenumber string, db *mongo.Database) (
 		if err == mongo.ErrNoDocuments {
 			//tiket udah close karena no doc
 			closed = true
+			err = nil
 		}
 		return
 	}
