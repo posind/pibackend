@@ -23,7 +23,7 @@ func HubHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *mongo.Da
 		if err != nil {
 			return err.Error()
 		}
-		if res { //klo session admin masih ada
+		if res { //klo session admin masih ada, maka pesan diteruskan ke user
 			msgstr := msg.Message + "\n> _" + shub.AdminName + "_"
 			dt := &itmodel.TextMessage{
 				To:       shub.UserPhone,
@@ -37,7 +37,7 @@ func HubHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *mongo.Da
 		//kalo ga ada session
 		return ""
 	}
-	//kalo session user masih ada
+	//kalo session user masih ada, maka pesan diteruskan ke admin
 	msgstr := msg.Message + "\n> _" + shub.UserName + "_"
 	dt := &itmodel.TextMessage{
 		To:       shub.AdminPhone,

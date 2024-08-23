@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/hub"
 	"github.com/gocroot/helper/module"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
@@ -65,7 +66,11 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 		}
 		reply = dt.Answer
 	}
-	//jika reply kosong maka lanjutkan cek ke session hub
+	//jika reply kosong maka lanjutkan cek ke session message hub
+	if reply == "" {
+		reply = hub.HubHandler(Profile, msg, db)
+	}
+
 	return reply
 }
 
