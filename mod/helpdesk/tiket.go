@@ -2,13 +2,14 @@ package helpdesk
 
 import (
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/tiket"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // phonefield: userphone or adminphone
-func IsTicketClosed(phonefield string, phonenumber string, db *mongo.Database) (closed bool, tiket Bantuan, err error) {
-	tiket, err = atdb.GetOneLatestDoc[Bantuan](db, "tiket", bson.M{"terlayani": bson.M{"$exists": false}, phonefield: phonenumber})
+func IsTicketClosed(phonefield string, phonenumber string, db *mongo.Database) (closed bool, tiket tiket.Bantuan, err error) {
+	tiket, err = atdb.GetOneLatestDoc[tiket.Bantuan](db, "tiket", bson.M{"terlayani": bson.M{"$exists": false}, phonefield: phonenumber})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			//tiket udah close karena no doc
@@ -25,7 +26,7 @@ func IsTicketClosed(phonefield string, phonenumber string, db *mongo.Database) (
 
 func InserNewTicket(userphone string, adminname string, adminphone string, db *mongo.Database) (err error) {
 	dataapi := GetDataFromAPI(userphone)
-	tiketbaru := Bantuan{
+	tiketbaru := tiket.Bantuan{
 		UserName:   dataapi.Data.Fullname,
 		UserPhone:  userphone,
 		AdminPhone: adminphone,
