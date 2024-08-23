@@ -20,7 +20,10 @@ import (
 // helpdesk sudah terintegrasi dengan lms pamong desa backend
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	//check apakah tiketnya udah tutup atau belum
-	isclosed, tiket, _ := IsTicketClosed("userphone", Pesan.Phone_number, db)
+	isclosed, tiket, err := IsTicketClosed("userphone", Pesan.Phone_number, db)
+	if err != nil {
+		return err.Error()
+	}
 	if !isclosed { //ada yang belum closed, lanjutkan sesi hub
 		//pesan ke user
 		reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
