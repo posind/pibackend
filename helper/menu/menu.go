@@ -1,4 +1,4 @@
-package helpdesk
+package menu
 
 import (
 	"context"

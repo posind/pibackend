@@ -10,6 +10,7 @@ import (
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/hub"
+	"github.com/gocroot/helper/menu"
 	"github.com/gocroot/model"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
@@ -75,12 +76,12 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 // Jika user tidak terdaftar maka akan mengeluarkan list operator pusat
 func UserNotFound(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	//check apakah ada session, klo ga ada kasih reply menu
-	Sesdoc, _, err := CheckSession(Pesan.Phone_number, db)
+	Sesdoc, _, err := menu.CheckSession(Pesan.Phone_number, db)
 	if err != nil {
 		return err.Error()
 	}
 
-	msg, err := GetMenuFromKeywordAndSetSession("adminpusat", Sesdoc, db)
+	msg, err := menu.GetMenuFromKeywordAndSetSession("adminpusat", Sesdoc, db)
 	if err != nil {
 		return err.Error()
 	}
