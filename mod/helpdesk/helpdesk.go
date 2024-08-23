@@ -28,7 +28,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	if !isclosed { //ada yang belum closed, lanjutkan sesi hub
 		//pesan ke user
 		reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
-		reply = fmt.Sprintf(reply, tiket.AdminName, tiket.AdminPhone)
+		reply = fmt.Sprintf(reply, tiket.AdminName)
 		hub.CheckHubSession(Pesan.Phone_number, tiket.UserName, tiket.AdminPhone, tiket.AdminName, db)
 		return
 	}
@@ -53,7 +53,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	}
 	//pesan ke admin
 	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan ke admin
-	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
+	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency)
 	dt := &itmodel.TextMessage{
 		To:       helpdeskno,
 		IsGroup:  false,
@@ -62,7 +62,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
 	//pesan ke user
 	reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
-	reply = fmt.Sprintf(reply, helpdeskname, helpdeskno)
+	reply = fmt.Sprintf(reply, helpdeskname)
 	//insert ke database dan set hub session
 	err = InserNewTicket(Pesan.Phone_number, helpdeskname, helpdeskno, db)
 	if err != nil {
@@ -98,7 +98,7 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	}
 	res := GetDataFromAPI(Pesan.Phone_number)
 	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan untuk admin
-	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
+	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency)
 	dt := &itmodel.TextMessage{
 		To:       op.PhoneNumber,
 		IsGroup:  false,
@@ -106,7 +106,7 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
 	reply = GetPrefillMessage("userbantuanadmin", db) //pesan untuk user
-	reply = fmt.Sprintf(reply, op.Name, op.PhoneNumber)
+	reply = fmt.Sprintf(reply, op.Name)
 	//insert ke database dan set hub session
 	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
 	hub.CheckHubSession(Pesan.Phone_number, Pesan.Alias_name, op.PhoneNumber, op.Name, db)
@@ -127,7 +127,7 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 	}
 	res := GetDataFromAPI(Pesan.Phone_number)
 	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan untuk admin
-	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
+	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency)
 	dt := &itmodel.TextMessage{
 		To:       op.PhoneNumber,
 		IsGroup:  false,
@@ -135,7 +135,7 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
 	reply = GetPrefillMessage("userbantuanadmin", db) //pesan untuk user
-	reply = fmt.Sprintf(reply, op.Name, op.PhoneNumber)
+	reply = fmt.Sprintf(reply, op.Name)
 	//insert ke database dan set hub session
 	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
 	hub.CheckHubSession(Pesan.Phone_number, res.Data.Fullname, op.PhoneNumber, op.Name, db)

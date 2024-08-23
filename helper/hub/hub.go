@@ -43,6 +43,9 @@ func HubHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *mongo.Da
 		return ""
 	}
 	//kalo session user masih ada, maka pesan diteruskan ke admin
+	if shub.UserName == "" { // jika userkosong(userbelumterdaftar) maka nama diisi nomor hape dan alias
+		shub.UserName = msg.Phone_number + " ~ " + msg.Alias_name
+	}
 	msgstr := msg.Message + "\n> _" + shub.UserName + "_"
 	dt := &itmodel.TextMessage{
 		To:       shub.AdminPhone,
