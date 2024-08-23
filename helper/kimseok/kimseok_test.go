@@ -24,7 +24,7 @@ func TestExampleFunction(t *testing.T) {
 
 	db := client.Database(dbname)
 	q := "hari ini hari apa"
-	dest, _ := QueriesDataRegexpALL(db, q)
+	dest, _, _ := QueriesDataRegexpALL(db, q)
 	println(dest.Origin)
 	println(dest.Question)
 	println(dest.Answer)

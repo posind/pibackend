@@ -3,6 +3,7 @@ package kimseok
 import (
 	"context"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -38,8 +39,7 @@ func GetRandomFromQnASlice(qnas []Datasets) Datasets {
 	return qnas[randomIndex]
 }
 
-func GetQnAfromSliceWithJaro(q string, qnas []Datasets) (dt Datasets) {
-	var score float64
+func GetQnAfromSliceWithJaro(q string, qnas []Datasets) (dt Datasets, score float64) {
 	for _, qna := range qnas {
 		//fmt.Println(data)
 		str2 := qna.Question
@@ -62,12 +62,12 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 		reply = module.MenuSessionHandler(Profile, msg, db)
 		//jika tidak ada di db komplain lanjut ke selanjutnya
 		if reply == "" {
-			dt, err := QueriesDataRegexpALL(db, msg.Message)
+			dt, score, err := QueriesDataRegexpALL(db, msg.Message)
 			if err != nil {
 				return err.Error()
 			}
 			if dt.Answer != "" {
-				reply = dt.Answer + "\n> _" + dt.ID.Hex() + "_"
+				reply = dt.Answer + "\n> helpdesk-pamongdesa.kemendagri.go.id/faq/#" + dt.ID.Hex() + "\n> " + strconv.FormatFloat(score, 'f', 6, 64)
 			}
 		}
 	}
@@ -79,7 +79,7 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 	return reply
 }
 
-func QueriesDataRegexpALL(db *mongo.Database, queries string) (dest Datasets, err error) {
+func QueriesDataRegexpALL(db *mongo.Database, queries string) (dest Datasets, score float64, err error) {
 	//kata akhiran imbuhan
 	//queries = SeparateSuffixMu(queries)
 
@@ -105,7 +105,7 @@ func QueriesDataRegexpALL(db *mongo.Database, queries string) (dest Datasets, er
 		if err != nil {
 			return
 		} else if len(qnas) > 0 {
-			dest = GetQnAfromSliceWithJaro(queries, qnas)
+			dest, score = GetQnAfromSliceWithJaro(queries, qnas)
 			return
 		}
 		// Join remaining elements back into a string for wordsbelakang
@@ -114,7 +114,7 @@ func QueriesDataRegexpALL(db *mongo.Database, queries string) (dest Datasets, er
 		if err != nil {
 			return
 		} else if len(qnas) > 0 {
-			dest = GetQnAfromSliceWithJaro(queries, qnas)
+			dest, score = GetQnAfromSliceWithJaro(queries, qnas)
 			return
 		}
 		// Remove the last element
