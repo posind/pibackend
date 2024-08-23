@@ -13,12 +13,13 @@ func IsTicketClosed(phonefield string, phonenumber string, db *mongo.Database) (
 		if err == mongo.ErrNoDocuments {
 			//tiket udah close karena no doc
 			closed = true
-			err = nil
+			err = nil // Reset err ke nil karena ini bukan error, hanya kondisi normal
+			return
 		}
+		// Jika ada error lain, kita return error tersebut
 		return
 	}
-	// Jika ada tiket yang belum closed
-	closed = false
+	// Jika ada tiket yang belum closed, kita kembalikan nilai default closed = false
 	return
 }
 
