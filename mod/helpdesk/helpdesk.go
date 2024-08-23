@@ -109,7 +109,7 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	reply = fmt.Sprintf(reply, op.Name)
 	//insert ke database dan set hub session
 	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
-	hub.CheckHubSession(Pesan.Phone_number, Pesan.Alias_name, op.PhoneNumber, op.Name, db)
+	hub.CheckHubSession(Pesan.Phone_number, Pesan.Phone_number+" ~ "+Pesan.Alias_name, op.PhoneNumber, op.Name, db)
 	return
 
 }
