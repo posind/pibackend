@@ -11,6 +11,7 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/hub"
 	"github.com/gocroot/helper/menu"
+	"github.com/gocroot/helper/phone"
 	"github.com/gocroot/model"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
@@ -109,7 +110,7 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	reply = fmt.Sprintf(reply, op.Name)
 	//insert ke database dan set hub session
 	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
-	hub.CheckHubSession(Pesan.Phone_number, Pesan.Phone_number+" ~ "+Pesan.Alias_name, op.PhoneNumber, op.Name, db)
+	hub.CheckHubSession(Pesan.Phone_number, phone.MaskPhoneNumber(Pesan.Phone_number)+" ~ "+Pesan.Alias_name, op.PhoneNumber, op.Name, db)
 	return
 
 }

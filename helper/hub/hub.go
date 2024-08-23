@@ -6,6 +6,7 @@ import (
 
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/phone"
 	"github.com/gocroot/helper/tiket"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
@@ -44,7 +45,7 @@ func HubHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *mongo.Da
 	}
 	//kalo session user masih ada, maka pesan diteruskan ke admin
 	if shub.UserName == "" { // jika userkosong(userbelumterdaftar) maka nama diisi nomor hape dan alias
-		shub.UserName = msg.Phone_number + " ~ " + msg.Alias_name
+		shub.UserName = phone.MaskPhoneNumber(msg.Phone_number) + " ~ " + msg.Alias_name
 	}
 	msgstr := msg.Message + "\n> _" + shub.UserName + "_"
 	dt := &itmodel.TextMessage{
