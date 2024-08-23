@@ -44,6 +44,9 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	//jika arraynya ada adminnya maka lanjut ke start session hub
 	helpdeskno := res.Data.ContactAdminProvince[0].Phone
 	helpdeskname := res.Data.ContactAdminProvince[0].Fullname
+	if helpdeskname == "" && helpdeskno == "" {
+		return "Nama dan nomor helpdesk tidak ditemukan"
+	}
 	//pesan ke admin
 	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan ke admin
 	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency, Pesan.Phone_number)
