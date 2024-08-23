@@ -6,6 +6,7 @@ import (
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/kimseok"
+	"github.com/gocroot/helper/menu"
 	"github.com/gocroot/helper/normalize"
 	"github.com/gocroot/mod/helpdesk"
 
@@ -76,6 +77,7 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 	if bukanbot != nil {                               //jika tidak terdapat di profile
 		msg.Message = normalize.NormalizeHiddenChar(msg.Message)
 		module.NormalizeAndTypoCorrection(&msg.Message, db, "typo")
+		msg.Message = menu.MenuSessionHandler(profile, msg, db) //jika pesan adalah nomor,maka akan mengembalikan menu jika ada menu atau keyword
 		modname, group, personal := module.GetModuleName(profile.Phonenumber, msg, db, "module")
 		var msgstr string
 		var isgrup bool

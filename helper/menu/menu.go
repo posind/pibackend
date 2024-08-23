@@ -6,9 +6,53 @@ import (
 	"time"
 
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/tiket"
+	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+// Mengecek apakah pesan adalah nomor menu, jika nomor menu maka akan mengubahnya menjadi keyword
+func MenuSessionHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *mongo.Database) string {
+	//check apakah nomor adalah admin atau user untuk menentukan startmenu
+	var startmenu string
+	if !tiket.IsAdmin(msg.Phone_number, db) {
+		startmenu = "usermenu"
+	} else {
+		startmenu = "adminmenu"
+	}
+	//check apakah ada session, klo ga ada insert sesssion baru
+	Sesdoc, ses, err := CheckSession(msg.Phone_number, db)
+	if err != nil {
+		return err.Error()
+	}
+	if !ses { //jika tidak ada session atau session=false maka return menu utama user dan update session isi list nomor menunya
+		msg, err := GetMenuFromKeywordAndSetSession(startmenu, Sesdoc, db)
+		if err != nil {
+			return err.Error()
+		}
+		return msg
+
+	}
+	//jika ada session maka cek menu
+	//check apakah pesan integer
+	menuno, err := strconv.Atoi(msg.Message)
+	if err == nil { //kalo pesan adalah nomor
+		for _, menu := range Sesdoc.Menulist { //loping di menu list dari session
+			if menuno == menu.No { //jika nomor menu sama dengan nomor yang ada di pesan
+				msgs, err := GetMenuFromKeywordAndSetSession(menu.Keyword, Sesdoc, db) //check apakah ada menu dengan keyword dari nomor menu
+				if err != nil {
+					//jika di collection menu tidak ada menu dengan keyword tersebut maka kita kembalikan keyword tersebut untuk di proses ke langkah selanjutnya
+					return menu.Keyword
+				}
+				return msgs
+			}
+		}
+		return "Mohon maaf nomor menu yang anda masukkan tidak ada di daftar menu"
+	}
+	//kalo pesan bukan nomor return pesan itu sendiri
+	return msg.Message
+}
 
 // check session udah ada atau belum kalo sudah ada maka refresh session
 func CheckSession(phonenumber string, db *mongo.Database) (session Session, result bool, err error) {
