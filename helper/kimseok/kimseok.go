@@ -3,7 +3,6 @@ package kimseok
 import (
 	"context"
 	"math/rand"
-	"strconv"
 	"strings"
 	"time"
 
@@ -67,7 +66,7 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 				return err.Error()
 			}
 			if dt.Answer != "" && score > 0.9 {
-				reply = dt.Answer + "\n> _FAQ: " + dt.ID.Hex() + " " + strconv.FormatFloat(score, 'f', 6, 64) + "_"
+				reply = dt.Answer + "\n> _FAQ:" + dt.ID.Hex() + "_"
 			}
 		}
 	}
