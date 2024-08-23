@@ -66,7 +66,7 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 			if err != nil {
 				return err.Error()
 			}
-			reply = dt.Answer
+			reply = dt.Answer + "\n> _" + dt.ID.Hex() + "_"
 		}
 	}
 	//jika reply kosong maka lanjutkan cek ke session message hub
