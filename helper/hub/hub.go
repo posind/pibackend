@@ -6,6 +6,7 @@ import (
 
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/tiket"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,6 +32,10 @@ func HubHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *mongo.Da
 				Messages: msgstr,
 			}
 			go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+			err = tiket.UpdateAdminMsgInTiket(msg.Phone_number, msg.Message, db)
+			if err != nil {
+				return "tiket tidak ditemukan atau sudah di tutup : " + err.Error()
+			}
 			//return "> _ⓘ terkirim ke:" + shub.UserPhone + "_"
 			return ""
 		}
@@ -45,6 +50,10 @@ func HubHandler(Profile itmodel.Profile, msg itmodel.IteungMessage, db *mongo.Da
 		Messages: msgstr,
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+	err = tiket.UpdateUserMsgInTiket(msg.Phone_number, msg.Message, db)
+	if err != nil {
+		return "tiket tidak ditemukan atau sudah di tutup : " + err.Error()
+	}
 	//return "> _ⓘ terkirim ke:" + shub.AdminPhone + "_"
 	return ""
 
