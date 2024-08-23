@@ -29,7 +29,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		return
 	}
 	//jika tiket sudah clear
-	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
+	statuscode, res, err := atapi.GetStructWithToken[ResponseAPIPD]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
 	if statuscode != 200 { //404 jika user not found
 		msg := "Mohon maaf Bapak/Ibu, nomor anda *belum terdaftar* pada sistem kami.\n" + UserNotFound(Profile, Pesan, db)
 		return msg

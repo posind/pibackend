@@ -113,7 +113,7 @@ func GetOperatorFromSection(section string, db *mongo.Database) (operator model.
 }
 
 func GetNamadanDesaFromAPI(phonenumber string) (namadandesa string) {
-	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+phonenumber)
+	statuscode, res, err := atapi.GetStructWithToken[ResponseAPIPD]("token", config.APITOKENPD, config.APIGETPDLMS+phonenumber)
 	if err != nil {
 		return
 	}
@@ -124,8 +124,8 @@ func GetNamadanDesaFromAPI(phonenumber string) (namadandesa string) {
 	return
 }
 
-func GetDataFromAPI(phonenumber string) (data Response) {
-	statuscode, res, err := atapi.GetStructWithToken[Response]("token", config.APITOKENPD, config.APIGETPDLMS+phonenumber)
+func GetDataFromAPI(phonenumber string) (data ResponseAPIPD) {
+	statuscode, res, err := atapi.GetStructWithToken[ResponseAPIPD]("token", config.APITOKENPD, config.APIGETPDLMS+phonenumber)
 	if err != nil {
 		return
 	}

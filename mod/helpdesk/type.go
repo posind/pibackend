@@ -34,7 +34,7 @@ type Data struct {
 	ContactAdminProvince []ContactAdmin `json:"contact_admin_province"`
 }
 
-type Response struct {
+type ResponseAPIPD struct {
 	Success bool `json:"success"`
 	Data    Data `json:"data"`
 }
