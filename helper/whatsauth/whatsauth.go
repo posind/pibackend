@@ -82,7 +82,7 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 		module.NormalizeAndTypoCorrection(&msg.Message, db, "typo")
 		msgstr = menu.MenuSessionHandler(&msg, db) //jika pesan adalah nomor,maka akan mengembalikan menu jika ada menu atau keyword
 		modname, group, personal := module.GetModuleName(profile.Phonenumber, msg, db, "module")
-		if msg.Chat_server != "g.us" && msgstr != "" { //chat personal
+		if msg.Chat_server != "g.us" && msgstr == "" { //chat personal
 			if personal && modname != "" {
 				msgstr = mod.Caller(profile, modname, msg, db)
 			} else {
@@ -96,7 +96,7 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 			isgrup = true
 			if group && modname != "" {
 				msgstr = mod.Caller(profile, modname, msg, db)
-			} else if msgstr != "" {
+			} else if msgstr == "" {
 				msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
 			}
 		}
