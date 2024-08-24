@@ -74,13 +74,13 @@ func HandlerQRLogin(msg itmodel.IteungMessage, profile itmodel.Profile, db *mong
 
 func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, db *mongo.Database) (resp itmodel.Response, err error) {
 	_, bukanbot := GetAppProfile(msg.Phone_number, db) //cek apakah nomor adalah bot
-	if bukanbot != nil {                               //jika tidak terdapat di profile
-		msg.Message = normalize.NormalizeHiddenChar(msg.Message)
-		module.NormalizeAndTypoCorrection(&msg.Message, db, "typo")
-		msg.Message = menu.MenuSessionHandler(profile, msg, db) //jika pesan adalah nomor,maka akan mengembalikan menu jika ada menu atau keyword
-		modname, group, personal := module.GetModuleName(profile.Phonenumber, msg, db, "module")
+	if bukanbot != nil {                               //jika tidak terdapat di profile collection
 		var msgstr string
 		var isgrup bool
+		msg.Message = normalize.NormalizeHiddenChar(msg.Message)
+		module.NormalizeAndTypoCorrection(&msg.Message, db, "typo")
+		msgstr = menu.MenuSessionHandler(&msg, db) //jika pesan adalah nomor,maka akan mengembalikan menu jika ada menu atau keyword
+		modname, group, personal := module.GetModuleName(profile.Phonenumber, msg, db, "module")
 		if msg.Chat_server != "g.us" { //chat personal
 			if personal && modname != "" {
 				msgstr = mod.Caller(profile, modname, msg, db)
