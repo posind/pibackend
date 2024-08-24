@@ -3,6 +3,7 @@ package helpdesk
 import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/tiket"
+	"github.com/gocroot/helper/waktu"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -35,6 +36,7 @@ func InserNewTicket(userphone string, adminname string, adminphone string, db *m
 		KabKot:     dataapi.Data.Regency,
 		Kec:        dataapi.Data.District,
 		Desa:       dataapi.Data.Village,
+		StartAt:    waktu.Sekarang(),
 	}
 	_, err = atdb.InsertOneDoc(db, "tiket", tiketbaru)
 	if err != nil {
