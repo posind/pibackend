@@ -5,6 +5,7 @@ import (
 
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/hub"
 	"github.com/gocroot/helper/kimseok"
 	"github.com/gocroot/helper/menu"
 	"github.com/gocroot/helper/normalize"
@@ -84,7 +85,8 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 	var isgrup bool
 	msg.Message = normalize.NormalizeHiddenChar(msg.Message)
 	module.NormalizeAndTypoCorrection(&msg.Message, db, "typo")
-	msgstr = menu.MenuSessionHandler(&msg, db) //jika pesan adalah nomor,maka akan mengembalikan menu jika ada menu atau keyword
+	galathub := hub.HubHandler(profile, msg, db) // check jika hub aktif maka langsung saja ke percakapan hub
+	msgstr = menu.MenuSessionHandler(&msg, db)   //jika pesan adalah nomor,maka akan mengembalikan menu jika ada menu atau keyword
 	modname, group, personal := module.GetModuleName(profile.Phonenumber, msg, db, "module")
 	if msg.Chat_server != "g.us" && msgstr == "" { //chat personal
 		if personal && modname != "" {
@@ -111,6 +113,10 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 	}
 	msgstr = strings.ReplaceAll(msgstr, "XXX", nama)                //rename XXX jadi nama dari api
 	msgstr = strings.ReplaceAll(msgstr, "YYY", profile.Phonenumber) //rename YYY jadi nomor profile
+	//sisipkan info atau galat
+	if galathub != "" {
+		msgstr += "\ngalat hub:" + galathub
+	}
 	//kirim balasan
 	dt := &itmodel.TextMessage{
 		To:       msg.Chat_number,
