@@ -145,6 +145,44 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 	return
 }
 
+// penutupan helpdesk dari pilihan menu objectid|tutuph3lpdeskt1kcet
+func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
+	msgs := strings.Split(Pesan.Message, "|")
+	id := msgs[0]
+	// Mengonversi id string ke primitive.ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		reply = "Invalid ID format: " + err.Error()
+		return
+	}
+	helpdeskuser, err := atdb.GetOneLatestDoc[tiket.Bantuan](db, "tiket", bson.M{"_id": objectID})
+	if err != nil {
+		reply = err.Error()
+		return
+	}
+	//helpdeskuser.Solusi = strings.Split(msgs[1], ":")[1]
+	helpdeskuser.Terlayani = true
+	_, err = atdb.ReplaceOneDoc(db, "tiket", bson.M{"_id": objectID}, helpdeskuser)
+	if err != nil {
+		reply = err.Error()
+		return
+	}
+
+	reply = GetPrefillMessage("admintutuphelpdesk", db) //pesan untuk admin
+	reply = fmt.Sprintf(reply, helpdeskuser.UserName, helpdeskuser.Desa)
+
+	msgstr := GetPrefillMessage("usertutuphelpdesk", db) //pesan untuk user
+	msgstr = fmt.Sprintf(msgstr, helpdeskuser.AdminName, helpdeskuser.UserName, helpdeskuser.ID.Hex())
+	dt := &itmodel.TextMessage{
+		To:       helpdeskuser.UserPhone,
+		IsGroup:  false,
+		Messages: msgstr,
+	}
+	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
+
+	return
+}
+
 // legacy
 // handling key word, keyword :bantuan operator
 func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
@@ -212,54 +250,6 @@ func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		return err.Error()
 	}
 	reply = "Silakan ketik pertanyaan atau masalah yang ingin Bapak/Ibu " + Pesan.Alias_name + " sampaikan. Kami siap membantu Anda" // + " mengetik pertanyaan atau bantuan yang ingin dijawab oleh operator: "
-
-	return
-}
-
-// handling key word
-func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
-	msgs := strings.Split(Pesan.Message, "|")
-	id := msgs[0]
-	// Mengonversi id string ke primitive.ObjectID
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		reply = "Invalid ID format: " + err.Error()
-		return
-	}
-	helpdeskuser, err := atdb.GetOneLatestDoc[model.Laporan](db, "helpdeskuser", bson.M{"_id": objectID, "user.phonenumber": Pesan.Phone_number})
-	if err != nil {
-		reply = err.Error()
-		return
-	}
-	helpdeskuser.Solusi = strings.Split(msgs[1], ":")[1]
-	helpdeskuser.Terlayani = true
-	_, err = atdb.ReplaceOneDoc(db, "helpdeskuser", bson.M{"_id": objectID}, helpdeskuser)
-	if err != nil {
-		reply = err.Error()
-		return
-	}
-	op := helpdeskuser.User
-	op.JumlahAntrian -= 1
-	filter := bson.M{
-		"scope":       op.Scope,
-		"team":        op.Team,
-		"phonenumber": op.PhoneNumber,
-	}
-	_, err = atdb.ReplaceOneDoc(db, "user", filter, op)
-	if err != nil {
-		reply = err.Error()
-		return
-	}
-	reply = "*Penutupan Tiket Helpdesk*\n\nUser : " + helpdeskuser.Nama + "\nMasalah:\n" + helpdeskuser.Masalah
-
-	msgstr := "*Permintaan Feedback Helpdesk*\n\nAdmin " + helpdeskuser.User.Name + " (" + helpdeskuser.User.PhoneNumber + ")\nMeminta tolong Bapak/Ibu " + helpdeskuser.User.Name + " untuk memberikan rating layanan (bintang 1-5) di link berikut:\n"
-	msgstr += "wa.me/" + Profile.Phonenumber + "?text=" + helpdeskuser.ID.Hex() + "|+rating+bintang+layanan+helpdesk+:+5"
-	dt := &itmodel.TextMessage{
-		To:       helpdeskuser.Phone,
-		IsGroup:  false,
-		Messages: msgstr,
-	}
-	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
 
 	return
 }
