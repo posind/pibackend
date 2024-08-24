@@ -7,10 +7,10 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/hub"
 	"github.com/gocroot/helper/kimseok"
+	"github.com/gocroot/helper/lms"
 	"github.com/gocroot/helper/menu"
 	"github.com/gocroot/helper/normalize"
 	"github.com/gocroot/helper/tiket"
-	"github.com/gocroot/mod/helpdesk"
 
 	"github.com/gocroot/mod"
 
@@ -107,7 +107,7 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 		}
 	}
 	//fill template message
-	nama := helpdesk.GetNamadanDesaFromAPI(msg.Phone_number)
+	nama := lms.GetNamadanDesaFromAPI(msg.Phone_number)
 	if nama == "" {
 		nama = tiket.GetNamaAdmin(msg.Phone_number, db)
 	}

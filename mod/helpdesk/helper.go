@@ -4,10 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/gocroot/config"
-	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
-	"github.com/gocroot/helper/lms"
 	"github.com/gocroot/model"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
@@ -110,18 +107,6 @@ func GetOperatorFromSection(section string, db *mongo.Database) (operator model.
 	if err != nil {
 		return
 	}
-	return
-}
-
-func GetNamadanDesaFromAPI(phonenumber string) (namadandesa string) {
-	statuscode, res, err := atapi.GetStructWithToken[lms.ResponseAPIPD]("token", config.APITOKENPD, config.APIGETPDLMS+phonenumber)
-	if err != nil {
-		return
-	}
-	if statuscode != 200 { //404 jika user not found
-		return
-	}
-	namadandesa = res.Data.Fullname + " dari " + res.Data.Village
 	return
 }
 
