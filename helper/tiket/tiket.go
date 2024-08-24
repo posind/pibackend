@@ -25,6 +25,14 @@ func UpdateUserMsgInTiket(userphone string, usermsg string, db *mongo.Database) 
 	return
 }
 
+func GetNamaAdmin(adminphone string, db *mongo.Database) (name string) {
+	tiket, err := atdb.GetOneLatestDoc[Bantuan](db, "tiket", bson.M{"adminphone": adminphone})
+	if err != nil {
+		return
+	}
+	return tiket.AdminName
+}
+
 func UpdateAdminMsgInTiket(adminphone string, adminmsg string, db *mongo.Database) (err error) {
 	tiket, err := atdb.GetOneLatestDoc[Bantuan](db, "tiket", bson.M{"terlayani": bson.M{"$exists": false}, "adminphone": adminphone})
 	if err != nil {

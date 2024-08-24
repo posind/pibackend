@@ -17,7 +17,7 @@ func MenuSessionHandler(msg *itmodel.IteungMessage, db *mongo.Database) string {
 	//check apakah nomor adalah admin atau user untuk menentukan startmenu
 	var startmenu string
 	if !tiket.IsAdmin(msg.Phone_number, db) {
-		startmenu = "usermenu"
+		startmenu = "menu"
 	} else {
 		startmenu = "adminmenu"
 	}

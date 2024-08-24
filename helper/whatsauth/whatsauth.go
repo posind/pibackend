@@ -8,6 +8,7 @@ import (
 	"github.com/gocroot/helper/kimseok"
 	"github.com/gocroot/helper/menu"
 	"github.com/gocroot/helper/normalize"
+	"github.com/gocroot/helper/tiket"
 	"github.com/gocroot/mod/helpdesk"
 
 	"github.com/gocroot/mod"
@@ -101,8 +102,12 @@ func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, 
 			}
 		}
 		//fill template message
-		msgstr = strings.ReplaceAll(msgstr, "XXX", helpdesk.GetNamadanDesaFromAPI(msg.Phone_number)) //rename XXX jadi nama dari api
-		msgstr = strings.ReplaceAll(msgstr, "YYY", profile.Phonenumber)                              //rename YYY jadi nomor profile
+		nama := helpdesk.GetNamadanDesaFromAPI(msg.Phone_number)
+		if nama == "" {
+			nama = tiket.GetNamaAdmin(msg.Phone_number, db)
+		}
+		msgstr = strings.ReplaceAll(msgstr, "XXX", nama)                //rename XXX jadi nama dari api
+		msgstr = strings.ReplaceAll(msgstr, "YYY", profile.Phonenumber) //rename YYY jadi nomor profile
 		//kirim balasan
 		dt := &itmodel.TextMessage{
 			To:       msg.Chat_number,
