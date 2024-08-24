@@ -80,7 +80,9 @@ func UpdateAdminMsgInTiket(adminphone string, adminmsg string, db *mongo.Databas
 	if err != nil {
 		return
 	}
-
+	if tiket.ResponsAt.IsZero() {
+		tiket.ResponsAt = waktu.Sekarang()
+	}
 	tiket.AdminMessage += "\n" + wkt + " : " + adminmsg
 	_, err = atdb.ReplaceOneDoc(db, "tiket", bson.M{"_id": tiket.ID}, tiket)
 	if err != nil {
