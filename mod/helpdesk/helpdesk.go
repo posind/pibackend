@@ -10,8 +10,10 @@ import (
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/hub"
+	"github.com/gocroot/helper/lms"
 	"github.com/gocroot/helper/menu"
 	"github.com/gocroot/helper/phone"
+	"github.com/gocroot/helper/tiket"
 	"github.com/gocroot/model"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,19 +24,19 @@ import (
 // helpdesk sudah terintegrasi dengan lms pamong desa backend
 func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
 	//check apakah tiketnya udah tutup atau belum
-	isclosed, tiket, err := IsTicketClosed("userphone", Pesan.Phone_number, db)
+	isclosed, stiket, err := tiket.IsTicketClosed("userphone", Pesan.Phone_number, db)
 	if err != nil {
 		return "IsTicketClosed: " + err.Error()
 	}
 	if !isclosed { //ada yang belum closed, lanjutkan sesi hub
 		//pesan ke user
 		reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
-		reply = fmt.Sprintf(reply, tiket.AdminName)
-		hub.CheckHubSession(Pesan.Phone_number, tiket.UserName, tiket.AdminPhone, tiket.AdminName, db)
+		reply = fmt.Sprintf(reply, stiket.AdminName)
+		hub.CheckHubSession(Pesan.Phone_number, stiket.UserName, stiket.AdminPhone, stiket.AdminName, db)
 		return
 	}
 	//jika tiket sudah clear
-	statuscode, res, err := atapi.GetStructWithToken[ResponseAPIPD]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
+	statuscode, res, err := atapi.GetStructWithToken[lms.ResponseAPIPD]("token", config.APITOKENPD, config.APIGETPDLMS+Pesan.Phone_number)
 	if statuscode != 200 { //404 jika user not found
 		msg := "Mohon maaf Bapak/Ibu, nomor anda *belum terdaftar* pada sistem kami.\n" + UserNotFound(Profile, Pesan, db)
 		return msg
@@ -65,7 +67,7 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
 	reply = fmt.Sprintf(reply, helpdeskname)
 	//insert ke database dan set hub session
-	err = InserNewTicket(Pesan.Phone_number, helpdeskname, helpdeskno, db)
+	err = tiket.InserNewTicket(Pesan.Phone_number, helpdeskname, helpdeskno, db)
 	if err != nil {
 		return err.Error()
 	}
@@ -97,7 +99,7 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	if err != nil {
 		return err.Error()
 	}
-	res := GetDataFromAPI(Pesan.Phone_number)
+	res := lms.GetDataFromAPI(Pesan.Phone_number)
 	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan untuk admin
 	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency)
 	dt := &itmodel.TextMessage{
@@ -109,7 +111,7 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	reply = GetPrefillMessage("userbantuanadmin", db) //pesan untuk user
 	reply = fmt.Sprintf(reply, op.Name)
 	//insert ke database dan set hub session
-	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
+	tiket.InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
 	hub.CheckHubSession(Pesan.Phone_number, phone.MaskPhoneNumber(Pesan.Phone_number)+" ~ "+Pesan.Alias_name, op.PhoneNumber, op.Name, db)
 	return
 
@@ -126,7 +128,7 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 	if err != nil {
 		return err.Error()
 	}
-	res := GetDataFromAPI(Pesan.Phone_number)
+	res := lms.GetDataFromAPI(Pesan.Phone_number)
 	msgstr := GetPrefillMessage("adminbantuanadmin", db) //pesan untuk admin
 	msgstr = fmt.Sprintf(msgstr, res.Data.Fullname, res.Data.Village, res.Data.District, res.Data.Regency)
 	dt := &itmodel.TextMessage{
@@ -138,7 +140,7 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 	reply = GetPrefillMessage("userbantuanadmin", db) //pesan untuk user
 	reply = fmt.Sprintf(reply, op.Name)
 	//insert ke database dan set hub session
-	InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
+	tiket.InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
 	hub.CheckHubSession(Pesan.Phone_number, res.Data.Fullname, op.PhoneNumber, op.Name, db)
 	return
 }

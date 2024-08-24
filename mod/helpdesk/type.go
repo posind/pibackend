@@ -12,23 +12,3 @@ package helpdesk
 	RateLayanan  int                 `json:"ratelayanan,omitempty" bson:"ratelayanan,omitempty"`
 	Operator     model.Userdomyikado `json:"operator,omitempty" bson:"operator,omitempty"`
 } */
-
-type ContactAdmin struct {
-	Fullname string `json:"fullname"`
-	Phone    string `json:"phone"`
-}
-
-type Data struct {
-	Fullname             string         `json:"fullname"`
-	Province             string         `json:"province"`
-	Regency              string         `json:"regency"`
-	District             string         `json:"district"`
-	Village              string         `json:"village"`
-	ContactAdminRegency  []ContactAdmin `json:"contact_admin_regency"`
-	ContactAdminProvince []ContactAdmin `json:"contact_admin_province"`
-}
-
-type ResponseAPIPD struct {
-	Success bool `json:"success"`
-	Data    Data `json:"data"`
-}

@@ -5,11 +5,23 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gocroot/config"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+func GetDataFromAPI(phonenumber string) (data ResponseAPIPD) {
+	statuscode, res, err := atapi.GetStructWithToken[ResponseAPIPD]("token", config.APITOKENPD, config.APIGETPDLMS+phonenumber)
+	if err != nil {
+		return
+	}
+	if statuscode != 200 { //404 jika user not found
+		return
+	}
+	return res
+}
 
 func RefreshCookie(db *mongo.Database) (err error) {
 	profile, err := atdb.GetOneDoc[LoginProfile](db, "lmscreds", bson.M{})

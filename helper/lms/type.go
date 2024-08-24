@@ -226,3 +226,23 @@ type RekapitulasiUser struct {
 	Ditolak             int64 `json:"ditolak,omitempty"`
 	Total               int64 `json:"total,omitempty"`
 }
+
+type ResponseAPIPD struct {
+	Success bool   `json:"success"`
+	Data    DataPD `json:"data"`
+}
+
+type ContactAdmin struct {
+	Fullname string `json:"fullname"`
+	Phone    string `json:"phone"`
+}
+
+type DataPD struct {
+	Fullname             string         `json:"fullname"`
+	Province             string         `json:"province"`
+	Regency              string         `json:"regency"`
+	District             string         `json:"district"`
+	Village              string         `json:"village"`
+	ContactAdminRegency  []ContactAdmin `json:"contact_admin_regency"`
+	ContactAdminProvince []ContactAdmin `json:"contact_admin_province"`
+}
