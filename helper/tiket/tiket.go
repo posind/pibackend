@@ -5,6 +5,7 @@ import (
 	"github.com/gocroot/helper/lms"
 	"github.com/gocroot/helper/waktu"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -25,7 +26,7 @@ func IsTicketClosed(phonefield string, phonenumber string, db *mongo.Database) (
 	return
 }
 
-func InserNewTicket(userphone string, adminname string, adminphone string, db *mongo.Database) (err error) {
+func InserNewTicket(userphone string, adminname string, adminphone string, db *mongo.Database) (IDTiket primitive.ObjectID, err error) {
 	dataapi := lms.GetDataFromAPI(userphone)
 	tiketbaru := Bantuan{
 		UserName:   dataapi.Data.Fullname,
@@ -38,7 +39,7 @@ func InserNewTicket(userphone string, adminname string, adminphone string, db *m
 		Desa:       dataapi.Data.Village,
 		StartAt:    waktu.Sekarang(),
 	}
-	_, err = atdb.InsertOneDoc(db, "tiket", tiketbaru)
+	IDTiket, err = atdb.InsertOneDoc(db, "tiket", tiketbaru)
 	if err != nil {
 		return
 	}

@@ -93,3 +93,8 @@ func GetMenuFromKeywordAndSetSession(keyword string, session Session, db *mongo.
 	msg += dt.Footer
 	return
 }
+
+func InjectSessionMenu(menulist []MenuList, phonenumber string, db *mongo.Database) error {
+	_, err := atdb.UpdateOneDoc(db, "session", bson.M{"phonenumber": phonenumber}, bson.M{"list": menulist})
+	return err
+}

@@ -33,6 +33,16 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
 		reply = fmt.Sprintf(reply, stiket.AdminName)
 		hub.CheckHubSession(Pesan.Phone_number, stiket.UserName, stiket.AdminPhone, stiket.AdminName, db)
+		//inject menu session untuk menutup tiket
+		mn := menu.MenuList{
+			No:      0,
+			Keyword: stiket.ID.Hex() + "|tutuph3lpdeskt1kcet",
+			Konten:  "Akhiri percakapan dan tutup sesi bantuan saat ini",
+		}
+		err = menu.InjectSessionMenu([]menu.MenuList{mn}, Pesan.Phone_number, db)
+		if err != nil {
+			return err.Error()
+		}
 		return
 	}
 	//jika tiket sudah clear
@@ -67,11 +77,21 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
 	reply = fmt.Sprintf(reply, helpdeskname)
 	//insert ke database dan set hub session
-	err = tiket.InserNewTicket(Pesan.Phone_number, helpdeskname, helpdeskno, db)
+	idtiket, err := tiket.InserNewTicket(Pesan.Phone_number, helpdeskname, helpdeskno, db)
 	if err != nil {
 		return err.Error()
 	}
 	hub.CheckHubSession(Pesan.Phone_number, res.Data.Fullname, helpdeskno, helpdeskname, db)
+	//inject menu session untuk menutup tiket
+	mn := menu.MenuList{
+		No:      0,
+		Keyword: idtiket.Hex() + "|tutuph3lpdeskt1kcet",
+		Konten:  "Akhiri percakapan dan tutup sesi bantuan saat ini",
+	}
+	err = menu.InjectSessionMenu([]menu.MenuList{mn}, Pesan.Phone_number, db)
+	if err != nil {
+		return err.Error()
+	}
 	return
 
 }
@@ -111,8 +131,21 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	reply = GetPrefillMessage("userbantuanadmin", db) //pesan untuk user
 	reply = fmt.Sprintf(reply, op.Name)
 	//insert ke database dan set hub session
-	tiket.InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
+	idtiket, err := tiket.InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
+	if err != nil {
+		return err.Error()
+	}
 	hub.CheckHubSession(Pesan.Phone_number, phone.MaskPhoneNumber(Pesan.Phone_number)+" ~ "+Pesan.Alias_name, op.PhoneNumber, op.Name, db)
+	//inject menu session untuk menutup tiket
+	mn := menu.MenuList{
+		No:      0,
+		Keyword: idtiket.Hex() + "|tutuph3lpdeskt1kcet",
+		Konten:  "Akhiri percakapan dan tutup sesi bantuan saat ini",
+	}
+	err = menu.InjectSessionMenu([]menu.MenuList{mn}, Pesan.Phone_number, db)
+	if err != nil {
+		return err.Error()
+	}
 	return
 
 }
@@ -140,8 +173,21 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 	reply = GetPrefillMessage("userbantuanadmin", db) //pesan untuk user
 	reply = fmt.Sprintf(reply, op.Name)
 	//insert ke database dan set hub session
-	tiket.InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
+	idtiket, err := tiket.InserNewTicket(Pesan.Phone_number, op.Name, op.PhoneNumber, db)
+	if err != nil {
+		return err.Error()
+	}
 	hub.CheckHubSession(Pesan.Phone_number, res.Data.Fullname, op.PhoneNumber, op.Name, db)
+	//inject menu session untuk menutup tiket
+	mn := menu.MenuList{
+		No:      0,
+		Keyword: idtiket.Hex() + "|tutuph3lpdeskt1kcet",
+		Konten:  "Akhiri percakapan dan tutup sesi bantuan saat ini",
+	}
+	err = menu.InjectSessionMenu([]menu.MenuList{mn}, Pesan.Phone_number, db)
+	if err != nil {
+		return err.Error()
+	}
 	return
 }
 
