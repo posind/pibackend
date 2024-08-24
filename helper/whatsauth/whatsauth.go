@@ -74,51 +74,54 @@ func HandlerQRLogin(msg itmodel.IteungMessage, profile itmodel.Profile, db *mong
 }
 
 func HandlerIncomingMessage(msg itmodel.IteungMessage, profile itmodel.Profile, db *mongo.Database) (resp itmodel.Response, err error) {
-	_, bukanbot := GetAppProfile(msg.Phone_number, db) //cek apakah nomor adalah bot
-	if bukanbot != nil {                               //jika tidak terdapat di profile collection
-		var msgstr string
-		var isgrup bool
-		msg.Message = normalize.NormalizeHiddenChar(msg.Message)
-		module.NormalizeAndTypoCorrection(&msg.Message, db, "typo")
-		msgstr = menu.MenuSessionHandler(&msg, db) //jika pesan adalah nomor,maka akan mengembalikan menu jika ada menu atau keyword
-		modname, group, personal := module.GetModuleName(profile.Phonenumber, msg, db, "module")
-		if msg.Chat_server != "g.us" && msgstr == "" { //chat personal
-			if personal && modname != "" {
-				msgstr = mod.Caller(profile, modname, msg, db)
-			} else {
-				msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
-			}
-
-			//chat group
-		} else if strings.Contains(strings.ToLower(msg.Message), profile.Triggerword+" ") || strings.Contains(strings.ToLower(msg.Message), " "+profile.Triggerword) || strings.ToLower(msg.Message) == profile.Triggerword {
-			msg.Message = HapusNamaPanggilanBot(msg.Message, profile.Triggerword, profile.Botname)
-			//set grup true
-			isgrup = true
-			if group && modname != "" {
-				msgstr = mod.Caller(profile, modname, msg, db)
-			} else if msgstr == "" {
-				msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
-			}
-		}
-		//fill template message
-		nama := helpdesk.GetNamadanDesaFromAPI(msg.Phone_number)
-		if nama == "" {
-			nama = tiket.GetNamaAdmin(msg.Phone_number, db)
-		}
-		msgstr = strings.ReplaceAll(msgstr, "XXX", nama)                //rename XXX jadi nama dari api
-		msgstr = strings.ReplaceAll(msgstr, "YYY", profile.Phonenumber) //rename YYY jadi nomor profile
-		//kirim balasan
-		dt := &itmodel.TextMessage{
-			To:       msg.Chat_number,
-			IsGroup:  isgrup,
-			Messages: msgstr,
-		}
-		_, resp, err = atapi.PostStructWithToken[itmodel.Response]("Token", profile.Token, dt, profile.URLAPIText)
-		if err != nil {
-			return
-		}
-
+	//cek apakah nomor adalah bot, jika bot maka return empty
+	_, bukanbot := GetAppProfile(msg.Phone_number, db)
+	if bukanbot == nil { //nomor ada di collection profile
+		return
 	}
+	//jika tidak terdapat sebagai profile bot
+	var msgstr string
+	var isgrup bool
+	msg.Message = normalize.NormalizeHiddenChar(msg.Message)
+	module.NormalizeAndTypoCorrection(&msg.Message, db, "typo")
+	msgstr = menu.MenuSessionHandler(&msg, db) //jika pesan adalah nomor,maka akan mengembalikan menu jika ada menu atau keyword
+	modname, group, personal := module.GetModuleName(profile.Phonenumber, msg, db, "module")
+	if msg.Chat_server != "g.us" && msgstr == "" { //chat personal
+		if personal && modname != "" {
+			msgstr = mod.Caller(profile, modname, msg, db)
+		} else {
+			msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
+		}
+
+		//chat group
+	} else if strings.Contains(strings.ToLower(msg.Message), profile.Triggerword+" ") || strings.Contains(strings.ToLower(msg.Message), " "+profile.Triggerword) || strings.ToLower(msg.Message) == profile.Triggerword {
+		msg.Message = HapusNamaPanggilanBot(msg.Message, profile.Triggerword, profile.Botname)
+		//set grup true
+		isgrup = true
+		if group && modname != "" {
+			msgstr = mod.Caller(profile, modname, msg, db)
+		} else if msgstr == "" {
+			msgstr = kimseok.GetMessage(profile, msg, profile.Botname, db)
+		}
+	}
+	//fill template message
+	nama := helpdesk.GetNamadanDesaFromAPI(msg.Phone_number)
+	if nama == "" {
+		nama = tiket.GetNamaAdmin(msg.Phone_number, db)
+	}
+	msgstr = strings.ReplaceAll(msgstr, "XXX", nama)                //rename XXX jadi nama dari api
+	msgstr = strings.ReplaceAll(msgstr, "YYY", profile.Phonenumber) //rename YYY jadi nomor profile
+	//kirim balasan
+	dt := &itmodel.TextMessage{
+		To:       msg.Chat_number,
+		IsGroup:  isgrup,
+		Messages: msgstr,
+	}
+	_, resp, err = atapi.PostStructWithToken[itmodel.Response]("Token", profile.Token, dt, profile.URLAPIText)
+	if err != nil {
+		return
+	}
+
 	return
 }
 
