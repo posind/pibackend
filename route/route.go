@@ -34,6 +34,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//pamong desa data from api
 	case method == "GET" && path == "/data/lms/user":
 		controller.GetDataUserFromApi(w, r)
+	//simpan testimoni dari pamong desa lms api
+	case method == "POST" && path == "/data/lms/testi":
+		controller.PostTestimoni(w, r)
 	//user data
 	case method == "GET" && path == "/data/user":
 		controller.GetDataUser(w, r)
@@ -41,7 +44,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	case method == "GET" && at.URLParam(path, "/data/peserta/sent/:id"):
 		controller.GetSentItem(w, r)
 	//simpan feedback unsubs user
-	case method == "POST" && path == "/data/peserta/unsubscribe": //resume atau risalah rapat dan feedback
+	case method == "POST" && path == "/data/peserta/unsubscribe":
 		controller.PostUnsubscribe(w, r)
 	//generate token linked device
 	case method == "PUT" && path == "/data/user":
