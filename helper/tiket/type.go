@@ -23,4 +23,5 @@ type Bantuan struct {
 	CloseAt      time.Time          `bson:"closeat,omitempty" json:"closeat,omitempty"`
 	Terlayani    bool               `json:"terlayani,omitempty" bson:"terlayani,omitempty"`
 	RateLayanan  int                `json:"ratelayanan,omitempty" bson:"ratelayanan,omitempty"`
+	Masukan      string             `json:"masukan,omitempty" bson:"masukan,omitempty"`
 }

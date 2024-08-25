@@ -13,6 +13,7 @@ import (
 	"github.com/gocroot/helper/gcallapi"
 	"github.com/gocroot/helper/kimseok"
 	"github.com/gocroot/helper/report"
+	"github.com/gocroot/helper/tiket"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/helper/whatsauth"
 	"github.com/gocroot/model"
@@ -214,6 +215,67 @@ func GetSentItem(respw http.ResponseWriter, req *http.Request) {
 	}
 	hasil.PhoneNumber = ""
 	at.WriteJSON(respw, http.StatusOK, hasil)
+}
+
+// mendapatkan tiket yang sudah closed
+func GetClosedTicket(respw http.ResponseWriter, req *http.Request) {
+	id := at.GetParam(req)
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : ObjectID Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(req)
+		respn.Location = "Encode Object ID Error"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
+		return
+	}
+	hasil, err := atdb.GetOneLatestDoc[tiket.Bantuan](config.Mongoconn, "tiket", primitive.M{"_id": objectId})
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : Data tiket tidak di temukan"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
+
+	at.WriteJSON(respw, http.StatusOK, hasil)
+}
+
+// feedback dari tiket yang sudah tertutup
+func PostMasukanTiket(respw http.ResponseWriter, req *http.Request) {
+	var rating report.Rating
+	var respn model.Response
+	err := json.NewDecoder(req.Body).Decode(&rating)
+	if err != nil {
+		respn.Status = "Error : Body tidak valid"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
+		return
+	}
+	objectId, err := primitive.ObjectIDFromHex(rating.ID)
+	if err != nil {
+		respn.Status = "Error : ObjectID Tidak Valid"
+		respn.Info = at.GetSecretFromHeader(req)
+		respn.Location = "Encode Object ID Error"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
+		return
+	}
+	updatefields := primitive.M{
+		"ratelayanan": rating.Rating,
+		"masukan":     rating.Komentar,
+	}
+	res, err := atdb.UpdateOneDoc(config.Mongoconn, "tiket", primitive.M{"_id": objectId}, updatefields)
+	if err != nil {
+		respn.Status = "Error : Data laporan tidak berhasil di update data rating"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
+	respn.Response = strconv.Itoa(int(res.ModifiedCount))
+
+	at.WriteJSON(respw, http.StatusOK, respn)
 }
 
 func PostMeeting(w http.ResponseWriter, r *http.Request) {

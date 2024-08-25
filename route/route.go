@@ -68,6 +68,15 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.PostTaskUser(w, r)
 	case method == "GET" && path == "/data/pushrepo/kemarin":
 		controller.GetYesterdayDistincWAGroup(w, r)
+
+	//helpdesk
+	//mendapatkan data tiket
+	case method == "GET" && at.URLParam(path, "/data/tiket/closed/:id"):
+		controller.GetSentItem(w, r)
+	//simpan feedback tiket user
+	case method == "POST" && path == "/data/tiket/rate": //resume atau risalah rapat dan feedback
+		controller.PostMasukanTiket(w, r)
+
 	//disabel pendaftaran
 	//case method == "POST" && path == "/data/user":
 	//	controller.PostDataUser(w, r)
