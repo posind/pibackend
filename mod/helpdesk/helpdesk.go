@@ -240,6 +240,36 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 	return
 }
 
+// admin terkoneksi dengan user tiket terakhir yang belum terlayani
+func AdminOpenSessionCurrentUserTiket(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
+	//check apakah tiketnya udah tutup atau belum
+	isclosed, stiket, err := tiket.IsTicketClosed("adminphone", Pesan.Phone_number, db)
+	if err != nil {
+		return "IsTicketClosed: " + err.Error()
+	}
+	if !isclosed { //ada yang belum closed, lanjutkan sesi hub
+		//pesan ke admin
+		reply = GetPrefillMessage("adminadasesitiket", db) //pesan ke user
+		reply = fmt.Sprintf(reply, stiket.UserName, stiket.Desa, stiket.Kec, stiket.KabKot)
+		hub.CheckHubSession(stiket.UserPhone, stiket.UserName, stiket.AdminPhone, stiket.AdminName, db)
+		//inject menu session untuk menutup tiket
+		mn := menu.MenuList{
+			No:      0,
+			Keyword: stiket.ID.Hex() + "|tutuph3lpdeskt1kcet",
+			Konten:  "Akhiri percakapan dan tutup sesi bantuan saat ini",
+		}
+		err = menu.InjectSessionMenu([]menu.MenuList{mn}, Pesan.Phone_number, db)
+		if err != nil {
+			return err.Error()
+		}
+		return
+	}
+
+	reply = GetPrefillMessage("adminkosongsesitiket", db) //pesan ke user
+	reply = fmt.Sprintf(reply, stiket.AdminName)
+	return
+}
+
 // legacy
 // handling key word, keyword :bantuan operator
 func StartHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo.Database) (reply string) {
