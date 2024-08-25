@@ -12,6 +12,7 @@ import (
 	"github.com/gocroot/helper/menu"
 	"github.com/gocroot/helper/phone"
 	"github.com/gocroot/helper/tiket"
+	"github.com/gocroot/helper/waktu"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -211,6 +212,7 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 	}
 	//helpdeskuser.Solusi = strings.Split(msgs[1], ":")[1]
 	helpdeskuser.Terlayani = true
+	helpdeskuser.CloseAt = waktu.Sekarang()
 	_, err = atdb.ReplaceOneDoc(db, "tiket", bson.M{"_id": objectID}, helpdeskuser)
 	if err != nil {
 		reply = err.Error()
@@ -220,7 +222,11 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 	atdb.DeleteOneDoc(db, "hub", bson.M{"userphone": helpdeskuser.UserPhone, "adminphone": helpdeskuser.AdminPhone})
 	//prefill message admin dan user
 	msgstradmin := GetPrefillMessage("admintutuphelpdesk", db) //pesan untuk admin
-	msgstradmin = fmt.Sprintf(msgstradmin, helpdeskuser.UserName, helpdeskuser.Desa)
+	if helpdeskuser.UserName != "" {
+		msgstradmin = fmt.Sprintf(msgstradmin, helpdeskuser.UserName, helpdeskuser.Desa)
+	} else {
+		msgstradmin = fmt.Sprintf(msgstradmin, phone.MaskPhoneNumber(helpdeskuser.UserPhone), "Belum Terdaftar Sistem")
+	}
 
 	msgstruser := GetPrefillMessage("usertutuphelpdesk", db) //pesan untuk user
 	msgstruser = fmt.Sprintf(msgstruser, helpdeskuser.AdminName, helpdeskuser.UserName, helpdeskuser.ID.Hex())
