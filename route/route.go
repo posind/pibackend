@@ -74,7 +74,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	case method == "GET" && at.URLParam(path, "/data/tiket/closed/:id"):
 		controller.GetClosedTicket(w, r)
 	//simpan feedback tiket user
-	case method == "POST" && path == "/data/tiket/rate": //resume atau risalah rapat dan feedback
+	case method == "POST" && path == "/data/tiket/rate":
 		controller.PostMasukanTiket(w, r)
 
 	//disabel pendaftaran
