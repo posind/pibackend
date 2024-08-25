@@ -215,16 +215,25 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 	}
 	//hapus hub
 	atdb.DeleteOneDoc(db, "hub", bson.M{"userphone": helpdeskuser.UserPhone, "adminphone": helpdeskuser.AdminPhone})
+	//prefill message admin dan user
+	msgstradmin := GetPrefillMessage("admintutuphelpdesk", db) //pesan untuk admin
+	msgstradmin = fmt.Sprintf(msgstradmin, helpdeskuser.UserName, helpdeskuser.Desa)
 
-	reply = GetPrefillMessage("admintutuphelpdesk", db) //pesan untuk admin
-	reply = fmt.Sprintf(reply, helpdeskuser.UserName, helpdeskuser.Desa)
-
-	msgstr := GetPrefillMessage("usertutuphelpdesk", db) //pesan untuk user
-	msgstr = fmt.Sprintf(msgstr, helpdeskuser.AdminName, helpdeskuser.UserName, helpdeskuser.ID.Hex())
+	msgstruser := GetPrefillMessage("usertutuphelpdesk", db) //pesan untuk user
+	msgstruser = fmt.Sprintf(msgstruser, helpdeskuser.AdminName, helpdeskuser.UserName, helpdeskuser.ID.Hex())
+	//pembagian yg dikirim dan reply
+	var sendmsg string
+	if Pesan.Phone_number == helpdeskuser.UserPhone {
+		reply = msgstruser
+		sendmsg = msgstradmin
+	} else {
+		reply = msgstradmin
+		sendmsg = msgstruser
+	}
 	dt := &itmodel.TextMessage{
 		To:       helpdeskuser.UserPhone,
 		IsGroup:  false,
-		Messages: msgstr,
+		Messages: sendmsg,
 	}
 	go atapi.PostStructWithToken[itmodel.Response]("Token", Profile.Token, dt, Profile.URLAPIText)
 
