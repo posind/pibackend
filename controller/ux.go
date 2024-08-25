@@ -12,6 +12,7 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/gcallapi"
 	"github.com/gocroot/helper/kimseok"
+	"github.com/gocroot/helper/phone"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/tiket"
 	"github.com/gocroot/helper/watoken"
@@ -273,7 +274,30 @@ func PostMasukanTiket(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
-	respn.Info = strconv.Itoa(int(res.ModifiedCount))
+	//mendapatkan document untuk informasi ke admin
+	hasil, err := atdb.GetOneLatestDoc[tiket.Bantuan](config.Mongoconn, "tiket", primitive.M{"_id": objectId})
+	if err != nil {
+		respn.Status = "Error : Data laporan tidak di temukan"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
+
+	nama := hasil.UserName
+	if nama == "" {
+		nama = phone.MaskPhoneNumber(hasil.UserPhone)
+	}
+
+	respn.Response = strconv.Itoa(int(res.ModifiedCount))
+	respn.Info = nama
+	//info ke admin
+	message := "Anda mendapatkan rating *" + strconv.Itoa(rating.Rating) + "* dari " + nama + " dengan masukan:\n" + rating.Komentar
+	dt := &whatsauth.TextMessage{
+		To:       hasil.AdminPhone,
+		IsGroup:  false,
+		Messages: message,
+	}
+	go atapi.PostStructWithToken[model.Response]("Token", config.WAAPIToken, dt, config.WAAPIMessage)
 
 	at.WriteJSON(respw, http.StatusOK, respn)
 }
