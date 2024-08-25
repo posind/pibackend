@@ -72,7 +72,7 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//helpdesk
 	//mendapatkan data tiket
 	case method == "GET" && at.URLParam(path, "/data/tiket/closed/:id"):
-		controller.GetSentItem(w, r)
+		controller.GetClosedTicket(w, r)
 	//simpan feedback tiket user
 	case method == "POST" && path == "/data/tiket/rate": //resume atau risalah rapat dan feedback
 		controller.PostMasukanTiket(w, r)
