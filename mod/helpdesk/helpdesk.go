@@ -30,14 +30,18 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		//pesan ke user
 		reply = GetPrefillMessage("userbantuanadmin", db) //pesan ke user
 		reply = fmt.Sprintf(reply, stiket.AdminName)
-		hub.CheckHubSession(Pesan.Phone_number, stiket.UserName, stiket.AdminPhone, stiket.AdminName, db)
+		hub.CheckHubSession(stiket.UserPhone, stiket.UserName, stiket.AdminPhone, stiket.AdminName, db)
 		//inject menu session untuk menutup tiket
 		mn := menu.MenuList{
 			No:      0,
 			Keyword: stiket.ID.Hex() + "|tutuph3lpdeskt1kcet",
 			Konten:  "Akhiri percakapan dan tutup sesi bantuan saat ini",
 		}
-		err = menu.InjectSessionMenu([]menu.MenuList{mn}, Pesan.Phone_number, db)
+		err = menu.InjectSessionMenu([]menu.MenuList{mn}, stiket.UserPhone, db)
+		if err != nil {
+			return err.Error()
+		}
+		err = menu.InjectSessionMenu([]menu.MenuList{mn}, stiket.AdminPhone, db)
 		if err != nil {
 			return err.Error()
 		}
@@ -87,6 +91,10 @@ func HelpdeskPDLMS(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 		Konten:  "Akhiri percakapan dan tutup sesi bantuan saat ini",
 	}
 	err = menu.InjectSessionMenu([]menu.MenuList{mn}, Pesan.Phone_number, db)
+	if err != nil {
+		return err.Error()
+	}
+	err = menu.InjectSessionMenu([]menu.MenuList{mn}, helpdeskno, db)
 	if err != nil {
 		return err.Error()
 	}
@@ -150,6 +158,10 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	if err != nil {
 		return err.Error()
 	}
+	err = menu.InjectSessionMenu([]menu.MenuList{mn}, op.PhoneNumber, db)
+	if err != nil {
+		return err.Error()
+	}
 	return
 
 }
@@ -189,6 +201,10 @@ func AdminNotFoundWithProvinsi(Profile itmodel.Profile, Pesan itmodel.IteungMess
 		Konten:  "Akhiri percakapan dan tutup sesi bantuan saat ini",
 	}
 	err = menu.InjectSessionMenu([]menu.MenuList{mn}, Pesan.Phone_number, db)
+	if err != nil {
+		return err.Error()
+	}
+	err = menu.InjectSessionMenu([]menu.MenuList{mn}, op.PhoneNumber, db)
 	if err != nil {
 		return err.Error()
 	}
@@ -269,7 +285,11 @@ func AdminOpenSessionCurrentUserTiket(Profile itmodel.Profile, Pesan itmodel.Ite
 			Keyword: stiket.ID.Hex() + "|tutuph3lpdeskt1kcet",
 			Konten:  "Akhiri percakapan dan tutup sesi bantuan saat ini",
 		}
-		err = menu.InjectSessionMenu([]menu.MenuList{mn}, Pesan.Phone_number, db)
+		err = menu.InjectSessionMenu([]menu.MenuList{mn}, stiket.AdminPhone, db)
+		if err != nil {
+			return err.Error()
+		}
+		err = menu.InjectSessionMenu([]menu.MenuList{mn}, stiket.UserPhone, db)
 		if err != nil {
 			return err.Error()
 		}
