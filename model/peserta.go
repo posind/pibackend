@@ -21,3 +21,13 @@ type Peserta struct {
 	Komentar      string             `json:"komentar,omitempty" bson:"komentar,omitempty"`
 	Rating        int                `json:"rating,omitempty" bson:"rating,omitempty"`
 }
+
+type Testi struct {
+	Isi    string `json:"isi,omitempty" bson:"isi,omitempty"`
+	Nama   string `json:"nama,omitempty" bson:"nama,omitempty"`
+	Daerah string `json:"daerah,omitempty" bson:"daerah,omitempty"`
+}
+
+type Depan struct {
+	List []Testi `json:"list,omitempty" bson:"list,omitempty"`
+}

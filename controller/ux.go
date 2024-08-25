@@ -180,6 +180,31 @@ func PostTestimoni(respw http.ResponseWriter, req *http.Request) {
 	at.WriteJSON(respw, http.StatusOK, respn)
 }
 
+// mendapatkan random testi 4 buah untuk halaman depan
+func GetRandomTesti4(respw http.ResponseWriter, req *http.Request) {
+	var respn model.Response
+	lstpeserta, err := atdb.GetRandomDoc[model.Peserta](config.Mongoconn, "unsubs", 4)
+	if err != nil {
+		respn.Status = "Error : Data laporan tidak berhasil di update data rating"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
+	var listtesti []model.Testi
+	for _, testi := range lstpeserta {
+		tst := model.Testi{
+			Isi:    testi.Komentar,
+			Nama:   testi.Fullname,
+			Daerah: "Desa " + testi.Desa + " Kec. " + testi.Kec + " Kab. " + testi.Kab + " Prov. " + testi.Provinsi,
+		}
+		listtesti = append(listtesti, tst)
+	}
+	testidepan := model.Depan{
+		List: listtesti,
+	}
+	at.WriteJSON(respw, http.StatusOK, testidepan)
+}
+
 // feedback dan meeting jadi satu disini
 func PostUnsubscribe(respw http.ResponseWriter, req *http.Request) {
 	var rating report.Rating

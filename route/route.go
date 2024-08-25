@@ -37,6 +37,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//simpan testimoni dari pamong desa lms api
 	case method == "POST" && path == "/data/lms/testi":
 		controller.PostTestimoni(w, r)
+		//get random 4 testi
+	case method == "GET" && path == "/data/lms/random/testi":
+		controller.GetRandomTesti4(w, r)
 	//user data
 	case method == "GET" && path == "/data/user":
 		controller.GetDataUser(w, r)
