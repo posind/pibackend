@@ -231,16 +231,18 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 	msgstruser := GetPrefillMessage("usertutuphelpdesk", db) //pesan untuk user
 	msgstruser = fmt.Sprintf(msgstruser, helpdeskuser.AdminName, helpdeskuser.UserName, helpdeskuser.ID.Hex())
 	//pembagian yg dikirim dan reply
-	var sendmsg string
+	var sendmsg, to string
 	if Pesan.Phone_number == helpdeskuser.UserPhone {
 		reply = msgstruser
 		sendmsg = msgstradmin
+		to = helpdeskuser.AdminPhone
 	} else {
 		reply = msgstradmin
 		sendmsg = msgstruser
+		to = helpdeskuser.UserPhone
 	}
 	dt := &itmodel.TextMessage{
-		To:       helpdeskuser.UserPhone,
+		To:       to,
 		IsGroup:  false,
 		Messages: sendmsg,
 	}
