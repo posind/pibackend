@@ -213,6 +213,8 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 		reply = err.Error()
 		return
 	}
+	//hapus hub
+	atdb.DeleteOneDoc(db, "hub", bson.M{"userphone": helpdeskuser.UserPhone, "adminphone": helpdeskuser.AdminPhone})
 
 	reply = GetPrefillMessage("admintutuphelpdesk", db) //pesan untuk admin
 	reply = fmt.Sprintf(reply, helpdeskuser.UserName, helpdeskuser.Desa)
