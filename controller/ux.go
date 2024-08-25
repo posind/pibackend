@@ -13,6 +13,7 @@ import (
 	"github.com/gocroot/helper/atdb"
 	"github.com/gocroot/helper/gcallapi"
 	"github.com/gocroot/helper/kimseok"
+	"github.com/gocroot/helper/lms"
 	"github.com/gocroot/helper/phone"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/tiket"
@@ -128,6 +129,55 @@ func PostPresensi(respw http.ResponseWriter, req *http.Request) {
 	resp.Response = strconv.Itoa(int(res.ModifiedCount))
 	resp.Info = docusr.Name
 	at.WriteJSON(respw, http.StatusOK, resp)
+}
+
+// testimoni dari useng lms pamong
+func PostTestimoni(respw http.ResponseWriter, req *http.Request) {
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : Token Tidak Valid "
+		respn.Info = at.GetSecretFromHeader(req)
+		respn.Location = "Decode Token Error: " + at.GetLoginFromHeader(req)
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusForbidden, respn)
+		return
+	}
+	userdt := lms.GetDataFromAPI(payload.Id)
+	if userdt.Data.Fullname == "" {
+		at.WriteJSON(respw, http.StatusNotFound, userdt)
+		return
+	}
+	//pindah ke struck user
+	var usersub model.Peserta
+	usersub.Fullname = userdt.Data.Fullname
+	usersub.Desa = userdt.Data.Village
+	usersub.Kec = userdt.Data.District
+	usersub.Kab = userdt.Data.Regency
+	usersub.PhoneNumber = payload.Id
+	usersub.Provinsi = userdt.Data.Province
+
+	var rating report.Rating
+	var respn model.Response
+	err = json.NewDecoder(req.Body).Decode(&rating)
+	if err != nil {
+		respn.Status = "Error : Body tidak valid"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
+		return
+	}
+	usersub.Rating = rating.Rating
+	usersub.Komentar = rating.Komentar
+	res, err := atdb.InsertOneDoc(config.Mongoconn, "unsubs", usersub)
+	if err != nil {
+		respn.Status = "Error : Data laporan tidak berhasil di update data rating"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
+	respn.Response = res.Hex()
+	respn.Info = usersub.Fullname
+	at.WriteJSON(respw, http.StatusOK, respn)
 }
 
 // feedback dan meeting jadi satu disini
