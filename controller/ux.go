@@ -220,7 +220,7 @@ func GetSentItem(respw http.ResponseWriter, req *http.Request) {
 	at.WriteJSON(respw, http.StatusOK, hasil)
 }
 
-// mendapatkan tiket yang sudah closed
+// mendapatkan tiket yang sudah closed Profile, err := atdb.GetOneDoc[itmodel.Profile](Mongoconn, "profile", primitive.M{"phonenumber": PhoneNumber})
 func GetClosedTicket(respw http.ResponseWriter, req *http.Request) {
 	id := at.GetParam(req)
 	objectId, err := primitive.ObjectIDFromHex(id)
@@ -241,6 +241,26 @@ func GetClosedTicket(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
+
+	at.WriteJSON(respw, http.StatusOK, hasil)
+}
+
+// mendapatkan semua list bot yang aktif
+func GetBotList(respw http.ResponseWriter, req *http.Request) {
+	Profiles, err := atdb.GetAllDoc[[]itmodel.Profile](config.Mongoconn, "profile", primitive.M{})
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : Data tiket tidak di temukan"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusNotImplemented, respn)
+		return
+	}
+	var phonelist []string
+
+	for _, profile := range Profiles {
+		phonelist = append(phonelist, phone.MaskPhoneNumber(profile.Phonenumber))
+	}
+	hasil := model.PhoneList{PhoneList: phonelist}
 
 	at.WriteJSON(respw, http.StatusOK, hasil)
 }

@@ -5,3 +5,7 @@ type HelpdeskRekap struct {
 	ToDo int `json:"todo,omitempty"`
 	Done int `json:"done,omitempty"`
 }
+
+type PhoneList struct {
+	PhoneList []string `json:"phonelist,omitempty"`
+}
