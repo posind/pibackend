@@ -17,10 +17,30 @@ import (
 	"github.com/gocroot/helper/at"
 	"github.com/gocroot/helper/atapi"
 	"github.com/gocroot/helper/atdb"
+	"github.com/gocroot/helper/lms"
 	"github.com/gocroot/helper/report"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/helper/whatsauth"
 )
+
+func GetDataUserFromApi(respw http.ResponseWriter, req *http.Request) {
+	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error : Token Tidak Valid "
+		respn.Info = at.GetSecretFromHeader(req)
+		respn.Location = "Decode Token Error: " + at.GetLoginFromHeader(req)
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusForbidden, respn)
+		return
+	}
+	userdt := lms.GetDataFromAPI(payload.Id)
+	if userdt.Data.Fullname == "" {
+		at.WriteJSON(respw, http.StatusNotFound, userdt)
+		return
+	}
+	at.WriteJSON(respw, http.StatusOK, userdt)
+}
 
 func GetDataUser(respw http.ResponseWriter, req *http.Request) {
 	payload, err := watoken.Decode(config.PublicKeyWhatsAuth, at.GetLoginFromHeader(req))

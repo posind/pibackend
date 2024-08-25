@@ -31,7 +31,9 @@ func URL(w http.ResponseWriter, r *http.Request) {
 		controller.GetLatestHelpdeskMasuk(w, r)
 	case method == "GET" && path == "/data/user/helpdesk/selesai":
 		controller.GetLatestHelpdeskSelesai(w, r)
-
+	//pamong desa data from api
+	case method == "GET" && path == "/data/lms/user":
+		controller.GetDataUserFromApi(w, r)
 	//user data
 	case method == "GET" && path == "/data/user":
 		controller.GetDataUser(w, r)
