@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/gocroot/helper/tiket"
 	"github.com/gocroot/helper/watoken"
 	"github.com/gocroot/helper/whatsauth"
+	"github.com/gocroot/mod/helpdesk"
 	"github.com/gocroot/model"
 	"github.com/whatsauth/itmodel"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -291,7 +293,8 @@ func PostMasukanTiket(respw http.ResponseWriter, req *http.Request) {
 	respn.Response = strconv.Itoa(int(res.ModifiedCount))
 	respn.Info = nama
 	//info ke admin
-	message := "Anda mendapatkan rating *" + strconv.Itoa(rating.Rating) + "* dari " + nama + " dengan masukan:\n" + rating.Komentar
+	message := helpdesk.GetPrefillMessage("adminnotiffeedback", config.Mongoconn)
+	message = fmt.Sprintf(message, rating.Rating, nama, rating.Komentar)
 	dt := &whatsauth.TextMessage{
 		To:       hasil.AdminPhone,
 		IsGroup:  false,
