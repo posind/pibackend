@@ -195,7 +195,7 @@ func GetRandomTesti4(respw http.ResponseWriter, req *http.Request) {
 		tst := model.Testi{
 			Isi:    testi.Komentar,
 			Nama:   testi.Fullname,
-			Daerah: "Desa " + testi.Desa + " Kec. " + testi.Kec + " Kab. " + testi.Kab + " Prov. " + testi.Provinsi,
+			Daerah: "Desa " + testi.Desa + " Kec. " + testi.Kec + " " + testi.Kab + " Prov. " + testi.Provinsi,
 		}
 		listtesti = append(listtesti, tst)
 	}
