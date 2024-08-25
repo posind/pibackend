@@ -273,7 +273,7 @@ func PostMasukanTiket(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusNotImplemented, respn)
 		return
 	}
-	respn.Response = strconv.Itoa(int(res.ModifiedCount))
+	respn.Info = strconv.Itoa(int(res.ModifiedCount))
 
 	at.WriteJSON(respw, http.StatusOK, respn)
 }
