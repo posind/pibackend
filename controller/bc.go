@@ -198,7 +198,7 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusMisdirectedRequest, docuser)
 		return
 	}
-	if hcode == http.StatusOK && !qrstat.Status { //jika sudah linked status false
+	if hcode == http.StatusOK && !qrstat.Status { //jika sudah linked status false dari wamyid
 		contohsender, err := atdb.GetOneLatestDoc[itmodel.Profile](config.Mongoconn, "sender", bson.M{})
 		if err != nil {
 			at.WriteJSON(respw, http.StatusFailedDependency, docuser)
@@ -224,5 +224,23 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
+	//jika belum linked device status = true maka kasih code
+	//kirim kode ke wa dari user
+	newmsg = model.SendText{
+		To:       newbot.Phonenumber,
+		IsGroup:  false,
+		Messages: "Cek notifikasi di wa businesses nomor _" + qrstat.PhoneNumber + "_ masukkan kode\n*" + qrstat.Code + "*\n" + qrstat.Message,
+	}
+	httpstatuscode, _, err = atapi.PostStructWithToken[model.Response]("token", at.GetLoginFromHeader(req), newmsg, config.WAAPITextMessage)
+	if httpstatuscode != 200 || err != nil {
+		var respn model.Response
+		respn.Status = "Error : Nomor yang diinputkan tidak valid"
+		if err != nil {
+			respn.Response = err.Error()
+		}
+		at.WriteJSON(respw, http.StatusExpectationFailed, respn)
+		return
+	}
+	//kirim ke frontend
 	at.WriteJSON(respw, http.StatusOK, qrstat)
 }
