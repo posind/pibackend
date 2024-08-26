@@ -175,7 +175,7 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 	newmsg := model.SendText{
 		To:       newbot.Phonenumber,
 		IsGroup:  false,
-		Messages: "Hai hai... permisi... nomor ini saya daftarkan untuk broadcast ya",
+		Messages: "Hai hai... permisi... nomor ini saya daftarkan untuk broadcast ya mohon clear semua notifikasi, karena nanti ada notifikasi kode untuk linked device ke wa business, mohon notif wa business nya juga di allow di handphone",
 	}
 	httpstatuscode, _, err := atapi.PostStructWithToken[model.Response]("token", at.GetLoginFromHeader(req), newmsg, config.WAAPITextMessage)
 	if httpstatuscode != 200 || err != nil {
@@ -229,7 +229,7 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 	newmsg = model.SendText{
 		To:       newbot.Phonenumber,
 		IsGroup:  false,
-		Messages: "Cek notifikasi di wa businesses nomor _" + qrstat.PhoneNumber + "_ masukkan kode\n*" + qrstat.Code + "*\n" + qrstat.Message,
+		Messages: "Masukkan kode: *" + qrstat.Code + "*\n" + qrstat.Message + "\nUntuk nomor" + qrstat.PhoneNumber,
 	}
 	httpstatuscode, _, err = atapi.PostStructWithToken[model.Response]("token", at.GetLoginFromHeader(req), newmsg, config.WAAPITextMessage)
 	if httpstatuscode != 200 || err != nil {
