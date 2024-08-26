@@ -177,7 +177,7 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 		IsGroup:  false,
 		Messages: "Hai hai... permisi... nomor ini saya daftarkan untuk broadcast ya mohon clear semua notifikasi, karena nanti ada notifikasi kode untuk linked device ke wa business, mohon notif wa business nya juga di allow di handphone",
 	}
-	httpstatuscode, _, err := atapi.PostStructWithToken[model.Response]("token", at.GetLoginFromHeader(req), newmsg, config.WAAPITextMessage)
+	httpstatuscode, _, err := atapi.PostStructWithToken[model.Response]("token", config.WAAPIToken, newmsg, config.WAAPIMessage)
 	if httpstatuscode != 200 || err != nil {
 		var respn model.Response
 		respn.Status = "Error : Nomor yang diinputkan tidak valid"
@@ -256,7 +256,7 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 			IsGroup:  false,
 			Messages: "Masukkan kode: *" + qrstat.Code + "*\n" + qrstat.Message + "\nUntuk nomor" + qrstat.PhoneNumber,
 		}
-		httpstatuscode, _, err = atapi.PostStructWithToken[model.Response]("token", at.GetLoginFromHeader(req), newmsg, config.WAAPITextMessage)
+		httpstatuscode, _, err = atapi.PostStructWithToken[model.Response]("token", config.WAAPIToken, newmsg, config.WAAPITextMessage)
 		if httpstatuscode != 200 || err != nil {
 			var respn model.Response
 			respn.Status = "Error : Nomor yang diinputkan tidak valid"
