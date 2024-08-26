@@ -237,7 +237,8 @@ func EndHelpdesk(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mongo
 	//hapus hub
 	atdb.DeleteOneDoc(db, "hub", bson.M{"userphone": helpdeskuser.UserPhone, "adminphone": helpdeskuser.AdminPhone})
 	//hapus session menu
-	atdb.DeleteOneDoc(db, "session", bson.M{"phonenumber": Pesan.Phone_number})
+	atdb.DeleteOneDoc(db, "session", bson.M{"phonenumber": helpdeskuser.UserPhone})
+	atdb.DeleteOneDoc(db, "session", bson.M{"phonenumber": helpdeskuser.AdminPhone})
 	//prefill message admin dan user
 	msgstradmin := GetPrefillMessage("admintutuphelpdesk", db) //pesan untuk admin
 	if helpdeskuser.UserName != "" {
