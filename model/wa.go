@@ -17,3 +17,8 @@ type Prefill struct {
 	Key   string `bson:"key"`
 	Value string `bson:"value"`
 }
+
+type Webhook struct {
+	URL    string `json:"url"`
+	Secret string `json:"secret"`
+}

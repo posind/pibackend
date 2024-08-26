@@ -198,32 +198,56 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 		at.WriteJSON(respw, http.StatusMisdirectedRequest, docuser)
 		return
 	}
-	if hcode == http.StatusOK && !qrstat.Status { //jika sudah linked status false dari wamyid
-		contohsender, err := atdb.GetOneLatestDoc[itmodel.Profile](config.Mongoconn, "sender", bson.M{})
-		if err != nil {
-			at.WriteJSON(respw, http.StatusFailedDependency, docuser)
-			return
-		}
-		contohsender.Botname = docuser.Name
-		contohsender.Phonenumber = newbot.Phonenumber
-		contohsender.Triggerword = newbot.Triggerword
-		// Temukan posisi terakhir dari '/'
-		lastSlashIndex := strings.LastIndex(contohsender.URL, "/")
-		// Potong URL hingga posisi terakhir '/'
-		baseURL := contohsender.URL[:lastSlashIndex+1]
-		// Gabungkan baseURL dengan phonenumber
-		contohsender.URL = baseURL + newbot.Phonenumber
-		contohsender.Token, err = watoken.EncodeforHours(newbot.Phonenumber, docuser.Name, config.PrivateKey, 43830)
-		if err != nil {
-			at.WriteJSON(respw, http.StatusFailedDependency, docuser)
-			return
-		}
-		_, err = atdb.InsertOneDoc(config.Mongoconn, "sender", contohsender)
-		if err != nil {
-			at.WriteJSON(respw, http.StatusFailedDependency, docuser)
-			return
-		}
+	if hcode != http.StatusOK {
+		at.WriteJSON(respw, http.StatusFailedDependency, docuser)
+		return
 	}
+	//insert ke coll sender dan profile
+	contohsender, err := atdb.GetOneLatestDoc[itmodel.Profile](config.Mongoconn, "sender", bson.M{})
+	if err != nil {
+		at.WriteJSON(respw, http.StatusFailedDependency, docuser)
+		return
+	}
+	contohsender.Botname = docuser.Name
+	contohsender.Phonenumber = newbot.Phonenumber
+	contohsender.Triggerword = newbot.Triggerword
+	// Temukan posisi terakhir dari '/'
+	lastSlashIndex := strings.LastIndex(contohsender.URL, "/")
+	// Potong URL hingga posisi terakhir '/'
+	baseURL := contohsender.URL[:lastSlashIndex+1]
+	// Gabungkan baseURL dengan phonenumber
+	contohsender.URL = baseURL + newbot.Phonenumber
+	contohsender.Token, err = watoken.EncodeforHours(newbot.Phonenumber, docuser.Name, config.PrivateKey, 43830)
+	if err != nil {
+		at.WriteJSON(respw, http.StatusFailedDependency, docuser)
+		return
+	}
+	_, err = atdb.InsertOneDoc(config.Mongoconn, "sender", contohsender)
+	if err != nil {
+		at.WriteJSON(respw, http.StatusFailedDependency, docuser)
+		return
+	}
+	//daftarkan ke webhook agar bot aktif dan insert kan ke profile
+	whdt := model.Webhook{
+		URL:    contohsender.URL,
+		Secret: contohsender.Secret,
+	}
+	httpstatuscode, _, err = atapi.PostStructWithToken[model.Response]("token", contohsender.Token, whdt, config.WAAPIGetToken)
+	if httpstatuscode != 200 || err != nil {
+		var respn model.Response
+		respn.Status = "Error : Gagal mendaftarkan ke webhook"
+		if err != nil {
+			respn.Response = err.Error()
+		}
+		at.WriteJSON(respw, http.StatusExpectationFailed, respn)
+		return
+	}
+	_, err = atdb.InsertOneDoc(config.Mongoconn, "profile", contohsender)
+	if err != nil {
+		at.WriteJSON(respw, http.StatusFailedDependency, docuser)
+		return
+	}
+
 	//jika belum linked device status = true maka kasih code
 	//kirim kode ke wa dari user
 	if qrstat.Status { //true jika belum linked device

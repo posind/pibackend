@@ -12,6 +12,8 @@ var WAAPIImageMessage string = "https://api.wa.my.id/api/send/message/document"
 
 var WAAPITextMessage string = "https://api.wa.my.id/api/v2/send/message/text"
 
+var WebHookBOTAPI string = "https://api.wa.my.id/api/signup"
+
 var WAAPIGetToken string = "https://api.wa.my.id/api/signup"
 
 var WAAPIGetDevice string = "https://api.wa.my.id/api/device/"
