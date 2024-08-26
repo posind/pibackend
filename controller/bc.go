@@ -226,20 +226,22 @@ func PutNomorBlast(respw http.ResponseWriter, req *http.Request) {
 	}
 	//jika belum linked device status = true maka kasih code
 	//kirim kode ke wa dari user
-	newmsg = model.SendText{
-		To:       newbot.Phonenumber,
-		IsGroup:  false,
-		Messages: "Masukkan kode: *" + qrstat.Code + "*\n" + qrstat.Message + "\nUntuk nomor" + qrstat.PhoneNumber,
-	}
-	httpstatuscode, _, err = atapi.PostStructWithToken[model.Response]("token", at.GetLoginFromHeader(req), newmsg, config.WAAPITextMessage)
-	if httpstatuscode != 200 || err != nil {
-		var respn model.Response
-		respn.Status = "Error : Nomor yang diinputkan tidak valid"
-		if err != nil {
-			respn.Response = err.Error()
+	if qrstat.Status { //true jika belum linked device
+		newmsg = model.SendText{
+			To:       newbot.Phonenumber,
+			IsGroup:  false,
+			Messages: "Masukkan kode: *" + qrstat.Code + "*\n" + qrstat.Message + "\nUntuk nomor" + qrstat.PhoneNumber,
 		}
-		at.WriteJSON(respw, http.StatusExpectationFailed, respn)
-		return
+		httpstatuscode, _, err = atapi.PostStructWithToken[model.Response]("token", at.GetLoginFromHeader(req), newmsg, config.WAAPITextMessage)
+		if httpstatuscode != 200 || err != nil {
+			var respn model.Response
+			respn.Status = "Error : Nomor yang diinputkan tidak valid"
+			if err != nil {
+				respn.Response = err.Error()
+			}
+			at.WriteJSON(respw, http.StatusExpectationFailed, respn)
+			return
+		}
 	}
 	//kirim ke frontend
 	at.WriteJSON(respw, http.StatusOK, qrstat)
