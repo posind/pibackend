@@ -13,7 +13,12 @@ func GetNamadanDesaFromAPI(phonenumber string) (namadandesa string) {
 	if statuscode != 200 { //404 jika user not found
 		return
 	}
-	namadandesa = res.Data.Fullname + " dari " + res.Data.Village
+	if res.Data.Village != "" {
+		namadandesa = res.Data.Fullname + " dari " + res.Data.Village
+	} else {
+		namadandesa = res.Data.Fullname
+	}
+
 	return
 }
 
