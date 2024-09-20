@@ -8,7 +8,7 @@ import (
 var Origins = []string{
 	"https://pos.in.my.id",
 	"https://in.my.id",
-	"https://www.pos.in.go.id",
+	"https://www.pos.in.my.id",
 }
 
 // Fungsi untuk memeriksa apakah origin diizinkan
