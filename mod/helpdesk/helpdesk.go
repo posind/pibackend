@@ -123,7 +123,7 @@ func HelpdeskPusat(Profile itmodel.Profile, Pesan itmodel.IteungMessage, db *mon
 	Pesan.Message = strings.TrimSpace(Pesan.Message)
 	op, err := GetOperatorFromSection(Pesan.Message, db)
 	if err != nil {
-		return err.Error()
+		return err.Error() + " GetOperatorFromSection"
 	}
 	res := lms.GetDataFromAPI(Pesan.Phone_number)
 	//pesan untuk admin

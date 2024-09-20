@@ -228,21 +228,21 @@ type RekapitulasiUser struct {
 }
 
 type ResponseAPIPD struct {
-	Success bool   `json:"success"`
-	Data    DataPD `json:"data"`
+	Success bool   `json:"success,omitempty" bson:"success,omitempty"`
+	Data    DataPD `json:"data,omitempty" bson:"data,omitempty"`
 }
 
 type ContactAdmin struct {
-	Fullname string `json:"fullname"`
-	Phone    string `json:"phone"`
+	Fullname string `json:"fullname,omitempty" bson:"fullname,omitempty"`
+	Phone    string `json:"phone,omitempty" bson:"phone,omitempty"`
 }
 
 type DataPD struct {
-	Fullname             string         `json:"fullname"`
-	Province             string         `json:"province"`
-	Regency              string         `json:"regency"`
-	District             string         `json:"district"`
-	Village              string         `json:"village"`
-	ContactAdminRegency  []ContactAdmin `json:"contact_admin_regency"`
-	ContactAdminProvince []ContactAdmin `json:"contact_admin_province"`
+	Fullname             string         `json:"fullname,omitempty" bson:"fullname,omitempty"`
+	Province             string         `json:"province,omitempty" bson:"province,omitempty"`
+	Regency              string         `json:"regency,omitempty" bson:"regency,omitempty"`
+	District             string         `json:"district,omitempty" bson:"district,omitempty"`
+	Village              string         `json:"village,omitempty" bson:"village,omitempty"`
+	ContactAdminRegency  []ContactAdmin `json:"contact_admin_regency,omitempty" bson:"contact_admin_regency,omitempty"`
+	ContactAdminProvince []ContactAdmin `json:"contact_admin_province,omitempty" bson:"contact_admin_province,omitempty"`
 }
