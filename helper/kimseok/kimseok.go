@@ -59,7 +59,7 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 		return err.Error()
 	}
 	if dt.Answer != "" && score > 0.9 {
-		reply = dt.Answer + "\n> _Belajar kapan saja, di mana saja, Bisa!!_"
+		reply = dt.Answer + "\n> _Go digital with us_"
 	}
 	return reply
 }
