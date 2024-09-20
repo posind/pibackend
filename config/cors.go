@@ -6,9 +6,9 @@ import (
 
 // Daftar origins yang diizinkan
 var Origins = []string{
-	"https://kb.pd.my.id",
-	"https://pd.my.id",
-	"https://helpdesk-pamongdesa.kemendagri.go.id",
+	"https://pos.in.my.id",
+	"https://in.my.id",
+	"https://www.pos.in.go.id",
 }
 
 // Fungsi untuk memeriksa apakah origin diizinkan
