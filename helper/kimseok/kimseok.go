@@ -54,24 +54,34 @@ func GetQnAfromSliceWithJaro(q string, qnas []Datasets) (dt Datasets, score floa
 func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname string, db *mongo.Database) string {
 	var reply string
 	//check di daftar faq
-	dt, score, err := QueriesDataRegexpALL(db, msg.Message)
+	dt, score, err := QueriesDataRegexpALL(db, "faq", msg.Message)
 	if err != nil {
 		return err.Error()
 	}
-	if dt.Answer != "" && score > 0.9 {
+	if dt.Answer != "" && score > 0.9 { // setting skore nya disini
 		reply = dt.Answer + "\n> _Go digital with us_"
+	}
+	if reply == "" {
+		dt, score, err := QueriesDataRegexpALL(db, "conv", msg.Message)
+		if err != nil {
+			return err.Error()
+		}
+		if dt.Answer != "" && score > 0.8 { // setting skore nya disini
+			reply = dt.Answer + "\n> _Iteung bisa saja salah ya gaes_"
+		}
+
 	}
 	return reply
 }
 
-func QueriesDataRegexpALL(db *mongo.Database, queries string) (dest Datasets, score float64, err error) {
+func QueriesDataRegexpALL(db *mongo.Database, collection string, queries string) (dest Datasets, score float64, err error) {
 	//kata akhiran imbuhan
 	//queries = SeparateSuffixMu(queries)
 
 	//ubah ke kata dasar
 	queries = Stemmer(queries)
 	filter := bson.M{"question": queries}
-	qnas, err := atdb.GetAllDoc[[]Datasets](db, "faq", filter)
+	qnas, err := atdb.GetAllDoc[[]Datasets](db, collection, filter) //faq atau conv
 	if err != nil {
 		return
 	}
