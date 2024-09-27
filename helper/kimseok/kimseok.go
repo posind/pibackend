@@ -56,21 +56,21 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 	//check di daftar faq
 	dt, score, err := QueriesDataRegexpALL(db, "faq", msg.Message)
 	if err != nil {
-		return err.Error()
+		return err.Error() + "|faq GetMessage"
 	}
 	if dt.Answer != "" && score > 0.9 { // setting skore nya disini
 		reply = dt.Answer + "\n> _Go digital with us_"
-	}
-	if reply == "" {
-		dt2, score, err := QueriesDataRegexpALL(db, "conv", msg.Message)
+	} else {
+		dt, score, err = QueriesDataRegexpALL(db, "conv", msg.Message)
 		if err != nil {
-			return err.Error()
+			return err.Error() + "|conv GetMessage"
 		}
-		if dt2.Answer != "" && score > 0.8 { // setting skore nya disini
+		if dt.Answer != "" && score > 0.8 { // setting skore nya disini
 			reply = dt.Answer + "\n> _Iteung bisa saja salah ya gaes_"
 		}
 
 	}
+
 	return reply
 }
 
@@ -97,7 +97,7 @@ func QueriesDataRegexpALL(db *mongo.Database, collection string, queries string)
 	for len(wordsdepan) > 0 || len(wordsbelakang) > 0 {
 		// Join remaining elements back into a string for wordsdepan
 		filter := bson.M{"question": primitive.Regex{Pattern: strings.Join(wordsdepan, " "), Options: "i"}}
-		qnas, err = atdb.GetAllDoc[[]Datasets](db, "faq", filter)
+		qnas, err = atdb.GetAllDoc[[]Datasets](db, collection, filter)
 		if err != nil {
 			return
 		} else if len(qnas) > 0 {
@@ -106,7 +106,7 @@ func QueriesDataRegexpALL(db *mongo.Database, collection string, queries string)
 		}
 		// Join remaining elements back into a string for wordsbelakang
 		filter = bson.M{"question": primitive.Regex{Pattern: strings.Join(wordsbelakang, " "), Options: "i"}}
-		qnas, err = atdb.GetAllDoc[[]Datasets](db, "faq", filter)
+		qnas, err = atdb.GetAllDoc[[]Datasets](db, collection, filter)
 		if err != nil {
 			return
 		} else if len(qnas) > 0 {
