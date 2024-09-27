@@ -62,11 +62,11 @@ func GetMessage(Profile itmodel.Profile, msg itmodel.IteungMessage, botname stri
 		reply = dt.Answer + "\n> _Go digital with us_"
 	}
 	if reply == "" {
-		dt, score, err := QueriesDataRegexpALL(db, "conv", msg.Message)
+		dt2, score, err := QueriesDataRegexpALL(db, "conv", msg.Message)
 		if err != nil {
 			return err.Error()
 		}
-		if dt.Answer != "" && score > 0.8 { // setting skore nya disini
+		if dt2.Answer != "" && score > 0.8 { // setting skore nya disini
 			reply = dt.Answer + "\n> _Iteung bisa saja salah ya gaes_"
 		}
 
