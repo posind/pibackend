@@ -248,27 +248,224 @@ func PostUnsubscribe(respw http.ResponseWriter, req *http.Request) {
 
 // mendapatkan data FAQ
 func GetFAQ(respw http.ResponseWriter, req *http.Request) {
-	id := at.GetParam(req)
-	objectId, err := primitive.ObjectIDFromHex(id)
+	var filter primitive.M = primitive.M{}
+
+	// Ambil query parameters
+	query := req.URL.Query()
+	id := query.Get("id")
+	question := query.Get("question")
+	limitParam := query.Get("limit")
+
+	// Filter berdasarkan ID jika disediakan
+	if id != "" {
+		objectId, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			var respn model.Response
+			respn.Status = "Error: ObjectID Tidak Valid"
+			respn.Info = at.GetSecretFromHeader(req)
+			respn.Location = "Encode Object ID Error"
+			respn.Response = err.Error()
+			at.WriteJSON(respw, http.StatusBadRequest, respn)
+			return
+		}
+		filter["_id"] = objectId
+	}
+
+	// Filter berdasarkan pertanyaan jika disediakan
+	if question != "" {
+		filter["question"] = primitive.Regex{Pattern: question, Options: "i"} // Regex untuk pencarian case-insensitive
+	}
+
+	// Parsing limit jika diberikan
+	var limit int64 = 20
+	if limitParam != "" {
+		if parsedLimit, err := strconv.ParseInt(limitParam, 10, 64); err == nil {
+			limit = parsedLimit
+		}
+	}
+
+	// Ambil data dari database dengan filter dan limit
+	findOptions := options.Find().SetLimit(limit)
+	var items []kimseok.Datasets
+	collection := config.Mongoconn.Collection("faq")
+	cursor, err := collection.Find(context.Background(), filter, findOptions)
 	if err != nil {
 		var respn model.Response
-		respn.Status = "Error : ObjectID Tidak Valid"
-		respn.Info = at.GetSecretFromHeader(req)
-		respn.Location = "Encode Object ID Error"
+		respn.Status = "Error: Internal Server Error"
+		respn.Info = "Terjadi kesalahan saat mengambil data dari database."
+		at.WriteJSON(respw, http.StatusInternalServerError, respn)
+		return
+	}
+	defer cursor.Close(context.Background())
+
+	// Decode hasil pencarian
+	if err = cursor.All(context.Background(), &items); err != nil {
+		var respn model.Response
+		respn.Status = "Error: Internal Server Error"
+		respn.Info = "Terjadi kesalahan saat memproses data."
+		at.WriteJSON(respw, http.StatusInternalServerError, respn)
+		return
+	}
+
+	// Periksa apakah ada hasil
+	if len(items) == 0 {
+		var respn model.Response
+		respn.Status = "Error: Tidak Ada Data"
+		respn.Info = "Tidak ada data FAQ yang sesuai dengan filter."
+		at.WriteJSON(respw, http.StatusNotFound, respn)
+		return
+	}
+
+	// Kirim hasil ke client
+	at.WriteJSON(respw, http.StatusOK, items)
+}
+
+
+// update FAQ
+func UpdateFAQ(respw http.ResponseWriter, req *http.Request) {
+	// Ambil query parameters
+	query := req.URL.Query()
+	id := query.Get("id")
+
+	var filter primitive.M = primitive.M{}
+	var updateData kimseok.Datasets
+
+	// Jika ada ID, gunakan untuk filter
+	if id != "" {
+		objectId, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			var respn model.Response
+			respn.Status = "Error: ObjectID Tidak Valid"
+			respn.Info = at.GetSecretFromHeader(req)
+			respn.Location = "Encode Object ID Error"
+			respn.Response = err.Error()
+			at.WriteJSON(respw, http.StatusBadRequest, respn)
+			return
+		}
+		filter["_id"] = objectId
+	} else {
+		// Decode body permintaan untuk filter
+		if err := json.NewDecoder(req.Body).Decode(&filter); err != nil {
+			var respn model.Response
+			respn.Status = "Error: Invalid JSON"
+			respn.Response = err.Error()
+			at.WriteJSON(respw, http.StatusBadRequest, respn)
+			return
+		}
+	}
+
+	// Decode body permintaan untuk data update
+	if err := json.NewDecoder(req.Body).Decode(&updateData); err != nil {
+		var respn model.Response
+		respn.Status = "Error: Invalid JSON"
 		respn.Response = err.Error()
 		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
-	hasil, err := atdb.GetOneLatestDoc[kimseok.Datasets](config.Mongoconn, "faq", primitive.M{"_id": objectId})
-	if err != nil {
+
+	// Validasi bahwa field yang diperlukan ada
+	if updateData.Question == "" || updateData.Answer == "" {
 		var respn model.Response
-		respn.Status = "Error : Data profile user sent tidak di temukan"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusNotImplemented, respn)
+		respn.Status = "Error: Field Tidak Lengkap"
+		respn.Response = "Field Question dan Answer harus diisi."
+		at.WriteJSON(respw, http.StatusBadRequest, respn)
 		return
 	}
-	at.WriteJSON(respw, http.StatusOK, hasil)
+
+	// Update dokumen
+	update := primitive.M{
+		"$set": primitive.M{
+			"question": updateData.Question,
+			"answer":   updateData.Answer,
+		},
+	}
+
+	// Lakukan operasi update
+	result, err := config.Mongoconn.Collection("faq").UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error: Gagal Update Data"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusInternalServerError, respn)
+		return
+	}
+
+	// Periksa apakah ada dokumen yang diperbarui
+	if result.ModifiedCount == 0 {
+		var respn model.Response
+		respn.Status = "Error: Tidak Ada Data Yang Diperbarui"
+		respn.Response = "Pastikan filter valid dan data berbeda dari sebelumnya."
+		at.WriteJSON(respw, http.StatusNotFound, respn)
+		return
+	}
+
+	// Berikan respons berhasil
+	var respn model.Response
+	respn.Status = "Sukses: FAQ Diperbarui"
+	respn.Response = fmt.Sprintf("Dokumen berhasil diperbarui (%d dokumen diubah).", result.ModifiedCount)
+	at.WriteJSON(respw, http.StatusOK, respn)
 }
+
+
+// delete FAQ
+func DeleteFAQ(respw http.ResponseWriter, req *http.Request) {
+	// Ambil query parameters
+	query := req.URL.Query()
+	id := query.Get("id")
+
+	var filter primitive.M = primitive.M{}
+
+	// Jika ada ID, gunakan untuk filter
+	if id != "" {
+		objectId, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			var respn model.Response
+			respn.Status = "Error: ObjectID Tidak Valid"
+			respn.Info = at.GetSecretFromHeader(req)
+			respn.Location = "Encode Object ID Error"
+			respn.Response = err.Error()
+			at.WriteJSON(respw, http.StatusBadRequest, respn)
+			return
+		}
+		filter["_id"] = objectId
+	} else {
+		// Decode body permintaan untuk filter
+		if err := json.NewDecoder(req.Body).Decode(&filter); err != nil {
+			var respn model.Response
+			respn.Status = "Error: Invalid JSON"
+			respn.Response = err.Error()
+			at.WriteJSON(respw, http.StatusBadRequest, respn)
+			return
+		}
+	}
+
+	// Lakukan operasi delete
+	result, err := config.Mongoconn.Collection("faq").DeleteMany(context.TODO(), filter)
+	if err != nil {
+		var respn model.Response
+		respn.Status = "Error: Gagal Menghapus Data"
+		respn.Response = err.Error()
+		at.WriteJSON(respw, http.StatusInternalServerError, respn)
+		return
+	}
+
+	// Periksa apakah ada dokumen yang dihapus
+	if result.DeletedCount == 0 {
+		var respn model.Response
+		respn.Status = "Error: Tidak Ada Data Yang Dihapus"
+		respn.Response = "Pastikan filter valid."
+		at.WriteJSON(respw, http.StatusNotFound, respn)
+		return
+	}
+
+	// Berikan respons berhasil
+	var respn model.Response
+	respn.Status = "Sukses: FAQ Dihapus"
+	respn.Response = fmt.Sprintf("Dokumen berhasil dihapus (%d dokumen dihapus).", result.DeletedCount)
+	at.WriteJSON(respw, http.StatusOK, respn)
+}
+
+
 
 // mendapatkan user yang sent dan mau unnsubscribe
 func GetSentItem(respw http.ResponseWriter, req *http.Request) {
