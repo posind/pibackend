@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -260,8 +261,8 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 
 	// Default values
 	limit := int64(100)   // Default 100 records per page
-	offset := int64(0)   // Default starting index
-	filter := bson.M{}   // Default filter
+	offset := int64(0)    // Default starting index
+	filter := bson.M{}    // Default filter
 
 	// Parsing limit and offset
 	if limitParam != "" {
@@ -310,6 +311,9 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 		"filtered": filteredCount,
 		"data":     faqs,
 	}
+
+	// Log the response for debugging
+	log.Printf("Response sent to frontend: %+v\n", response)
 
 	// Send JSON response
 	respw.Header().Set("Content-Type", "application/json")
