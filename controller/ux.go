@@ -328,7 +328,6 @@ func PostFaq(respw http.ResponseWriter, req *http.Request) {
 }
 
 // update FAQ
-// Update FAQ
 func UpdateFaq(respw http.ResponseWriter, req *http.Request) {
     var respn model.Response
 
@@ -371,15 +370,15 @@ func UpdateFaq(respw http.ResponseWriter, req *http.Request) {
     // Hapus field _id jika ada
     updateData.ID = primitive.NilObjectID
 
-    // Update dokumen di database
+    // Filter dan update fields
     filter := bson.M{"_id": objectId}
-    update := bson.M{
-        "$set": bson.M{
-            "question": updateData.Question,
-            "answer":   updateData.Answer,
-        },
+    updatefields := bson.M{
+        "question": updateData.Question,
+        "answer":   updateData.Answer,
     }
-    _, err = atdb.UpdateOneDoc(config.Mongoconn, "faq", filter, update)
+
+    // Update dokumen di database
+    _, err = atdb.UpdateOneDoc(config.Mongoconn, "faq", filter, updatefields)
     if err != nil {
         respn.Status = "Error : Tidak Dapat Memperbarui FAQ"
         respn.Response = err.Error()
