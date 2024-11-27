@@ -253,72 +253,88 @@ func PostUnsubscribe(respw http.ResponseWriter, req *http.Request) {
 
 // Mendapatkan data FAQ dengan limit 
 func GetFaq(respw http.ResponseWriter, req *http.Request) {
-	// Query parameters
-	query := req.URL.Query()
-	search := query.Get("search")
-	limitParam := query.Get("limit")
-	offsetParam := query.Get("offset")
+    // Query parameters
+    query := req.URL.Query()
+    search := query.Get("search")
+    limitParam := query.Get("limit")
+    offsetParam := query.Get("offset")
 
-	// Default values
-	limit := int64(100)   // Default 100 records per page
-	offset := int64(0)    // Default starting index
-	filter := bson.M{}    // Default filter
+    // Log parameter query
+    log.Printf("Received query parameters: search=%s, limit=%s, offset=%s", search, limitParam, offsetParam)
 
-	// Parsing limit and offset
-	if limitParam != "" {
-		if parsedLimit, err := strconv.ParseInt(limitParam, 10, 64); err == nil {
-			limit = parsedLimit
-		}
-	}
-	if offsetParam != "" {
-		if parsedOffset, err := strconv.ParseInt(offsetParam, 10, 64); err == nil {
-			offset = parsedOffset
-		}
-	}
+    // Default values
+    limit := int64(100)   // Default 100 records per page
+    offset := int64(0)    // Default starting index
+    filter := bson.M{}    // Default filter
 
-	// Apply search filter
-	if search != "" {
-		filter["question"] = primitive.Regex{Pattern: search, Options: "i"} // Case-insensitive regex
-	}
+    // Parsing limit and offset
+    if limitParam != "" {
+        if parsedLimit, err := strconv.ParseInt(limitParam, 10, 64); err == nil {
+            limit = parsedLimit
+        } else {
+            log.Printf("Error parsing limit: %v", err)
+        }
+    }
+    if offsetParam != "" {
+        if parsedOffset, err := strconv.ParseInt(offsetParam, 10, 64); err == nil {
+            offset = parsedOffset
+        } else {
+            log.Printf("Error parsing offset: %v", err)
+        }
+    }
 
-	// Options for MongoDB query
-	opts := options.Find().SetLimit(limit).SetSkip(offset)
+    // Apply search filter
+    if search != "" {
+        filter["question"] = primitive.Regex{Pattern: search, Options: "i"} // Case-insensitive regex
+    }
 
-	// Fetch filtered documents
-	var faqs []kimseok.Datasets
-	collection := config.Mongoconn.Collection("faq")
-	cursor, err := collection.Find(context.TODO(), filter, opts)
-	if err != nil {
-		http.Error(respw, "Error fetching FAQs", http.StatusInternalServerError)
-		return
-	}
-	defer cursor.Close(context.TODO())
+    // Log constructed filter
+    log.Printf("Constructed filter: %+v", filter)
 
-	if err = cursor.All(context.TODO(), &faqs); err != nil {
-		http.Error(respw, "Error processing FAQs", http.StatusInternalServerError)
-		return
-	}
+    // Options for MongoDB query
+    opts := options.Find().SetLimit(limit).SetSkip(offset)
 
-	// Count total records and filtered records
-	totalCount, _ := collection.CountDocuments(context.TODO(), bson.M{})
-	filteredCount, _ := collection.CountDocuments(context.TODO(), filter)
+    // Fetch filtered documents
+    var faqs []kimseok.Datasets
+    collection := config.Mongoconn.Collection("faq")
+    cursor, err := collection.Find(context.TODO(), filter, opts)
+    if err != nil {
+        log.Printf("Error fetching FAQs: %v", err)
+        http.Error(respw, "Error fetching FAQs", http.StatusInternalServerError)
+        return
+    }
+    defer cursor.Close(context.TODO())
 
-	// Response data
-	response := map[string]interface{}{
-		"status":   "Success",
-		"response": "Data berhasil diambil",
-		"total":    totalCount,
-		"filtered": filteredCount,
-		"data":     faqs,
-	}
+    if err = cursor.All(context.TODO(), &faqs); err != nil {
+        log.Printf("Error processing FAQs: %v", err)
+        http.Error(respw, "Error processing FAQs", http.StatusInternalServerError)
+        return
+    }
 
-	// Log the response for debugging
-	log.Printf("Response sent to frontend: %+v\n", response)
+    // Count total records and filtered records
+    totalCount, _ := collection.CountDocuments(context.TODO(), bson.M{})
+    filteredCount, _ := collection.CountDocuments(context.TODO(), filter)
 
-	// Send JSON response
-	respw.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(respw).Encode(response)
+    // Response data
+    response := map[string]interface{}{
+        "status":   "Success",
+        "response": "Data berhasil diambil",
+        "total":    totalCount,
+        "filtered": filteredCount,
+        "data":     faqs,
+    }
+
+    // Log the response for debugging
+    log.Printf("Response sent to frontend: %+v", response)
+
+    // Send JSON response
+    respw.Header().Set("Content-Type", "application/json")
+    if err := json.NewEncoder(respw).Encode(response); err != nil {
+        log.Printf("Error encoding response: %v", err)
+        http.Error(respw, "Error encoding response", http.StatusInternalServerError)
+    }
 }
+
 
 // Tambah FAQ
 func PostFaq(respw http.ResponseWriter, req *http.Request) {
