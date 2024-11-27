@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -249,56 +250,71 @@ func PostUnsubscribe(respw http.ResponseWriter, req *http.Request) {
 	at.WriteJSON(respw, http.StatusOK, respn)
 }
 
-// mendapatkan data FAQ
-// Mendapatkan data FAQ dengan limit 50
+// Mendapatkan data FAQ dengan limit 
 func GetFaq(respw http.ResponseWriter, req *http.Request) {
-	var respn model.Response
-
-	// Ambil query parameters (opsional)
+	// Query parameters
 	query := req.URL.Query()
-	id := query.Get("id")
-	question := query.Get("question")
+	search := query.Get("search")
 	limitParam := query.Get("limit")
+	offsetParam := query.Get("offset")
 
-	// Buat filter untuk pencarian
-	var filter bson.M = bson.M{}
-	if id != "" {
-		objectId, err := primitive.ObjectIDFromHex(id)
-		if err != nil {
-			respn.Status = "Error: ID Tidak Valid"
-			respn.Response = err.Error()
-			at.WriteJSON(respw, http.StatusBadRequest, respn)
-			return
-		}
-		filter["_id"] = objectId
-	}
+	// Default values
+	limit := int64(100)   // Default 100 records per page
+	offset := int64(0)   // Default starting index
+	filter := bson.M{}   // Default filter
 
-	if question != "" {
-		filter["question"] = primitive.Regex{Pattern: question, Options: "i"}
-	}
-
-	// Parsing limit jika diberikan
-	limit := int64(50) // Default limit 50
+	// Parsing limit and offset
 	if limitParam != "" {
 		if parsedLimit, err := strconv.ParseInt(limitParam, 10, 64); err == nil {
 			limit = parsedLimit
 		}
 	}
+	if offsetParam != "" {
+		if parsedOffset, err := strconv.ParseInt(offsetParam, 10, 64); err == nil {
+			offset = parsedOffset
+		}
+	}
 
-	// Ambil dokumen dari koleksi "faq" dengan limit
-	opts := options.Find().SetLimit(limit)
-	faqs, err := atdb.GetDocsWithOptions[[]kimseok.Datasets](config.Mongoconn, "faq", filter, opts)
+	// Apply search filter
+	if search != "" {
+		filter["question"] = primitive.Regex{Pattern: search, Options: "i"} // Case-insensitive regex
+	}
+
+	// Options for MongoDB query
+	opts := options.Find().SetLimit(limit).SetSkip(offset)
+
+	// Fetch filtered documents
+	var faqs []kimseok.Datasets
+	collection := config.Mongoconn.Collection("faq")
+	cursor, err := collection.Find(context.TODO(), filter, opts)
 	if err != nil {
-		respn.Status = "Error: Tidak dapat mengambil data FAQ"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusInternalServerError, respn)
+		http.Error(respw, "Error fetching FAQs", http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	if err = cursor.All(context.TODO(), &faqs); err != nil {
+		http.Error(respw, "Error processing FAQs", http.StatusInternalServerError)
 		return
 	}
 
-	// Kirim respons ke client
-	at.WriteJSON(respw, http.StatusOK, faqs)
-}
+	// Count total records and filtered records
+	totalCount, _ := collection.CountDocuments(context.TODO(), bson.M{})
+	filteredCount, _ := collection.CountDocuments(context.TODO(), filter)
 
+	// Response data
+	response := map[string]interface{}{
+		"status":   "Success",
+		"response": "Data berhasil diambil",
+		"total":    totalCount,
+		"filtered": filteredCount,
+		"data":     faqs,
+	}
+
+	// Send JSON response
+	respw.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(respw).Encode(response)
+}
 
 // Tambah FAQ
 func PostFaq(respw http.ResponseWriter, req *http.Request) {
