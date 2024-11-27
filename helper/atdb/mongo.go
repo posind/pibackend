@@ -169,6 +169,19 @@ func GetOneLowestDoc[T any](db *mongo.Database, collection string, filter bson.M
 	return
 }
 
+func GetDocsWithOptions[T any](db *mongo.Database, collection string, filter bson.M, opts *options.FindOptions) (docs T, err error) {
+	ctx := context.TODO()
+	cursor, err := db.Collection(collection).Find(ctx, filter, opts)
+	if err != nil {
+		return
+	}
+	defer cursor.Close(ctx)
+
+	err = cursor.All(ctx, &docs)
+	return
+}
+
+
 func InsertOneDoc(db *mongo.Database, collection string, doc interface{}) (insertedID primitive.ObjectID, err error) {
 	insertResult, err := db.Collection(collection).InsertOne(context.TODO(), doc)
 	if err != nil {

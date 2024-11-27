@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/gocroot/config"
 	"github.com/gocroot/helper/at"
@@ -249,6 +250,7 @@ func PostUnsubscribe(respw http.ResponseWriter, req *http.Request) {
 }
 
 // mendapatkan data FAQ
+// Mendapatkan data FAQ dengan limit 50
 func GetFaq(respw http.ResponseWriter, req *http.Request) {
 	var respn model.Response
 
@@ -256,6 +258,7 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 	query := req.URL.Query()
 	id := query.Get("id")
 	question := query.Get("question")
+	limitParam := query.Get("limit")
 
 	// Buat filter untuk pencarian
 	var filter bson.M = bson.M{}
@@ -274,8 +277,17 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 		filter["question"] = primitive.Regex{Pattern: question, Options: "i"}
 	}
 
-	// Ambil dokumen dari koleksi "faq"
-	faqs, err := atdb.GetAllDoc[[]kimseok.Datasets](config.Mongoconn, "faq", filter)
+	// Parsing limit jika diberikan
+	limit := int64(50) // Default limit 50
+	if limitParam != "" {
+		if parsedLimit, err := strconv.ParseInt(limitParam, 10, 64); err == nil {
+			limit = parsedLimit
+		}
+	}
+
+	// Ambil dokumen dari koleksi "faq" dengan limit
+	opts := options.Find().SetLimit(limit)
+	faqs, err := atdb.GetDocsWithOptions[[]kimseok.Datasets](config.Mongoconn, "faq", filter, opts)
 	if err != nil {
 		respn.Status = "Error: Tidak dapat mengambil data FAQ"
 		respn.Response = err.Error()
@@ -286,6 +298,7 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 	// Kirim respons ke client
 	at.WriteJSON(respw, http.StatusOK, faqs)
 }
+
 
 // Tambah FAQ
 func PostFaq(respw http.ResponseWriter, req *http.Request) {
