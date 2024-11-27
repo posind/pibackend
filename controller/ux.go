@@ -288,7 +288,7 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 }
 
 // Tambah FAQ
-func PostFaq(respw http.ResponseWriter, req *http.Request) {
+func PostFAQ(respw http.ResponseWriter, req *http.Request) {
 	var respn model.Response
 
 	// Decode body request menjadi struct Datasets
@@ -309,6 +309,9 @@ func PostFaq(respw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Hapus field _id jika ada
+	newFAQ.ID = primitive.NilObjectID
+
 	// Tambahkan data ke koleksi "faq"
 	insertedID, err := atdb.InsertOneDoc(config.Mongoconn, "faq", newFAQ)
 	if err != nil {
@@ -327,104 +330,114 @@ func PostFaq(respw http.ResponseWriter, req *http.Request) {
 // update FAQ
 // Update FAQ
 func UpdateFaq(respw http.ResponseWriter, req *http.Request) {
-	var respn model.Response
+    var respn model.Response
 
-	// Ambil ID dari query parameter
-	query := req.URL.Query()
-	id := query.Get("id")
-	if id == "" {
-		respn.Status = "Error : ID Tidak Diberikan"
-		respn.Response = "Parameter ID diperlukan untuk update."
-		at.WriteJSON(respw, http.StatusBadRequest, respn)
-		return
-	}
+    // Ambil ID dari query parameter
+    query := req.URL.Query()
+    id := query.Get("id")
+    if id == "" {
+        respn.Status = "Error : ID Tidak Diberikan"
+        respn.Response = "Parameter ID diperlukan untuk update."
+        at.WriteJSON(respw, http.StatusBadRequest, respn)
+        return
+    }
 
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		respn.Status = "Error : ID Tidak Valid"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusBadRequest, respn)
-		return
-	}
+    objectId, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        respn.Status = "Error : ID Tidak Valid"
+        respn.Response = err.Error()
+        at.WriteJSON(respw, http.StatusBadRequest, respn)
+        return
+    }
 
-	// Decode body request untuk data update
-	var updateData kimseok.Datasets
-	err = json.NewDecoder(req.Body).Decode(&updateData)
-	if err != nil {
-		respn.Status = "Error : Body Tidak Valid"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusBadRequest, respn)
-		return
-	}
+    // Decode body request untuk data update
+    var updateData kimseok.Datasets
+    err = json.NewDecoder(req.Body).Decode(&updateData)
+    if err != nil {
+        respn.Status = "Error : Body Tidak Valid"
+        respn.Response = err.Error()
+        at.WriteJSON(respw, http.StatusBadRequest, respn)
+        return
+    }
 
-	// Validasi field yang diperlukan
-	if updateData.Question == "" || updateData.Answer == "" {
-		respn.Status = "Error : Field Tidak Lengkap"
-		respn.Response = "Field Question dan Answer harus diisi."
-		at.WriteJSON(respw, http.StatusBadRequest, respn)
-		return
-	}
+    // Validasi field yang diperlukan
+    if updateData.Question == "" || updateData.Answer == "" {
+        respn.Status = "Error : Field Tidak Lengkap"
+        respn.Response = "Field Question dan Answer harus diisi."
+        at.WriteJSON(respw, http.StatusBadRequest, respn)
+        return
+    }
 
-	// Update dokumen di database
-	filter := bson.M{"_id": objectId}
-	update := bson.M{
-		"$set": bson.M{
-			"question": updateData.Question,
-			"answer":   updateData.Answer,
-		},
-	}
-	_, err = atdb.UpdateOneDoc(config.Mongoconn, "faq", filter, update)
-	if err != nil {
-		respn.Status = "Error : Tidak Dapat Memperbarui FAQ"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusInternalServerError, respn)
-		return
-	}
+    // Hapus field _id jika ada
+    updateData.ID = primitive.NilObjectID
 
-	// Respons sukses
-	respn.Status = "Sukses : FAQ Diperbarui"
-	respn.Response = "Data berhasil diperbarui."
-	at.WriteJSON(respw, http.StatusOK, respn)
+    // Update dokumen di database
+    filter := bson.M{"_id": objectId}
+    update := bson.M{
+        "$set": bson.M{
+            "question": updateData.Question,
+            "answer":   updateData.Answer,
+        },
+    }
+    _, err = atdb.UpdateOneDoc(config.Mongoconn, "faq", filter, update)
+    if err != nil {
+        respn.Status = "Error : Tidak Dapat Memperbarui FAQ"
+        respn.Response = err.Error()
+        at.WriteJSON(respw, http.StatusInternalServerError, respn)
+        return
+    }
+
+    // Log jika update berhasil
+    fmt.Printf("FAQ dengan ID %s berhasil diperbarui\n", id)
+
+    // Respons sukses
+    respn.Status = "Sukses : FAQ Diperbarui"
+    respn.Response = "Data berhasil diperbarui."
+    at.WriteJSON(respw, http.StatusOK, respn)
 }
+
+
 
 // Hapus FAQ
 func DeleteFaq(respw http.ResponseWriter, req *http.Request) {
-	var respn model.Response
+    var respn model.Response
 
-	// Ambil ID dari query parameter
-	query := req.URL.Query()
-	id := query.Get("id")
-	if id == "" {
-		respn.Status = "Error : ID Tidak Diberikan"
-		respn.Response = "Parameter ID diperlukan untuk menghapus data."
-		at.WriteJSON(respw, http.StatusBadRequest, respn)
-		return
-	}
+    // Ambil ID dari query parameter
+    query := req.URL.Query()
+    id := query.Get("id")
+    if id == "" {
+        respn.Status = "Error : ID Tidak Diberikan"
+        respn.Response = "Parameter ID diperlukan untuk menghapus data."
+        at.WriteJSON(respw, http.StatusBadRequest, respn)
+        return
+    }
 
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		respn.Status = "Error : ID Tidak Valid"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusBadRequest, respn)
-		return
-	}
+    objectId, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        respn.Status = "Error : ID Tidak Valid"
+        respn.Response = err.Error()
+        at.WriteJSON(respw, http.StatusBadRequest, respn)
+        return
+    }
 
-	// Hapus dokumen dari koleksi "faq"
-	filter := bson.M{"_id": objectId}
-	_, err = atdb.DeleteOneDoc(config.Mongoconn, "faq", filter)
-	if err != nil {
-		respn.Status = "Error : Tidak Dapat Menghapus FAQ"
-		respn.Response = err.Error()
-		at.WriteJSON(respw, http.StatusInternalServerError, respn)
-		return
-	}
+    // Hapus dokumen dari koleksi "faq"
+    filter := bson.M{"_id": objectId}
+    _, err = atdb.DeleteOneDoc(config.Mongoconn, "faq", filter)
+    if err != nil {
+        respn.Status = "Error : Tidak Dapat Menghapus FAQ"
+        respn.Response = err.Error()
+        at.WriteJSON(respw, http.StatusInternalServerError, respn)
+        return
+    }
 
-	// Respons sukses
-	respn.Status = "Sukses : FAQ Dihapus"
-	respn.Response = "Data berhasil dihapus."
-	at.WriteJSON(respw, http.StatusOK, respn)
+    // Log jika delete berhasil
+    fmt.Printf("FAQ dengan ID %s berhasil dihapus\n", id)
+
+    // Respons sukses
+    respn.Status = "Sukses : FAQ Dihapus"
+    respn.Response = "Data berhasil dihapus."
+    at.WriteJSON(respw, http.StatusOK, respn)
 }
-
 
 
 // mendapatkan user yang sent dan mau unnsubscribe

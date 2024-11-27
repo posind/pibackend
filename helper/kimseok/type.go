@@ -7,7 +7,7 @@ import (
 )
 
 type Datasets struct {
-	ID       primitive.ObjectID `json:"id" bson:"_id"`
+	ID       primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"` // Gunakan "omitempty" agar MongoDB menghasilkan ObjectID
 	Question string             `json:"question" bson:"question"`
 	Answer   string             `json:"answer" bson:"answer"`
 	Origin   string             `json:"origin" bson:"origin"`
