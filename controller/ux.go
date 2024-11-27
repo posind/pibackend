@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -253,14 +252,13 @@ func PostUnsubscribe(respw http.ResponseWriter, req *http.Request) {
 
 // Mendapatkan data FAQ dengan limit 
 func GetFaq(respw http.ResponseWriter, req *http.Request) {
+    var respn model.Response
+
     // Query parameters
     query := req.URL.Query()
     search := query.Get("search")
     limitParam := query.Get("limit")
     offsetParam := query.Get("offset")
-
-    // Log parameter query
-    log.Printf("Received query parameters: search=%s, limit=%s, offset=%s", search, limitParam, offsetParam)
 
     // Default values
     limit := int64(100)   // Default 100 records per page
@@ -271,15 +269,11 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
     if limitParam != "" {
         if parsedLimit, err := strconv.ParseInt(limitParam, 10, 64); err == nil {
             limit = parsedLimit
-        } else {
-            log.Printf("Error parsing limit: %v", err)
         }
     }
     if offsetParam != "" {
         if parsedOffset, err := strconv.ParseInt(offsetParam, 10, 64); err == nil {
             offset = parsedOffset
-        } else {
-            log.Printf("Error parsing offset: %v", err)
         }
     }
 
@@ -287,9 +281,6 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
     if search != "" {
         filter["question"] = primitive.Regex{Pattern: search, Options: "i"} // Case-insensitive regex
     }
-
-    // Log constructed filter
-    log.Printf("Constructed filter: %+v", filter)
 
     // Options for MongoDB query
     opts := options.Find().SetLimit(limit).SetSkip(offset)
@@ -299,15 +290,17 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
     collection := config.Mongoconn.Collection("faq")
     cursor, err := collection.Find(context.TODO(), filter, opts)
     if err != nil {
-        log.Printf("Error fetching FAQs: %v", err)
-        http.Error(respw, "Error fetching FAQs", http.StatusInternalServerError)
+        respn.Status = "Error"
+        respn.Response = "Error fetching FAQs"
+        at.WriteJSON(respw, http.StatusInternalServerError, respn)
         return
     }
     defer cursor.Close(context.TODO())
 
     if err = cursor.All(context.TODO(), &faqs); err != nil {
-        log.Printf("Error processing FAQs: %v", err)
-        http.Error(respw, "Error processing FAQs", http.StatusInternalServerError)
+        respn.Status = "Error"
+        respn.Response = "Error processing FAQs"
+        at.WriteJSON(respw, http.StatusInternalServerError, respn)
         return
     }
 
@@ -316,25 +309,31 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
     filteredCount, _ := collection.CountDocuments(context.TODO(), filter)
 
     // Response data
-    response := map[string]interface{}{
-        "status":   "Success",
-        "response": "Data berhasil diambil",
+    responseData := map[string]interface{}{
         "total":    totalCount,
         "filtered": filteredCount,
         "data":     faqs,
     }
 
-    // Log the response for debugging
-    log.Printf("Response sent to frontend: %+v", response)
+    // Convert responseData to JSON string
+    responseDataString, err := json.Marshal(responseData)
+    if err != nil {
+        respn.Status = "Error"
+        respn.Response = "Error encoding response data"
+        at.WriteJSON(respw, http.StatusInternalServerError, respn)
+        return
+    }
+
+    // Fill response
+    respn.Status = "Success"
+    respn.Response = string(responseDataString) // Store as a JSON string
 
     // Send JSON response
     respw.Header().Set("Content-Type", "application/json")
-    if err := json.NewEncoder(respw).Encode(response); err != nil {
-        log.Printf("Error encoding response: %v", err)
+    if err := json.NewEncoder(respw).Encode(respn); err != nil {
         http.Error(respw, "Error encoding response", http.StatusInternalServerError)
     }
 }
-
 
 // Tambah FAQ
 func PostFaq(respw http.ResponseWriter, req *http.Request) {
