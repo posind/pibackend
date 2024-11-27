@@ -67,6 +67,8 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	//mendapatkan data faq
 	case method == "GET" && at.URLParam(path, "/data/faq"):
 		controller.GetFAQ(w, r)
+	case method == "POST" && at.URLParam(path, "/data/faq"):
+		controller.AddFAQ(w, r)
 	case method == "PUT" && at.URLParam(path, "/data/faq"):
 		controller.UpdateFAQ(w, r)
 	case method == "DELETE" && at.URLParam(path, "/data/faq"):
