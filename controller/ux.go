@@ -288,7 +288,7 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 }
 
 // Tambah FAQ
-func PostFAQ(respw http.ResponseWriter, req *http.Request) {
+func PostFaq(respw http.ResponseWriter, req *http.Request) {
 	var respn model.Response
 
 	// Decode body request menjadi struct Datasets
