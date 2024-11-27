@@ -249,19 +249,31 @@ func PostUnsubscribe(respw http.ResponseWriter, req *http.Request) {
 	at.WriteJSON(respw, http.StatusOK, respn)
 }
 
-// Mendapatkan data FAQ dengan limit 
+// Mendapatkan data FAQ dengan limit 100
 func GetFaq(respw http.ResponseWriter, req *http.Request) {
 	var respn model.Response
 
-	// Ambil query parameters
+	// Ambil query parameters (opsional)
 	query := req.URL.Query()
-	search := query.Get("search")
+	id := query.Get("id")
+	question := query.Get("question")
 	limitParam := query.Get("limit")
 
-	// Filter berdasarkan query search
-	filter := bson.M{}
-	if search != "" {
-		filter["question"] = primitive.Regex{Pattern: search, Options: "i"}
+	// Buat filter untuk pencarian
+	var filter bson.M = bson.M{}
+	if id != "" {
+		objectId, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			respn.Status = "Error: ID Tidak Valid"
+			respn.Response = err.Error()
+			at.WriteJSON(respw, http.StatusBadRequest, respn)
+			return
+		}
+		filter["_id"] = objectId
+	}
+
+	if question != "" {
+		filter["question"] = primitive.Regex{Pattern: question, Options: "i"}
 	}
 
 	// Parsing limit jika diberikan
@@ -272,7 +284,7 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// Ambil dokumen dengan filter dan limit
+	// Ambil dokumen dari koleksi "faq" dengan limit
 	opts := options.Find().SetLimit(limit)
 	faqs, err := atdb.GetDocsWithOptions[[]kimseok.Datasets](config.Mongoconn, "faq", filter, opts)
 	if err != nil {
@@ -285,7 +297,6 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 	// Kirim respons ke client
 	at.WriteJSON(respw, http.StatusOK, faqs)
 }
-
 
 // Tambah FAQ
 func PostFaq(respw http.ResponseWriter, req *http.Request) {
