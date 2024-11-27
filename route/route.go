@@ -65,13 +65,13 @@ func URL(w http.ResponseWriter, r *http.Request) {
 	case method == "GET" && path == "/data/rekap":
 		controller.GetRekapBlast(w, r)
 	//mendapatkan data faq
-	case method == "GET" && at.URLParam(path, "/data/faq"):
+	case method == "GET" && path == "/data/faq":
 		controller.GetFaq(w, r)
-	case method == "POST" && at.URLParam(path, "/data/faq"):
+	case method == "POST" && path == "/data/faq":
 		controller.PostFaq(w, r)
-	case method == "PUT" && at.URLParam(path, "/data/faq"):
+	case method == "PUT" && path == "/data/faq":
 		controller.UpdateFaq(w, r)
-	case method == "DELETE" && at.URLParam(path, "/data/faq"):
+	case method == "DELETE" && path == "/data/faq":
 		controller.DeleteFaq(w, r)	
 	
 	//legacy
