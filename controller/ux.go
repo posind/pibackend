@@ -427,7 +427,7 @@ func UpdateFaq(respw http.ResponseWriter, req *http.Request) {
 }
 
 
-// Hapus FAQ
+// Hapuss FAQ
 func DeleteFaq(respw http.ResponseWriter, req *http.Request) {
     var respn model.Response
 
