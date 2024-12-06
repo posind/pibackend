@@ -345,6 +345,8 @@ func UpdateFaq(respw http.ResponseWriter, req *http.Request) {
     // Ambil ID dari query parameter
     query := req.URL.Query()
     id := query.Get("id")
+    fmt.Printf("Received ID for update: %s\n", id) // Debug log
+
     if id == "" {
         respn.Status = "Error : ID Tidak Diberikan"
         respn.Response = "Parameter ID diperlukan untuk update."
@@ -352,26 +354,32 @@ func UpdateFaq(respw http.ResponseWriter, req *http.Request) {
         return
     }
 
+    // Validasi dan konversi ID ke ObjectID
     objectId, err := primitive.ObjectIDFromHex(id)
     if err != nil {
+        fmt.Printf("Invalid ObjectID: %s\n", id) // Debug log
         respn.Status = "Error : ID Tidak Valid"
         respn.Response = err.Error()
         at.WriteJSON(respw, http.StatusBadRequest, respn)
         return
     }
+    fmt.Printf("Valid ObjectID: %s\n", objectId.Hex()) // Debug log
 
     // Decode body request untuk data update
     var updateData kimseok.Datasets
     err = json.NewDecoder(req.Body).Decode(&updateData)
     if err != nil {
+        fmt.Printf("Invalid request body: %v\n", err) // Debug log
         respn.Status = "Error : Body Tidak Valid"
         respn.Response = err.Error()
         at.WriteJSON(respw, http.StatusBadRequest, respn)
         return
     }
+    fmt.Printf("Data for update: %+v\n", updateData) // Debug log
 
     // Validasi field yang diperlukan
     if updateData.Question == "" || updateData.Answer == "" {
+        fmt.Printf("Missing required fields: Question=%s, Answer=%s\n", updateData.Question, updateData.Answer) // Debug log
         respn.Status = "Error : Field Tidak Lengkap"
         respn.Response = "Field Question dan Answer harus diisi."
         at.WriteJSON(respw, http.StatusBadRequest, respn)
@@ -388,9 +396,13 @@ func UpdateFaq(respw http.ResponseWriter, req *http.Request) {
         "answer":   updateData.Answer,
     }
 
+    // Debugging data yang akan diperbarui
+    fmt.Printf("Updating FAQ with ID: %s, Fields: %+v\n", id, updatefields) // Debug log
+
     // Update dokumen di database
     _, err = atdb.UpdateOneDoc(config.Mongoconn, "faq", filter, updatefields)
     if err != nil {
+        fmt.Printf("Failed to update FAQ: %v\n", err) // Debug log
         respn.Status = "Error : Tidak Dapat Memperbarui FAQ"
         respn.Response = err.Error()
         at.WriteJSON(respw, http.StatusInternalServerError, respn)
@@ -398,15 +410,13 @@ func UpdateFaq(respw http.ResponseWriter, req *http.Request) {
     }
 
     // Log jika update berhasil
-    fmt.Printf("FAQ dengan ID %s berhasil diperbarui\n", id)
+    fmt.Printf("FAQ dengan ID %s berhasil diperbarui\n", id) // Debug log
 
     // Respons sukses
     respn.Status = "Sukses : FAQ Diperbarui"
     respn.Response = "Data berhasil diperbarui."
     at.WriteJSON(respw, http.StatusOK, respn)
 }
-
-
 
 // Hapus FAQ
 func DeleteFaq(respw http.ResponseWriter, req *http.Request) {
