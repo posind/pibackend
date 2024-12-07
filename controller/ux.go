@@ -435,14 +435,17 @@ func DeleteFaq(respw http.ResponseWriter, req *http.Request) {
     query := req.URL.Query()
     id := query.Get("id")
     if id == "" {
+		fmt.Println("Eror: ID tidak diberikan")
         respn.Status = "Error : ID Tidak Diberikan"
         respn.Response = "Parameter ID diperlukan untuk menghapus data."
         at.WriteJSON(respw, http.StatusBadRequest, respn)
         return
     }
+	fmt.Printf("Received ID for delete: %s\n", id)
 
     objectId, err := primitive.ObjectIDFromHex(id)
     if err != nil {
+		fmt.Printf("Invalid ObjectID : %s\n", id)
         respn.Status = "Error : ID Tidak Valid"
         respn.Response = err.Error()
         at.WriteJSON(respw, http.StatusBadRequest, respn)
