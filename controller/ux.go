@@ -277,7 +277,7 @@ func GetFaq(respw http.ResponseWriter, req *http.Request) {
 	}
 
 	// Parsing limit jika diberikan
-	limit := int64(20) // Default limit 20
+	limit := int64(100) // Default limit 100
 	if limitParam != "" {
 		if parsedLimit, err := strconv.ParseInt(limitParam, 10, 64); err == nil {
 			limit = parsedLimit
